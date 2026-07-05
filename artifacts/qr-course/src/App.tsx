@@ -1,7 +1,9 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Search, LogIn } from "lucide-react";
+import { useAuth, loginUrl } from "@/lib/auth";
 import NotFound from "@/pages/not-found";
 
 import Landing from "@/pages/Landing";
@@ -47,12 +49,65 @@ function Router() {
   );
 }
 
+function SignInRequired() {
+  return (
+    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col items-center justify-center px-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center text-primary-foreground">
+          <Search className="w-5 h-5" />
+        </div>
+        <span className="font-serif font-semibold text-2xl tracking-tight">
+          Basic AI Math
+        </span>
+      </div>
+      <h1 className="text-xl font-serif font-bold mb-2 text-center">
+        Sign in to access the course
+      </h1>
+      <p className="text-muted-foreground text-sm mb-8 max-w-md text-center">
+        Lessons, tutoring, practice, and assignments are available after you
+        sign in with your Google account.
+      </p>
+      <a
+        href={loginUrl}
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-md text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        data-testid="button-gate-sign-in"
+      >
+        <LogIn className="w-5 h-5" />
+        Sign in with Google
+      </a>
+    </div>
+  );
+}
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { authenticated, isLoading } = useAuth();
+  const [location] = useLocation();
+
+  // The landing page stays public as the front door; everything else
+  // requires a Google sign-in.
+  if (location === "/") return <>{children}</>;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!authenticated) return <SignInRequired />;
+
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <WouterRouter base={basePath}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Router />
+          <AuthGate>
+            <Router />
+          </AuthGate>
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

@@ -95,6 +95,34 @@ const topics = [
   { n: "1.8", title: "Backpropagation: how the whole thing teaches itself (Capstone)" },
 ];
 
+function CourseEntryButton({
+  label,
+  className,
+  testId,
+}: {
+  label: string;
+  className: string;
+  testId: string;
+}) {
+  const { authenticated, isLoading } = useAuth();
+
+  if (!isLoading && !authenticated) {
+    return (
+      <a href={loginUrl} className={className} data-testid={testId}>
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href="/dashboard">
+      <button className={className} data-testid={testId}>
+        {label}
+      </button>
+    </Link>
+  );
+}
+
 export default function Landing() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
@@ -109,14 +137,11 @@ export default function Landing() {
         </div>
         <div className="flex items-center gap-2">
           <LandingAuthControls />
-          <Link href="/dashboard">
-            <button
-              className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              data-testid="button-enter-course"
-            >
-              Enter the course
-            </button>
-          </Link>
+          <CourseEntryButton
+            label="Enter the course"
+            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            testId="button-enter-course"
+          />
         </div>
       </header>
 
@@ -136,14 +161,11 @@ export default function Landing() {
             the discipline.
           </p>
           <div className="flex items-center justify-center gap-3">
-            <Link href="/dashboard">
-              <button
-                className="px-6 py-3 rounded-md text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                data-testid="button-cta-start"
-              >
-                Start the course
-              </button>
-            </Link>
+            <CourseEntryButton
+              label="Start the course"
+              className="inline-flex items-center px-6 py-3 rounded-md text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              testId="button-cta-start"
+            />
           </div>
         </section>
 

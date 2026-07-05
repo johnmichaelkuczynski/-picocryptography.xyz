@@ -1,16 +1,16 @@
 ---
-name: App auth model (none)
-description: The course app has NO authentication at all — login was deliberately ripped out at user request
+name: App auth model (Google OAuth, frontend-gated)
+description: Course app uses the user's canonical Google OAuth server file; the whole course is gated behind sign-in on the FRONTEND only
 ---
 
-# The app is intentionally unauthenticated
+# Auth model: Google OAuth, frontend gating
 
-On 2026-07-05 the user demanded "RIP OUT ALL EXISTING LOGIN" (they have a follow-up plan requiring no login). Clerk was removed entirely: no ClerkProvider, no sign-in/sign-up routes, no protected-route HOC, no server-side clerkMiddleware or FAPI proxy middleware, and `@clerk/*` + `http-proxy-middleware` deps were dropped from both artifacts.
+History: Clerk was ripped out on user demand (2026-07-05), then replaced the same day with the user's own canonical `server/auth.ts` (Google OAuth + passport + connect-pg-simple sessions), integrated verbatim into the API server. Later the same day the user demanded the course itself be login-gated: "THEY SIGN IN; THEN THEY SEE THE COURSE".
 
-**Why:** explicit user mandate. Even before removal the API had no per-route server authz (single-user app; Clerk gating was frontend-only), so nothing server-side lost protection.
+**Why:** explicit user mandates at each step. The canonical auth file must not be modified beyond the agreed adaptations (callback path, domains, logout return).
 
 **How to apply:**
-- `/` renders the Landing page directly; its CTA links straight to `/dashboard`. Every route is public by design — do not "fix" this.
-- "Admin mode" + `skipDetection` remain client-side `localStorage` flags, not a trust boundary — unchanged and intentional.
-- Do NOT re-add any login/auth without an explicit user request; the user's plan requires login to be absent.
-- The old clerk-wouter-auth memory was retired; don't resurrect its patterns unless auth returns.
+- Landing `/` is the ONLY public page. An `AuthGate` in the qr-course `App.tsx` blocks every other route behind Google sign-in; Landing CTAs point to login when signed out.
+- Gating is FRONTEND-ONLY by established project model — course API routes have no per-route server authz. Only `/api/admin/visits` is server-guarded (isAdmin, ADMIN_EMAIL johnmichaelkuczynski@gmail.com). Do not add server-side gating without user request.
+- "Admin mode" + `skipDetection` remain client-side localStorage flags, not a trust boundary — intentional.
+- To test authenticated flows end-to-end without a browser login: insert a session row into `user_sessions` (sess JSON `{cookie:…, passport:{user:<id>}}`), sign the sid with HMAC-SHA256(SESSION_SECRET) as `connect.sid=s%3A<sid>.<sig>`, curl through `localhost:80`; clean up test rows after (real visits data must be preserved).
