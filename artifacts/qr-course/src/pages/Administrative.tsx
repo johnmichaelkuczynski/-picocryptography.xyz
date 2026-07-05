@@ -180,7 +180,7 @@ export default function Administrative() {
     );
   }
 
-  if (result && result.status === 403) {
+  if (result && (result.status === 403 || result.status === 401)) {
     return (
       <Layout>
         <div className="p-8 max-w-lg">
