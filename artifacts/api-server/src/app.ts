@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import path from "node:path";
 import fs from "node:fs";
 import router from "./routes";
+import { setupAuth } from "./auth";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -31,6 +32,8 @@ app.use(
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+setupAuth(app);
 
 app.use("/api", router);
 
