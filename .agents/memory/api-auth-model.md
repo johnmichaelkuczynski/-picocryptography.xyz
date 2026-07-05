@@ -1,14 +1,16 @@
 ---
-name: API auth model (single-user)
-description: How the Ethics 101 API treats authentication/authorization — important before adding "protected" or "admin" endpoints.
+name: App auth model (none)
+description: The course app has NO authentication at all — login was deliberately ripped out at user request
 ---
 
-# API is single-user with no per-route server authz
+# The app is intentionally unauthenticated
 
-The api-server mounts `clerkMiddleware` (attaches auth context) but **routes do not gate on it** — no `userId` check, and submit/grade endpoints don't identify a user. The whole API is effectively callable without a session; Clerk gating lives only on the frontend (wouter `protectedComponent`).
+On 2026-07-05 the user demanded "RIP OUT ALL EXISTING LOGIN" (they have a follow-up plan requiring no login). Clerk was removed entirely: no ClerkProvider, no sign-in/sign-up routes, no protected-route HOC, no server-side clerkMiddleware or FAPI proxy middleware, and `@clerk/*` + `http-proxy-middleware` deps were dropped from both artifacts.
 
-**Why:** Ethics 101 is a single-user, self-paced course. The account owner is simultaneously the student and the "administrator." There is no second party to protect against, so detection/grading are self-imposed tooling, not a trust boundary.
+**Why:** explicit user mandate. Even before removal the API had no per-route server authz (single-user app; Clerk gating was frontend-only), so nothing server-side lost protection.
 
 **How to apply:**
-- "Admin mode" is intentionally a client-side `localStorage` flag (`lib/adminMode.ts`); `skipDetection` on submit and `/api/admin/grader-lab` are not server-authz'd by design — consistent with every other endpoint.
-- Do NOT assume any endpoint is protected server-side. If a future task genuinely needs a trust boundary (multi-user, cost abuse), that requires adding per-route Clerk authz across the whole API — a deliberate, in-scope architectural change, not a one-endpoint patch.
+- `/` renders the Landing page directly; its CTA links straight to `/dashboard`. Every route is public by design — do not "fix" this.
+- "Admin mode" + `skipDetection` remain client-side `localStorage` flags, not a trust boundary — unchanged and intentional.
+- Do NOT re-add any login/auth without an explicit user request; the user's plan requires login to be absent.
+- The old clerk-wouter-auth memory was retired; don't resurrect its patterns unless auth returns.
