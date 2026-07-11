@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -81,11 +81,6 @@ function SignInRequired() {
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { authenticated, isLoading } = useAuth();
-  const [location] = useLocation();
-
-  // The landing page stays public as the front door; everything else
-  // requires a Google sign-in.
-  if (location === "/") return <>{children}</>;
 
   if (isLoading) {
     return (
