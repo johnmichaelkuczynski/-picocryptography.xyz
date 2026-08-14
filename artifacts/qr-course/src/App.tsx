@@ -95,6 +95,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Ping the server once per page load so anonymous unique visitors are
+// counted (a long-lived cookie set by the server identifies the browser).
+if (typeof window !== "undefined") {
+  fetch(`${basePath}/api/track`, {
+    method: "POST",
+    credentials: "include",
+  }).catch(() => {});
+}
+
 function App() {
   return (
     <WouterRouter base={basePath}>

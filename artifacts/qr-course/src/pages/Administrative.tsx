@@ -32,6 +32,13 @@ interface VisitsResponse {
     lastMonth: number;
     lastYear: number;
   };
+  uniqueVisitors?: {
+    allTime: number;
+    last24Hours: number;
+    lastWeek: number;
+    lastMonth: number;
+    lastYear: number;
+  };
   series: {
     last24Hours: SeriesPoint[];
     lastMonth: SeriesPoint[];
@@ -208,7 +215,7 @@ export default function Administrative() {
     );
   }
 
-  const { stats, series, visits } = result.data;
+  const { stats, series, visits, uniqueVisitors } = result.data;
   const week = buildWeekSeries(visits);
 
   return (
@@ -225,6 +232,39 @@ export default function Administrative() {
           <KpiCard label="Last Month" value={stats.lastMonth} icon={CalendarRange} />
           <KpiCard label="Last Year" value={stats.lastYear} icon={CalendarClock} />
           <KpiCard label="All Time" value={stats.allTime} icon={InfinityIcon} />
+        </div>
+
+        <h2 className="text-lg font-serif font-bold mb-1">Unique visitors</h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          Distinct browsers/devices that opened the site — signed in or not.
+          Each device is counted once per time window.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          <KpiCard
+            label="Unique Last Day"
+            value={uniqueVisitors?.last24Hours ?? 0}
+            icon={Clock}
+          />
+          <KpiCard
+            label="Unique Last Week"
+            value={uniqueVisitors?.lastWeek ?? 0}
+            icon={CalendarDays}
+          />
+          <KpiCard
+            label="Unique Last Month"
+            value={uniqueVisitors?.lastMonth ?? 0}
+            icon={CalendarRange}
+          />
+          <KpiCard
+            label="Unique Last Year"
+            value={uniqueVisitors?.lastYear ?? 0}
+            icon={CalendarClock}
+          />
+          <KpiCard
+            label="Unique All Time"
+            value={uniqueVisitors?.allTime ?? 0}
+            icon={Users}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">

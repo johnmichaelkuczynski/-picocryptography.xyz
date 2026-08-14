@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { seedIfEmpty, seedReasoningPrimersIfMissing } from "./lib/seed";
 import { seedDiagnosticsIfEmpty } from "./lib/seedDiagnostics";
+import { storage } from "./storage";
 
 const rawPort = process.env["PORT"];
 
@@ -16,6 +17,12 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+storage
+  .ensureUniqueVisitorsTable()
+  .catch((err) =>
+    logger.error({ err }, "Failed to provision unique_visitors table"),
+  );
 
 seedIfEmpty()
   .then(() => seedReasoningPrimersIfMissing())

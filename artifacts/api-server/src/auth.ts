@@ -295,6 +295,65 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // --- Anonymous unique-visitor tracking (public, no auth) ---
+  // Every browser that loads the app pings this once per page load. A
+  // long-lived server-issued cookie identifies the browser, so each device
+  // is counted once. Hardening: client-supplied ids can only UPDATE an
+  // existing row (never insert), and new-visitor creation is rate-limited
+  // per IP so the count cannot be inflated by scripted requests.
+  const trackRate = new Map<string, { count: number; resetAt: number }>();
+  const TRACK_WINDOW_MS = 10 * 60 * 1000;
+  const TRACK_MAX_NEW_PER_WINDOW = 5;
+  app.post("/api/track", async (req, res) => {
+    try {
+      const cookieHeader = req.headers.cookie ?? "";
+      const match = /(?:^|;\s*)bam_vid=([A-Za-z0-9-]{10,64})/.exec(
+        cookieHeader,
+      );
+      const existingId = match?.[1];
+
+      if (existingId) {
+        // Update-only: unknown/forged ids are ignored.
+        await storage.touchUniqueVisitor(existingId);
+        res.json({ ok: true });
+        return;
+      }
+
+      // New visitor: rate-limit row creation per IP.
+      const ip = req.ip ?? "unknown";
+      const now = Date.now();
+      let bucket = trackRate.get(ip);
+      if (!bucket || bucket.resetAt <= now) {
+        bucket = { count: 0, resetAt: now + TRACK_WINDOW_MS };
+        trackRate.set(ip, bucket);
+        if (trackRate.size > 10000) {
+          for (const [k, v] of trackRate) {
+            if (v.resetAt <= now) trackRate.delete(k);
+          }
+        }
+      }
+      if (bucket.count >= TRACK_MAX_NEW_PER_WINDOW) {
+        res.status(429).json({ ok: false });
+        return;
+      }
+      bucket.count++;
+
+      const visitorId = crypto.randomUUID();
+      res.cookie("bam_vid", visitorId, {
+        maxAge: 2 * 365 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      });
+      await storage.createUniqueVisitor(visitorId);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("Visitor tracking error:", err);
+      res.status(200).json({ ok: false });
+    }
+  });
+
   // --- Admin: visitor analytics (restricted to the site owner) ---
   app.get("/api/admin/visits", isAdmin, async (_req, res) => {
     try {
@@ -303,9 +362,10 @@ export function setupAuth(app: Express) {
       const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
       const yearAgo = new Date(now - 365 * 24 * 60 * 60 * 1000);
 
-      const [visitList, allTimestamps] = await Promise.all([
+      const [visitList, allTimestamps, uniqueVisitors] = await Promise.all([
         storage.getVisits(500),
         storage.getVisitTimestampsSince(null),
+        storage.countUniqueVisitors(),
       ]);
 
       const times = allTimestamps.map((t) => new Date(t).getTime());
@@ -351,6 +411,7 @@ export function setupAuth(app: Express) {
 
       res.json({
         stats,
+        uniqueVisitors,
         series,
         visits: visitList.map((v) => ({
           id: v.id,
