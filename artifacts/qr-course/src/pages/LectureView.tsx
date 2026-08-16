@@ -33,7 +33,7 @@ export default function LectureView() {
   const { data: lecture, isLoading } = useGetLecture(lectureId);
   const { data: week } = useGetWeek(lecture?.weekNumber ?? 1);
 
-  // Adjacent lectures within the unit, so the reader can move straight to the
+  // Adjacent lectures within the day, so the reader can move straight to the
   // next/previous lecture without going back to the dashboard.
   const { prevLecture, nextLecture } = useMemo(() => {
     const list = week?.lectures ?? [];
@@ -248,7 +248,7 @@ export default function LectureView() {
         <Link href={lecture ? `/weeks/${lecture.weekNumber}` : "/"}>
           <Button variant="ghost" className="-ml-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Unit {lecture?.weekNumber ?? ""}
+            Back to Day {lecture?.weekNumber ?? ""}
           </Button>
         </Link>
       </div>
@@ -272,7 +272,7 @@ export default function LectureView() {
                 </h1>
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Unit {lecture.weekNumber}
+                    Day {lecture.weekNumber}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="inline-flex rounded-md border border-border overflow-hidden text-xs">

@@ -214,7 +214,7 @@ export default function Diagnostics() {
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Uses OpenAI to independently re-derive the answer to a sample of course
-                problems across every unit and verify that each seeded answer key is a
+                problems across the entire course and verify that each seeded answer key is a
                 legitimate, correct, and unambiguous answer to its prompt. Any key the model
                 judges wrong, off-topic, or ambiguous is flagged before a student is ever
                 graded against it. Each review is an LLM call, so this can take a minute.

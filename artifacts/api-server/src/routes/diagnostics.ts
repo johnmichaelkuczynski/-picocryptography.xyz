@@ -540,7 +540,7 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
     steps.push(
       // eslint-disable-next-line no-loop-func
       await run(
-        `${p.assignmentTitle} (unit ${p.weekNumber}, ${p.kind}): "${p.prompt.slice(0, 80)}${
+        `${p.assignmentTitle} (day ${p.weekNumber}, ${p.kind}): "${p.prompt.slice(0, 80)}${
           p.prompt.length > 80 ? "…" : ""
         }"`,
         async () => {

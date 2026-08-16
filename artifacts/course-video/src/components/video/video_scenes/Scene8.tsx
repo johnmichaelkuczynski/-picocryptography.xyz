@@ -4,10 +4,8 @@ import { AppShell } from '../AppShell';
 
 export function Scene8() {
   const topicsList = [
-    { name: 'Vectors & Embeddings', acc: '98%', status: 'Strong', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10' },
-    { name: 'Dot Product & Distance', acc: '92%', status: 'Strong', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10' },
-    { name: 'Matrices', acc: '75%', status: 'Developing', color: 'text-[#FBBF24]', bg: 'bg-[#FBBF24]/10' },
-    { name: 'Gradients & Slopes', acc: '45%', status: 'Weak', color: 'text-[#EF4444]', bg: 'bg-[#EF4444]/10' },
+    { name: 'Numbers as meaning', acc: '98%', status: 'Strong', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10' },
+    { name: 'How AI learns', acc: '75%', status: 'Developing', color: 'text-[#FBBF24]', bg: 'bg-[#FBBF24]/10' },
   ];
 
   return (

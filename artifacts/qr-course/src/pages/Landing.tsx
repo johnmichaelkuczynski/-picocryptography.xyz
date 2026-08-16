@@ -73,7 +73,7 @@ const features = [
   {
     icon: ClipboardCheck,
     title: "AI-Graded Work",
-    body: "Homework, a unit test, and a final — each with written feedback.",
+    body: "Homework, a course test, and a final — each with written feedback.",
   },
   {
     icon: ShieldCheck,
@@ -82,20 +82,14 @@ const features = [
   },
   {
     icon: BarChart3,
-    title: "One Unit, 8 Topics",
+    title: "One Intensive Day, 2 Topics",
     body: "From why AI is really math all the way to how it teaches itself.",
   },
 ];
 
 const topics = [
-  { n: "1.1", title: "Why AI is really math (the idea behind the machine)" },
-  { n: "1.2", title: "Numbers as meaning: vectors and embeddings" },
-  { n: "1.3", title: "Measuring likeness: the dot product and distance" },
-  { n: "1.4", title: "Matrices: how a network moves information" },
-  { n: "1.5", title: "Slopes and gradients: which way is better?" },
-  { n: "1.6", title: "Gradient descent: learning by rolling downhill" },
-  { n: "1.7", title: "Probability: how AI handles uncertainty and guesses" },
-  { n: "1.8", title: "Backpropagation: how the whole thing teaches itself (Capstone)" },
+  { n: "1.1", title: "Numbers as meaning: why AI is really math" },
+  { n: "1.2", title: "How AI learns: from matrices to backpropagation" },
 ];
 
 function CourseEntryButton({
@@ -152,14 +146,14 @@ export default function Landing() {
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-medium mb-6">
             <BarChart3 className="w-3.5 h-3.5" />
-            A focused, one-unit course on the mathematics behind AI
+            A focused, one-day intensive course on the mathematics behind AI
           </div>
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-5">
             AI isn't magic — it's mathematics. Learn how it really works.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             A rigorous, self-paced course that teaches, tutors, drills, and grades
-            you on the mathematics behind modern AI — eight topics from vectors to
+            you on the mathematics behind modern AI — two topics from vectors to
             backpropagation, each built up from first principles for newcomers to
             the discipline.
           </p>
@@ -202,7 +196,7 @@ export default function Landing() {
             Topics Covered in This Course
           </h2>
           <p className="text-center text-sm text-muted-foreground mb-6">
-            One unit, eight topics — every lecture readable free online, or{" "}
+            One intensive day, two topics — every lecture readable free online, or{" "}
             <a href={pdfUrl} className="underline hover:text-foreground" data-testid="link-download-pdf">
               download the course as a PDF
             </a>{" "}

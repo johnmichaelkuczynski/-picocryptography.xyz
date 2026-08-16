@@ -171,7 +171,7 @@ export default function TopicPractice() {
           </h1>
           {topic && (
             <div className="text-sm text-muted-foreground">
-              Unit {topic.weekNumber} · {topic.attempts} prior attempt
+              Day {topic.weekNumber} · {topic.attempts} prior attempt
               {topic.attempts === 1 ? "" : "s"} · {topic.accuracy}% accuracy ·{" "}
               <span className="uppercase tracking-wider font-semibold">
                 {topic.strengthLabel}

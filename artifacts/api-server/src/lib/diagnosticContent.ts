@@ -92,21 +92,21 @@ const SUBJECT_SPECS: Record<Phase, GenSpec> = {
   },
   third: {
     level:
-      "Early course level: covers roughly the first third of the unit. Plain language, short realistic cases, no calculations.",
+      "Early course level: covers roughly the first third of the one-day course. Plain language, short realistic cases, no calculations.",
     topicFocus:
-      "Topics 1.1-1.3: AI is really math (inputs become numbers; weights are tunable numbers; learning adjusts them; math not magic); vectors and embeddings (a vector is a list of numbers acting as a location, an embedding places similar-meaning things near each other so nearness IS meaning, and directions can carry meaning like king-man+woman≈queen); and measuring likeness (distance is how far apart two vectors are, the dot product checks whether they point the same way, cosine similarity ignores size — used for search and recommendations).",
+      "Most of session 1.1 (Numbers as meaning): AI is really math (inputs become numbers; weights are tunable numbers; learning adjusts them; math not magic); vectors and embeddings (a vector is a list of numbers acting as a location, an embedding places similar-meaning things near each other so nearness IS meaning, and directions can carry meaning like king-man+woman≈queen); and measuring likeness (small distance or a large dot product between vectors signals similarity, as used by search and recommendations).",
   },
   twothirds: {
     level:
-      "Mid course level: covers roughly the first two-thirds of the unit. Realistic short cases requiring a step of reasoning, no calculations.",
+      "Mid course level: covers roughly the first two-thirds of the one-day course. Realistic short cases requiring a step of reasoning, no calculations.",
     topicFocus:
-      "Topics 1.1-1.6: AI as math, vectors/embeddings, and measuring likeness, PLUS matrices (a grid of numbers that reshapes a vector by taking weighted blends of inputs, so one layer of a network is a matrix and stacking them moves information), slopes and gradients (a loss measures how wrong the model is, and the gradient is the per-dial slope pointing uphill toward more error, so you move the opposite way), and gradient descent (learning by repeatedly stepping downhill on the error landscape, where the learning-rate step size matters and you can get stuck in local valleys).",
+      "All of session 1.1 plus the start of session 1.2: AI as math, vectors/embeddings, and measuring likeness (distance is how far apart two vectors are, the dot product checks whether they point the same way, cosine similarity ignores size — used for search and recommendations), PLUS matrices (a grid of numbers that reshapes a vector by taking weighted blends of inputs, so one layer of a network is a matrix and stacking them moves information), slopes and gradients (a loss measures how wrong the model is, and the gradient is the per-dial slope pointing uphill toward more error, so you move the opposite way), and gradient descent (learning by repeated small downhill steps on the error landscape, where the learning-rate step size matters — too big and the model overshoots and bounces).",
   },
   after: {
     level:
-      "End-of-course level: covers the whole unit. Integrative short cases that apply more than one idea, no calculations.",
+      "End-of-course level: covers the whole one-day course. Integrative short cases that apply more than one idea, no calculations.",
     topicFocus:
-      "The full unit, topics 1.1-1.8: AI as math, vectors/embeddings, measuring likeness, matrices, slopes/gradients, and gradient descent, PLUS probability (AI assigns probabilities rather than knowing facts, a chatbot predicts the next word, confidence reflects pattern-fit not truth so it can be confidently wrong, and a little randomness/'temperature' adds variety) and backpropagation (the self-teaching loop: a forward pass guesses, the loss scores the error, blame is passed backward to give each weight a gradient, gradient descent nudges them, repeated millions of times).",
+      "The full one-day course, sessions 1.1-1.2: AI as math, vectors/embeddings, measuring likeness, matrices, slopes/gradients, and gradient descent (learning by repeatedly stepping downhill on the error landscape, where the learning-rate step size matters and you can get stuck in local valleys), PLUS probability (AI assigns probabilities rather than knowing facts, a chatbot predicts the next word, confidence reflects pattern-fit not truth so it can be confidently wrong, and a little randomness/'temperature' adds variety) and backpropagation (the self-teaching loop: a forward pass guesses, the loss scores the error, blame is passed backward to give each weight a gradient, gradient descent nudges them, repeated millions of times).",
   },
 };
 
@@ -194,7 +194,7 @@ const SUBJECT_BEFORE: DiagItem[] = [
   },
   {
     prompt:
-      "Which description is most central to what this course says an AI really is?",
+      "A product demo shows one AI system captioning photos, answering questions, and composing music. According to this course, what is actually going on inside it in every one of those cases?",
     options: [
       "A system doing huge amounts of arithmetic on lists of numbers",
       "A private library storing every fact ever written",
@@ -319,7 +319,7 @@ const SUBJECT_AFTER: DiagItem[] = [
   },
   {
     prompt:
-      "A commentator says, 'AI literally understands and knows the truth — it's a digital mind.' Drawing on the unit, the strongest criticism is that:",
+      "A commentator says, 'AI literally understands and knows the truth — it's a digital mind.' Drawing on the course, the strongest criticism is that:",
     options: [
       "AI is arithmetic on numbers that assigns probabilities; it has no real understanding and can be confidently wrong",
       "AI really is a conscious mind, so the claim is fine",
@@ -379,7 +379,7 @@ const GENERAL_BLUEPRINT: DiagItem[] = [
   },
   {
     prompt:
-      "'If it rained, the streets are wet. The streets are not wet.' What necessarily follows?",
+      "A neighbor insists it rained overnight. You know that if it had rained, the streets would be wet — and stepping outside, you see the streets are not wet. What necessarily follows?",
     options: [
       "It did not rain.",
       "It rained.",

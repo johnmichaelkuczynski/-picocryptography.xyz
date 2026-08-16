@@ -88,7 +88,7 @@ export default function Analytics() {
                       <thead className="bg-secondary/50 text-muted-foreground text-left">
                         <tr>
                           <th className="p-3 font-medium">Topic</th>
-                          <th className="p-3 font-medium">Unit</th>
+                          <th className="p-3 font-medium">Day</th>
                           <th className="p-3 font-medium text-right">Attempts</th>
                           <th className="p-3 font-medium text-right">Accuracy</th>
                           <th className="p-3 font-medium text-center">Status</th>
@@ -109,7 +109,7 @@ export default function Analytics() {
                                 <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
                             </td>
-                            <td className="p-3 text-muted-foreground">Unit {topic.weekNumber}</td>
+                            <td className="p-3 text-muted-foreground">Day {topic.weekNumber}</td>
                             <td className="p-3 text-right">{topic.attempts}</td>
                             <td className="p-3 text-right font-mono">{topic.accuracy}%</td>
                             <td className="p-3 text-center">

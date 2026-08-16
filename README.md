@@ -2,17 +2,17 @@
 
 **A rigorous, self-paced introduction to the mathematics behind modern AI that teaches, tutors, drills, and grades itself — built for researchers and professionals entering the field.**
 
-Basic AI Math is a self-paced, single-user web course on the mathematics behind artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. A complete one-unit curriculum builds the subject from first principles, one idea at a time: how AI is, underneath, numbers and arithmetic at scale, from turning words into vectors to teaching a network through backpropagation.
+Basic AI Math is a self-paced, single-user web course on the mathematics behind artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. A complete one-day intensive curriculum builds the subject from first principles, one idea at a time: how AI is, underneath, numbers and arithmetic at scale, from turning words into vectors to teaching a network through backpropagation.
 
 ---
 
 ## ✨ Features
 
-- **One unit, 8 topics** — a complete syllabus: why AI is really math · numbers as meaning (vectors and embeddings) · measuring likeness (the dot product and distance) · matrices (how a network moves information) · slopes and gradients · gradient descent · probability · backpropagation (the capstone).
+- **One intensive day, 2 topics** — a complete condensed syllabus in two sessions: 1.1 Numbers as meaning — why AI is really math (numbers, weights, vectors and embeddings, measuring likeness with the dot product and distance) · 1.2 How AI learns — from matrices to backpropagation (matrices, loss and gradients, gradient descent, probability, backpropagation).
 - **Three-depth lessons** — every lesson reads at **Short / Medium / Long** length, AI-rewritten while keeping the same examples and learning objectives.
 - **Section-scoped AI tutor** — ask about the exact paragraph you're reading; answers stream back token-by-token, grounded in that lecture section.
 - **Adaptive practice** — generated problem sets that get harder on a streak and ease off after a miss; per-session difficulty persists. Every question asks you to reason about a concrete scenario, not to recite.
-- **AI-graded assignments** — two homework sets, a timed unit test, and a cumulative final, each scored for semantic equivalence with a written rationale and a rolled-up percent score.
+- **AI-graded assignments** — two homework sets, a timed course test, and a cumulative final, each scored for semantic equivalence with a written rationale and a rolled-up percent score.
 - **Two-layer AI-authorship detection** — every submission is screened by a static text classifier (GPTZero) **and** a diachronic keystroke-pattern detector, each with a human-readable verdict.
 - **Diagnostic reasoning checks** — two ungraded instruments (AI-math subject reasoning and General Reasoning), each offered in three formats and three lengths, at four points in the journey (before, one-third, two-thirds, and after the course). They are unlimited practice with fresh questions every attempt and never affect the grade (coursework is 100%).
 - **Live analytics** — dashboard KPIs (attempts, accuracy, streak), per-topic mastery, and a recent-activity feed.

@@ -21,9 +21,9 @@ const router: IRouter = Router();
 
 const WEEK_TITLES: Record<number, { title: string; summary: string }> = {
   1: {
-    title: "Basic AI Math: The Math Behind the Machine",
+    title: "Basic AI Math: A One-Day Intensive",
     summary:
-      "What the math behind AI really is and why a chatbot's reply is just numbers and arithmetic at huge scale, how words and images become lists of numbers (vectors and embeddings), how AI measures likeness with the dot product and distance, how matrices move information through a network, what slopes and gradients tell us, how gradient descent learns by rolling downhill, how probability lets AI handle uncertainty, and how backpropagation ties it all together — each idea built up from first principles, one step at a time.",
+      "One intensive day, two sessions. The morning session covers what the math behind AI really is — why a chatbot's reply is just numbers and arithmetic at huge scale, how words become vectors and embeddings so meaning is a location in space, and how AI measures likeness with distance and the dot product. The afternoon session covers how AI learns — matrices moving information through a network, loss and gradients, gradient descent, probability and uncertainty, and backpropagation tying the whole learning loop together.",
   },
 };
 
@@ -447,7 +447,7 @@ router.get("/course/download-pdf", async (_req, res) => {
       .fontSize(11)
       .fillColor("#555555")
       .text(
-        "Short lectures for all eight topics, with sample homework problems and exam questions.",
+        "Both session lectures of the one-day intensive, with sample homework problems and exam questions.",
         { align: "center" },
       );
     doc.fillColor("black");

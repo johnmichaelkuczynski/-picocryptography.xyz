@@ -35,6 +35,7 @@ export function Scene5() {
       }, 150); // streaming speed
       return () => clearInterval(aInterval);
     }
+    return undefined;
   }, [phase]);
 
   return (

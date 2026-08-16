@@ -8,15 +8,15 @@ Basic AI Math — AI-Powered Course
 
 ## 📝 Description (paste into YouTube)
 
-**Basic AI Math** is a rigorous, self-paced course on the mathematics behind modern artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. It builds the subject from first principles for anyone entering the field: a complete one-unit curriculum that explains how AI is, underneath, numbers and arithmetic at scale — from turning words into vectors all the way to backpropagation.
+**Basic AI Math** is a rigorous, self-paced course on the mathematics behind modern artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. It builds the subject from first principles for anyone entering the field: a complete one-day intensive curriculum that explains how AI is, underneath, numbers and arithmetic at scale — from turning words into vectors all the way to backpropagation.
 
 In this video you'll see the whole course in action:
 
-🔎 Eight topics — from "why AI is really math" all the way to "backpropagation: how the whole thing teaches itself"
+🔎 One intensive day, two topics — from "numbers as meaning: why AI is really math" to "how AI learns: from matrices to backpropagation"
 📖 Three-depth lessons — read any topic Short, Medium, or Long, the same ideas at the depth you want
 💬 A section-scoped AI tutor that answers questions about the exact paragraph you're reading
 🎯 Adaptive practice that gets harder when you're on a streak and eases off when you're stuck
-📝 AI-graded homework, a unit test, and a final — each with real written feedback
+📝 AI-graded homework, a course test, and a final — each with real written feedback
 🛡️ Two-layer AI-authorship detection on every answer you submit (a text classifier AND a keystroke-pattern detector)
 
 Built for researchers and professionals entering the discipline, instructors evaluating AI-taught coursework, and academic-integrity researchers studying how AI authorship can be detected.

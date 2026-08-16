@@ -24,7 +24,7 @@ export default function WeekView() {
           </div>
         ) : (
           <div>
-            <h1 className="text-3xl font-serif font-bold text-primary mb-2">Unit {week?.weekNumber}: {week?.title}</h1>
+            <h1 className="text-3xl font-serif font-bold text-primary mb-2">Day {week?.weekNumber}: {week?.title}</h1>
             <p className="text-lg text-muted-foreground">{week?.summary}</p>
           </div>
         )}
@@ -34,7 +34,7 @@ export default function WeekView() {
           {isLoading ? (
             <Skeleton className="h-24 w-full" />
           ) : week?.lectures.length === 0 ? (
-            <div className="text-muted-foreground">No lectures for this unit.</div>
+            <div className="text-muted-foreground">No lectures for this day.</div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
               {week?.lectures.map(lecture => (
@@ -60,7 +60,7 @@ export default function WeekView() {
           {isLoading ? (
             <Skeleton className="h-32 w-full" />
           ) : week?.assignments.length === 0 ? (
-            <div className="text-muted-foreground">No assignments for this unit.</div>
+            <div className="text-muted-foreground">No assignments for this day.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {week?.assignments.map(item => (
