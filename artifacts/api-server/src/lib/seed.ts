@@ -14,7 +14,7 @@ import { logger } from "./logger";
 // the value stored in seed_meta; a mismatch forces a full re-seed, so content
 // edits self-heal in every environment (including a republished production)
 // without a manual database wipe.
-const SEED_CONTENT_VERSION = "2026-08-15-basic-ai-math-one-day-v3";
+const SEED_CONTENT_VERSION = "2026-08-15-ai-math-level-1-v1";
 
 type SeedTopic = {
   slug: string;
@@ -26,7 +26,7 @@ type SeedTopic = {
 };
 
 const TOPICS: SeedTopic[] = [
-  // Day 1 — Basic AI Math: a one-day intensive on the math behind the machine
+  // Day 1 — AI Math Level 1: a one-day intensive on the math behind the machine
   {
     slug: "numbers-as-meaning",
     title: "Numbers as meaning",
@@ -177,7 +177,7 @@ const ASSIGNMENTS: SeedAssignment[] = [
   },
   {
     kind: "test",
-    title: "Course Test — Basic AI Math: The Math Behind the Machine",
+    title: "Course Test — AI Math Level 1: The Math Behind the Machine",
     weekNumber: 1,
     isTimed: true,
     timeLimitMinutes: 15,
@@ -215,7 +215,7 @@ const ASSIGNMENTS: SeedAssignment[] = [
   },
   {
     kind: "final",
-    title: "Final — Basic AI Math: The Math Behind the Machine",
+    title: "Final — AI Math Level 1: The Math Behind the Machine",
     weekNumber: 1,
     isTimed: true,
     timeLimitMinutes: 25,
@@ -415,7 +415,7 @@ export async function seedIfEmpty(): Promise<void> {
     const row = (existing.rows[0] ?? {}) as { n?: number };
     if ((row.n ?? 0) > 0) {
       logger.warn(
-        "Seed: stale course content detected — replacing with the Basic AI Math one-day curriculum",
+        "Seed: stale course content detected — replacing with the AI Math Level 1 one-day curriculum",
       );
       await tx.execute(
         sql`TRUNCATE TABLE answers, attempts, practice_attempts, practice_problems, practice_sessions, problems, assignments, lectures, topics, diagnostic_responses, diagnostic_attempts, diagnostic_items, diagnostic_assessments RESTART IDENTITY CASCADE`,

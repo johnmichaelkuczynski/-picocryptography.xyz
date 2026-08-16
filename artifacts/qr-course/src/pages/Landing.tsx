@@ -121,7 +121,7 @@ export default function Landing() {
             <Search className="w-4 h-4" />
           </div>
           <span className="font-serif font-semibold text-lg tracking-tight">
-            Basic AI Math
+            AI Math Level 1
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        Basic AI Math
+        AI Math Level 1
       </footer>
     </div>
   );

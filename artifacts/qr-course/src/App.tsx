@@ -71,7 +71,7 @@ function LoginRequiredModal() {
             <Search className="w-5 h-5" />
           </div>
           <span className="font-serif font-semibold text-xl tracking-tight">
-            Basic AI Math
+            AI Math Level 1
           </span>
         </div>
         <h1 className="text-lg font-serif font-bold mb-2">

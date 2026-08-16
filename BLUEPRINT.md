@@ -1,12 +1,12 @@
-# Basic AI Math — App Blueprint
+# AI Math Level 1 — App Blueprint
 
-A complete architectural blueprint for the Basic AI Math one-day intensive intro course on the math behind AI. This document is the single reference for what the app does, how it's wired, and the contracts between pieces. For day-to-day commands and gotchas see `replit.md`.
+A complete architectural blueprint for the AI Math Level 1 one-day intensive intro course on the math behind AI. This document is the single reference for what the app does, how it's wired, and the contracts between pieces. For day-to-day commands and gotchas see `replit.md`.
 
 ---
 
 ## 1. Product summary
 
-Basic AI Math is a self-paced, single-user, no-login web course covering a one-day intensive, plain-language intro to the math behind artificial intelligence (2 topics across two sessions, from "why AI is really math" through backpropagation). Students read AI-rewritten lecture notes at three lengths, ask an AI tutor scoped to the section they're reading, drill on adaptive practice problems, and submit homework / a course test / a final that are AI-graded and AI-detection-screened.
+AI Math Level 1 is a self-paced, single-user, no-login web course covering a one-day intensive, plain-language intro to the math behind artificial intelligence (2 topics across two sessions, from "why AI is really math" through backpropagation). Students read AI-rewritten lecture notes at three lengths, ask an AI tutor scoped to the section they're reading, drill on adaptive practice problems, and submit homework / a course test / a final that are AI-graded and AI-detection-screened.
 
 The product surface is two deployable artifacts in one pnpm monorepo:
 

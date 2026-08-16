@@ -1,14 +1,14 @@
-# YouTube — Basic AI Math
+# YouTube — AI Math Level 1
 
 ## 🎬 Title
 
-Basic AI Math — AI-Powered Course
+AI Math Level 1 — AI-Powered Course
 
 ---
 
 ## 📝 Description (paste into YouTube)
 
-**Basic AI Math** is a rigorous, self-paced course on the mathematics behind modern artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. It builds the subject from first principles for anyone entering the field: a complete one-day intensive curriculum that explains how AI is, underneath, numbers and arithmetic at scale — from turning words into vectors all the way to backpropagation.
+**AI Math Level 1** is a rigorous, self-paced course on the mathematics behind modern artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. It builds the subject from first principles for anyone entering the field: a complete one-day intensive curriculum that explains how AI is, underneath, numbers and arithmetic at scale — from turning words into vectors all the way to backpropagation.
 
 In this video you'll see the whole course in action:
 
@@ -30,7 +30,7 @@ A complete curriculum, an AI tutor, an AI grader, and an integrity check — in 
 0:00 Inside the machine's mind
 0:08 What the course is
 0:20 The AI tutor, lessons & adaptive practice
-0:35 Basic AI Math
+0:35 AI Math Level 1
 
 ---
 

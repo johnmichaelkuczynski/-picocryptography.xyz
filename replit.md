@@ -1,4 +1,4 @@
-# 🔎 Basic AI Math
+# 🔎 AI Math Level 1
 
 **A Rigorous, One-Day Intensive Introduction to the Mathematics Behind Modern AI That Teaches, Tutors, and Proofs Itself — Built for Researchers and Professionals Entering the Field**
 
@@ -6,13 +6,13 @@
 
 ## 🧩 Overview
 
-Basic AI Math is a self-paced, single-user web course on the mathematics behind artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. A complete one-day intensive curriculum builds the subject from first principles, one idea at a time, rather than leaning on heavy formulas.
+AI Math Level 1 is a self-paced, single-user web course on the mathematics behind artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. A complete one-day intensive curriculum builds the subject from first principles, one idea at a time, rather than leaning on heavy formulas.
 
 It turns the question *how does a chatbot actually work?* into one product: read each lesson at the depth you want, ask a tutor scoped to the exact section you're on, drill questions whose difficulty adapts to you in real time, and submit homework, a course test, and a final that are AI-graded with feedback and screened for AI-generated answers. The material is concrete and built up step by step — it explains how AI is, underneath, numbers and arithmetic at huge scale, from turning words into vectors to teaching a network through backpropagation.
 
 The curriculum is organized into **one intensive day with 2 topics** (two sessions): 1.1 Numbers as meaning — why AI is really math (everything becomes numbers, weights, vectors and embeddings, measuring likeness with the dot product and distance); and 1.2 How AI learns — from matrices to backpropagation (matrices, loss and gradients, gradient descent, probability, backpropagation).
 
-Designed for **researchers and professionals entering the discipline, instructors evaluating AI-taught coursework, and researchers studying AI academic integrity**, Basic AI Math pairs a real curriculum with two layers of AI-authorship detection — surfacing not just *whether* the writing looks AI-generated, but whether the *act of producing it* did.
+Designed for **researchers and professionals entering the discipline, instructors evaluating AI-taught coursework, and researchers studying AI academic integrity**, AI Math Level 1 pairs a real curriculum with two layers of AI-authorship detection — surfacing not just *whether* the writing looks AI-generated, but whether the *act of producing it* did.
 
 ---
 
@@ -57,11 +57,11 @@ Designed for **researchers and professionals entering the discipline, instructor
 
 ## 💡 Core Idea
 
-Basic AI Math reframes an AI-taught course as a *closed accountability loop*.
+AI Math Level 1 reframes an AI-taught course as a *closed accountability loop*.
 
 It doesn't just teach the material and grade the homework — it **teaches**, **tutors**, **drills**, **grades**, **detects misuse**, and **proves the whole pipeline still works** with a single click. The result is a self-paced course that students can actually trust to be fair, and that instructors can actually trust to be honest.
 
-**Basic AI Math — where the curriculum, the tutor, the grader, and the integrity check all live in one room.**
+**AI Math Level 1 — where the curriculum, the tutor, the grader, and the integrity check all live in one room.**
 
 ---
 
@@ -72,4 +72,4 @@ It doesn't just teach the material and grade the homework — it **teaches**, **
 - **App name** must always be the most literal, utilitarian name possible (e.g. "Data Analytics", "Ethics", "Formal Logic", "Basic AI") — **never** goofy, funny, or cute. Use that name consistently in the README, the video, and everywhere else relevant.
 - **No "fun" blurbs or "cool" marketing slogans — EVER.** All user-facing copy (landing page, dashboard, footers, badges, headlines) must be plain and descriptive, stating what the course is and covers. No witty taglines, no "AI isn't magic" style hooks, no clever footer lines.
 - **Topics list configuration**: the "Topics Covered in This Course" list must appear as a small vertical left-hand rail (top-left, small font, no unit/week/number meta-markers) on BOTH the landing page and the dashboard, with Download Course (PDF/TXT) buttons beneath it.
-- **YouTube description title** must ALWAYS follow exactly the format `<App Name> — AI-Powered Course` (e.g. "Basic AI Math — AI-Powered Course"). No extra descriptors, taglines, or "options" — just `<App Name> — AI-Powered Course`.
+- **YouTube description title** must ALWAYS follow exactly the format `<App Name> — AI-Powered Course` (e.g. "AI Math Level 1 — AI-Powered Course"). No extra descriptors, taglines, or "options" — just `<App Name> — AI-Powered Course`.

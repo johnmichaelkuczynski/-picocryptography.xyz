@@ -21,7 +21,7 @@ const router: IRouter = Router();
 
 const WEEK_TITLES: Record<number, { title: string; summary: string }> = {
   1: {
-    title: "Basic AI Math: A One-Day Intensive",
+    title: "AI Math Level 1: A One-Day Intensive",
     summary:
       "One intensive day, two sessions. The morning session covers what the math behind AI really is — why a chatbot's reply is just numbers and arithmetic at huge scale, how words become vectors and embeddings so meaning is a location in space, and how AI measures likeness with distance and the dot product. The afternoon session covers how AI learns — matrices moving information through a network, loss and gradients, gradient descent, probability and uncertainty, and backpropagation tying the whole learning loop together.",
   },
@@ -112,7 +112,7 @@ router.get("/course/overview", async (_req, res) => {
 
   res.json(
     GetCourseOverviewResponse.parse({
-      title: "Basic AI Math",
+      title: "AI Math Level 1",
       weeks,
       totals: { assignmentsCompleted, assignmentsTotal, practiceCount },
     }),
@@ -470,7 +470,7 @@ router.get("/course/download-txt", async (_req, res) => {
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="basic-ai-math-course.txt"',
+      'attachment; filename="ai-math-level-1-course.txt"',
     );
     res.send(lines.join("\n"));
   } catch (err) {
@@ -489,14 +489,14 @@ router.get("/course/download-pdf", async (_req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="basic-ai-math-course.pdf"',
+      'attachment; filename="ai-math-level-1-course.pdf"',
     );
 
     const doc = new PDFDocument({ margin: 54, bufferPages: true });
     doc.pipe(res);
 
     // Title page
-    doc.font("Times-Bold").fontSize(30).text("Basic AI Math", { align: "center" });
+    doc.font("Times-Bold").fontSize(30).text("AI Math Level 1", { align: "center" });
     doc.moveDown(0.5);
     doc
       .font("Times-Roman")
