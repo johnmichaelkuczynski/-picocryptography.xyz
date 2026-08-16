@@ -1,16 +1,12 @@
 ---
-name: App auth model (Google OAuth, frontend-gated)
-description: Course app uses the user's canonical Google OAuth server file; the whole course is gated behind sign-in on the FRONTEND only
+name: App auth model
+description: Access policy for the course app — public browsing with a metered anonymous AI preview; Google login enforced server-side, never by a frontend gate.
 ---
 
-# Auth model: Google OAuth, frontend gating
+# App auth model
 
-History: Clerk was ripped out on user demand (2026-07-05), then replaced the same day with the user's own canonical `server/auth.ts` (Google OAuth + passport + connect-pg-simple sessions), integrated verbatim into the API server. Later the same day the user demanded the course itself be login-gated: "THEY SIGN IN; THEN THEY SEE THE COURSE".
-
-**Why:** explicit user mandates at each step. The canonical auth file must not be modified beyond the agreed adaptations (callback path, domains, logout return).
-
-**How to apply:**
-- Landing `/` is the ONLY public page. An `AuthGate` in the qr-course `App.tsx` blocks every other route behind Google sign-in; Landing CTAs point to login when signed out.
-- Gating is FRONTEND-ONLY by established project model — course API routes have no per-route server authz. Only `/api/admin/visits` is server-guarded (isAdmin, ADMIN_EMAIL johnmichaelkuczynski@gmail.com). Do not add server-side gating without user request.
-- "Admin mode" + `skipDetection` remain client-side localStorage flags, not a trust boundary — intentional.
-- To test authenticated flows end-to-end without a browser login: insert a session row into `user_sessions` (sess JSON `{cookie:…, passport:{user:<id>}}`), sign the sid with HMAC-SHA256(SESSION_SECRET) as `connect.sid=s%3A<sid>.<sig>`, curl through `localhost:80`; clean up test rows after (real visits data must be preserved).
+- OWNER MANDATE (reversal of the earlier "nothing visible without login" rule): NO frontend login wall. Every page, including lectures, is browsable signed-out.
+- Anonymous visitors get a small free AI preview (~two paragraphs of generated output); once exhausted, AI-generating endpoints return 401 `login_required` and the client shows a dismissible Google sign-in prompt. Reading remains free.
+- **Why:** owner wants crawlers to index content and visitors to try the app; login is forced only after real AI cost is incurred.
+- **How to apply:** never reintroduce a blanket frontend auth gate. Any NEW AI-generating endpoint must be covered by the anonymous metering middleware — watch for AI work hidden behind GET routes, which default-skip the meter unless explicitly listed.
+- A public course PDF download (no auth, no AI) is part of the marketing surface; the PDF library must stay external in the server bundle or its font pipeline breaks at runtime.

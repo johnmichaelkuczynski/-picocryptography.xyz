@@ -88,6 +88,39 @@ export const storage = {
         hits integer not null default 1
       )
     `);
+    await db.execute(sql`
+      alter table unique_visitors
+        add column if not exists ai_tokens integer not null default 0
+    `);
+  },
+
+  // --- Anonymous AI usage metering (free preview before forced login) ---
+  // Atomically reserve an allowance BEFORE any AI work: the update only
+  // succeeds while the visitor is under the limit, so concurrent requests
+  // cannot all slip past the check, and unregistered/forged visitor ids
+  // (no row) are rejected outright.
+  async reserveAnonAiTokens(
+    visitorId: string,
+    reserve: number,
+    limit: number,
+  ): Promise<boolean> {
+    const r = await db.execute(
+      sql`update unique_visitors
+          set ai_tokens = ai_tokens + ${reserve}
+          where visitor_id = ${visitorId} and ai_tokens < ${limit}
+          returning ai_tokens`,
+    );
+    return r.rows.length > 0;
+  },
+
+  // Reconcile the reservation with the actual generated size (delta may be
+  // negative when the response was smaller than the reservation).
+  async adjustAnonAiTokens(visitorId: string, delta: number): Promise<void> {
+    await db.execute(
+      sql`update unique_visitors
+          set ai_tokens = greatest(0, ai_tokens + ${delta})
+          where visitor_id = ${visitorId}`,
+    );
   },
 
   // Register a brand-new visitor id (server-generated only).

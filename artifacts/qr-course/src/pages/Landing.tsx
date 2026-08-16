@@ -9,8 +9,11 @@ import {
   Search,
   LogIn,
   LogOut,
+  Download,
 } from "lucide-react";
 import { useAuth, loginUrl } from "@/lib/auth";
+
+const pdfUrl = `${import.meta.env.BASE_URL}api/course/download-pdf`;
 
 function LandingAuthControls() {
   const { authenticated, user, logout, isLoading } = useAuth();
@@ -160,12 +163,20 @@ export default function Landing() {
             backpropagation, each built up from first principles for newcomers to
             the discipline.
           </p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <CourseEntryButton
               label="Start the course"
               className="inline-flex items-center px-6 py-3 rounded-md text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               testId="button-cta-start"
             />
+            <a
+              href={pdfUrl}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-md text-base font-medium border border-border hover:bg-secondary transition-colors"
+              data-testid="button-download-pdf"
+            >
+              <Download className="w-5 h-5" />
+              Download the course (PDF)
+            </a>
           </div>
         </section>
 
@@ -187,9 +198,16 @@ export default function Landing() {
         </section>
 
         <section className="max-w-4xl mx-auto px-6 pb-24">
-          <h2 className="text-center font-serif font-semibold text-xl mb-6">
-            The Curriculum
+          <h2 className="text-center font-serif font-semibold text-xl mb-2">
+            Topics Covered in This Course
           </h2>
+          <p className="text-center text-sm text-muted-foreground mb-6">
+            One unit, eight topics — every lecture readable free online, or{" "}
+            <a href={pdfUrl} className="underline hover:text-foreground" data-testid="link-download-pdf">
+              download the course as a PDF
+            </a>{" "}
+            (short lectures plus sample homework and exams).
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {topics.map((t) => (
               <div

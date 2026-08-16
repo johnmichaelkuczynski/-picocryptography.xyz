@@ -361,4 +361,163 @@ router.get("/course/topics", async (_req, res) => {
   res.json(ListTopicsResponse.parse(rows));
 });
 
+// --- Public course PDF download (no auth, no AI) ---
+// Short lecture for every topic, plus a sampler of homework problems and
+// exam questions, compiled into a single downloadable PDF.
+function mdToPlain(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, (block) =>
+      block.replace(/```[a-z]*\n?/g, "").trim(),
+    )
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "• ")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .trim();
+}
+
+router.get("/course/download-pdf", async (_req, res) => {
+  try {
+    const { default: PDFDocument } = await import("pdfkit");
+
+    const topics = await db
+      .select()
+      .from(topicsTable)
+      .orderBy(asc(topicsTable.position));
+
+    const lectures = await db
+      .select({
+        topicId: lecturesTable.topicId,
+        title: lecturesTable.title,
+        body: lecturesTable.body,
+      })
+      .from(lecturesTable)
+      .orderBy(asc(lecturesTable.id));
+    const lectureByTopic = new Map(lectures.map((l) => [l.topicId, l]));
+
+    const problemRows = await db.execute(sql`
+      select p.prompt, p.topic_id, a.kind, a.title as assignment_title, p.position
+      from problems p
+      join assignments a on a.id = p.assignment_id
+      order by a.kind, p.topic_id, p.position
+    `);
+    const allProblems = problemRows.rows as Array<{
+      prompt: string;
+      topic_id: number;
+      kind: string;
+      assignment_title: string;
+      position: number;
+    }>;
+    // Two homework problems per topic, and up to ten exam questions.
+    const homework: typeof allProblems = [];
+    const perTopic = new Map<number, number>();
+    for (const p of allProblems.filter((x) => x.kind === "homework")) {
+      const n = perTopic.get(p.topic_id) ?? 0;
+      if (n < 2) {
+        homework.push(p);
+        perTopic.set(p.topic_id, n + 1);
+      }
+    }
+    const exam = allProblems
+      .filter((x) => x.kind === "test" || x.kind === "midterm" || x.kind === "final")
+      .filter((_, i) => i % 2 === 0)
+      .slice(0, 10);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="basic-ai-math-course.pdf"',
+    );
+
+    const doc = new PDFDocument({ margin: 54, bufferPages: true });
+    doc.pipe(res);
+
+    // Title page
+    doc.font("Times-Bold").fontSize(30).text("Basic AI Math", { align: "center" });
+    doc.moveDown(0.5);
+    doc
+      .font("Times-Roman")
+      .fontSize(14)
+      .text("The Math Behind the Machine — Course Reader", { align: "center" });
+    doc.moveDown(0.3);
+    doc
+      .fontSize(11)
+      .fillColor("#555555")
+      .text(
+        "Short lectures for all eight topics, with sample homework problems and exam questions.",
+        { align: "center" },
+      );
+    doc.fillColor("black");
+    doc.moveDown(2);
+    doc.font("Times-Bold").fontSize(16).text("Topics Covered");
+    doc.moveDown(0.5);
+    doc.font("Times-Roman").fontSize(12);
+    for (const t of topics) {
+      doc.text(`${t.slug}  ${t.title}`, { indent: 12 });
+      doc.moveDown(0.2);
+    }
+
+    // Lectures
+    for (const t of topics) {
+      const lec = lectureByTopic.get(t.id);
+      if (!lec) continue;
+      doc.addPage();
+      doc.font("Times-Bold").fontSize(18).text(`Topic ${t.slug}: ${t.title}`);
+      doc.moveDown(0.6);
+      doc.font("Times-Roman").fontSize(11.5);
+      for (const para of mdToPlain(lec.body).split(/\n{2,}/)) {
+        doc.text(para.replace(/\n/g, " "), { align: "justify" });
+        doc.moveDown(0.6);
+      }
+    }
+
+    // Homework sampler
+    doc.addPage();
+    doc.font("Times-Bold").fontSize(18).text("Practice Homework (Sampler)");
+    doc.moveDown(0.6);
+    doc.font("Times-Roman").fontSize(11.5);
+    let hn = 1;
+    for (const p of homework) {
+      const topic = topics.find((t) => t.id === p.topic_id);
+      doc.font("Times-Bold").text(`Problem ${hn}${topic ? ` (Topic ${topic.slug})` : ""}`);
+      doc.font("Times-Roman").text(mdToPlain(p.prompt), { align: "justify" });
+      doc.moveDown(0.8);
+      hn++;
+    }
+
+    // Exam sampler
+    doc.addPage();
+    doc.font("Times-Bold").fontSize(18).text("Sample Exam Questions");
+    doc.moveDown(0.6);
+    doc.font("Times-Roman").fontSize(11.5);
+    let en = 1;
+    for (const p of exam) {
+      doc.font("Times-Bold").text(`Question ${en} (${p.assignment_title})`);
+      doc.font("Times-Roman").text(mdToPlain(p.prompt), { align: "justify" });
+      doc.moveDown(0.8);
+      en++;
+    }
+
+    doc
+      .moveDown(1.5)
+      .fontSize(10)
+      .fillColor("#555555")
+      .text(
+        "Answers, AI tutoring, adaptive practice, and graded assignments are available in the online course at babyaimath.xyz.",
+      );
+
+    doc.end();
+  } catch (err) {
+    console.error("Course PDF error:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to generate course PDF" });
+    } else {
+      res.end();
+    }
+  }
+});
+
 export default router;

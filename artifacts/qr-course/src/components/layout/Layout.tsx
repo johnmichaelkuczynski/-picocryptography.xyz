@@ -4,6 +4,7 @@ import { LayoutDashboard, PenTool, BarChart3, Activity, RotateCcw, Sparkles, Sca
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminMode } from "@/lib/adminMode";
 import { useAuth, loginUrl } from "@/lib/auth";
+import { checkLoginRequired } from "@/lib/loginRequired";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -104,6 +105,10 @@ function TopBar() {
             `${basePath}/api/diagnostics/expand-lectures?level=${job.level}&id=${job.id}`,
             { method: "POST" },
           );
+          if (await checkLoginRequired(res)) {
+            failed++;
+            break;
+          }
           if (!res.ok) {
             failed++;
             continue;
@@ -130,6 +135,7 @@ function TopBar() {
     setResetting(true);
     try {
       const res = await fetch("/api/diagnostics/reset", { method: "POST" });
+      if (await checkLoginRequired(res)) throw new Error("Sign in required");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await qc.invalidateQueries();
       setLocation("/");

@@ -364,6 +364,17 @@ export async function customFetch<T = unknown>(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
+    // Anonymous free-preview exhausted: notify the app so it can show a
+    // sign-in prompt (the server returns 401 { error: "login_required" }).
+    if (
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      errorData !== null &&
+      typeof errorData === "object" &&
+      (errorData as { error?: unknown }).error === "login_required"
+    ) {
+      window.dispatchEvent(new CustomEvent("bam:login-required"));
+    }
     throw new ApiError(response, errorData, requestInfo);
   }
 

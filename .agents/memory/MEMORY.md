@@ -1,5 +1,5 @@
 - [Course answer-key QC diagnostic](course-qc-diagnostic.md) — LLM key-legitimacy checks must judge against the course's own lecture text (not generic knowledge), or correct course-specific keys false-flag.
-- [App auth model](api-auth-model.md) — Google OAuth via canonical auth.ts (do not modify); whole course gated behind sign-in FRONTEND-only, Landing `/` is the sole public page; only /api/admin/visits server-guarded.
+- [App auth model](api-auth-model.md) — NO login wall (owner reversal 2026-08-14): app fully browsable signed-out; anonymous AI metered per bam_vid (~300 tok) then server 401 login_required; pdfkit must stay esbuild-external.
 - [Tutor starter-question style](tutor-starter-questions.md) — lecture starter questions must ALWAYS be concrete-case application; never definition/abstract/comparison questions (user mandate).
 - [Course content reseed](course-content-reseed.md) — seeded data migrations must self-heal via a content marker + replace-in-transaction; "seed if empty" strands old content in existing/prod DBs (prod writes are read-only).
 - [DATABASE_URL override](database-url-override.md) — app DB resolves to platform `helium/heliumdb`, which overrides a user-set DATABASE_URL secret; checkDatabase() can report "not provisioned" while the app still has a working DB.

@@ -21,6 +21,7 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { AnswerInput } from "@/components/AnswerInput";
 import { MathKeyboard, insertAtTextareaCursor } from "@/components/MathKeyboard";
 import { StarterQuestionCard } from "@/components/StarterQuestionCard";
+import { checkLoginRequired } from "@/lib/loginRequired";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, MessageSquare, Sparkles, Send, X, RefreshCw, CheckCircle2, XCircle, Wand2, RotateCcw } from "lucide-react";
 
@@ -202,6 +203,9 @@ export default function LectureView() {
         `${import.meta.env.BASE_URL}api/diagnostics/expand-lectures?level=${target}&id=${lecture.id}`,
         { method: "POST" },
       );
+      if (await checkLoginRequired(res)) {
+        throw new Error("Sign in with Google to keep generating content.");
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as { updated?: number; failed?: number };
       if (!data.updated) {
@@ -672,7 +676,10 @@ function TutorPane({
     setDismissed(new Set());
     setSuggestionsLoading(true);
     fetch(`/api/tutor/suggestions/${lectureId}?t=${Date.now()}`, { cache: "no-store" })
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (await checkLoginRequired(r)) return { questions: [] };
+        return r.json() as Promise<{ questions?: string[] }>;
+      })
       .then((data: { questions?: string[] }) => {
         setSuggestions(data.questions ?? []);
       })
