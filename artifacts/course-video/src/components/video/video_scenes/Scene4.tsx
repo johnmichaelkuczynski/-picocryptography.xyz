@@ -25,7 +25,7 @@ export function Scene4() {
           {/* Left Column: Lecture */}
           <div className="flex-[3] flex flex-col border-r border-[#E2E8F0] bg-white h-full relative">
             <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
-              <div className="text-sm font-medium text-[#718096]">1.2 Numbers as meaning: vectors and embeddings</div>
+              <div className="text-sm font-medium text-[#718096]">Numbers as meaning: vectors and embeddings</div>
               <div className="flex items-center bg-[#EFECE6] rounded-md p-1">
                 <div className={`px-3 py-1 text-xs font-medium rounded ${phase === 0 ? 'bg-white shadow text-[#1A2B3D]' : 'text-[#718096]'}`}>Short</div>
                 <div className={`px-3 py-1 text-xs font-medium rounded ${phase === 1 ? 'bg-white shadow text-[#1A2B3D]' : 'text-[#718096]'}`}>Medium</div>

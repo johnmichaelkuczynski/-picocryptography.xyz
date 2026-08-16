@@ -12,8 +12,7 @@ import {
   Download,
 } from "lucide-react";
 import { useAuth, loginUrl } from "@/lib/auth";
-
-const pdfUrl = `${import.meta.env.BASE_URL}api/course/download-pdf`;
+import TopicsRail, { pdfUrl, txtUrl } from "@/components/TopicsRail";
 
 function LandingAuthControls() {
   const { authenticated, user, logout, isLoading } = useAuth();
@@ -88,8 +87,8 @@ const features = [
 ];
 
 const topics = [
-  { n: "1.1", title: "Numbers as meaning: why AI is really math" },
-  { n: "1.2", title: "How AI learns: from matrices to backpropagation" },
+  { session: "Morning session", title: "Numbers as meaning: why AI is really math" },
+  { session: "Afternoon session", title: "How AI learns: from matrices to backpropagation" },
 ];
 
 function CourseEntryButton({
@@ -101,16 +100,9 @@ function CourseEntryButton({
   className: string;
   testId: string;
 }) {
-  const { authenticated, isLoading } = useAuth();
-
-  if (!isLoading && !authenticated) {
-    return (
-      <a href={loginUrl} className={className} data-testid={testId}>
-        {label}
-      </a>
-    );
-  }
-
+  // The course is fully browsable without signing in — never send visitors
+  // to the login page from the entry buttons. Sign-in is only required once
+  // AI usage exceeds the free allowance (handled by the metering modal).
   return (
     <Link href="/dashboard">
       <button className={className} data-testid={testId}>
@@ -142,21 +134,15 @@ export default function Landing() {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 flex items-start">
+        <div className="hidden lg:block pl-6 pt-6">
+          <TopicsRail />
+        </div>
+        <div className="flex-1 min-w-0">
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-medium mb-6">
-            <BarChart3 className="w-3.5 h-3.5" />
-            A focused, one-day intensive course on the mathematics behind AI
-          </div>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-5">
-            AI isn't magic — it's mathematics. Learn how it really works.
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-8">
+            A one-day intensive course on the mathematics behind modern AI.
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            A rigorous, self-paced course that teaches, tutors, drills, and grades
-            you on the mathematics behind modern AI — two topics from vectors to
-            backpropagation, each built up from first principles for newcomers to
-            the discipline.
-          </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <CourseEntryButton
               label="Start the course"
@@ -170,6 +156,14 @@ export default function Landing() {
             >
               <Download className="w-5 h-5" />
               Download the course (PDF)
+            </a>
+            <a
+              href={txtUrl}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-md text-base font-medium border border-border hover:bg-secondary transition-colors"
+              data-testid="button-download-txt"
+            >
+              <Download className="w-5 h-5" />
+              TXT
             </a>
           </div>
         </section>
@@ -205,27 +199,22 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {topics.map((t) => (
               <div
-                key={t.n}
-                className="flex items-center gap-4 rounded-lg border border-border bg-card p-5"
+                key={t.title}
+                className="rounded-lg border border-border bg-card p-5"
               >
-                <div className="w-10 h-10 shrink-0 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-serif font-bold text-sm">
-                  {t.n}
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                  {t.session}
                 </div>
-                <div>
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Topic {t.n}
-                  </div>
-                  <div className="font-medium">{t.title}</div>
-                </div>
+                <div className="font-medium">{t.title}</div>
               </div>
             ))}
           </div>
         </section>
+        </div>
       </main>
 
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        Basic AI Math — where the curriculum, the tutor, the grader, and the
-        integrity check all live in one room.
+        Basic AI Math
       </footer>
     </div>
   );

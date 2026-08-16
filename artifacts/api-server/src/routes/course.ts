@@ -379,52 +379,112 @@ function mdToPlain(md: string): string {
     .trim();
 }
 
+async function loadCourseReaderData() {
+  const topics = await db
+    .select()
+    .from(topicsTable)
+    .orderBy(asc(topicsTable.position));
+
+  const lectures = await db
+    .select({
+      topicId: lecturesTable.topicId,
+      title: lecturesTable.title,
+      body: lecturesTable.body,
+    })
+    .from(lecturesTable)
+    .orderBy(asc(lecturesTable.id));
+  const lectureByTopic = new Map(lectures.map((l) => [l.topicId, l]));
+
+  const problemRows = await db.execute(sql`
+    select p.prompt, p.topic_id, a.kind, a.title as assignment_title, p.position
+    from problems p
+    join assignments a on a.id = p.assignment_id
+    order by a.kind, p.topic_id, p.position
+  `);
+  const allProblems = problemRows.rows as Array<{
+    prompt: string;
+    topic_id: number;
+    kind: string;
+    assignment_title: string;
+    position: number;
+  }>;
+  // Two homework problems per topic, and up to ten exam questions.
+  const homework: typeof allProblems = [];
+  const perTopic = new Map<number, number>();
+  for (const p of allProblems.filter((x) => x.kind === "homework")) {
+    const n = perTopic.get(p.topic_id) ?? 0;
+    if (n < 2) {
+      homework.push(p);
+      perTopic.set(p.topic_id, n + 1);
+    }
+  }
+  const exam = allProblems
+    .filter((x) => x.kind === "test" || x.kind === "midterm" || x.kind === "final")
+    .filter((_, i) => i % 2 === 0)
+    .slice(0, 10);
+
+  return { topics, lectureByTopic, homework, exam };
+}
+
+// --- Public course TXT download (no auth, no AI) ---
+router.get("/course/download-txt", async (_req, res) => {
+  try {
+    const { topics, lectureByTopic, homework, exam } =
+      await loadCourseReaderData();
+
+    const lines: string[] = [];
+    const rule = "=".repeat(72);
+    lines.push("BASIC AI MATH");
+    lines.push("The Math Behind the Machine — Course Reader");
+    lines.push(
+      "Both session lectures of the one-day intensive, with sample homework problems and exam questions.",
+    );
+    lines.push(rule, "", "TOPICS COVERED", "");
+    for (const t of topics) lines.push(`  ${t.slug}  ${t.title}`);
+    lines.push("", rule);
+
+    for (const t of topics) {
+      const lec = lectureByTopic.get(t.id);
+      if (!lec) continue;
+      lines.push("", lec.title.toUpperCase(), "-".repeat(lec.title.length), "");
+      lines.push(mdToPlain(lec.body));
+      lines.push("", rule);
+    }
+
+    if (homework.length) {
+      lines.push("", "SAMPLE HOMEWORK PROBLEMS", "");
+      homework.forEach((p, i) => {
+        lines.push(`${i + 1}. [${p.assignment_title}]`, mdToPlain(p.prompt), "");
+      });
+      lines.push(rule);
+    }
+    if (exam.length) {
+      lines.push("", "SAMPLE EXAM QUESTIONS", "");
+      exam.forEach((p, i) => {
+        lines.push(`${i + 1}. [${p.assignment_title}]`, mdToPlain(p.prompt), "");
+      });
+      lines.push(rule);
+    }
+    lines.push("", "End of course reader.");
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="basic-ai-math-course.txt"',
+    );
+    res.send(lines.join("\n"));
+  } catch (err) {
+    console.error("TXT export error:", err);
+    res.status(500).json({ error: "Failed to generate course text file" });
+  }
+});
+
 router.get("/course/download-pdf", async (_req, res) => {
   try {
     const { default: PDFDocument } = await import("pdfkit");
 
-    const topics = await db
-      .select()
-      .from(topicsTable)
-      .orderBy(asc(topicsTable.position));
-
-    const lectures = await db
-      .select({
-        topicId: lecturesTable.topicId,
-        title: lecturesTable.title,
-        body: lecturesTable.body,
-      })
-      .from(lecturesTable)
-      .orderBy(asc(lecturesTable.id));
-    const lectureByTopic = new Map(lectures.map((l) => [l.topicId, l]));
-
-    const problemRows = await db.execute(sql`
-      select p.prompt, p.topic_id, a.kind, a.title as assignment_title, p.position
-      from problems p
-      join assignments a on a.id = p.assignment_id
-      order by a.kind, p.topic_id, p.position
-    `);
-    const allProblems = problemRows.rows as Array<{
-      prompt: string;
-      topic_id: number;
-      kind: string;
-      assignment_title: string;
-      position: number;
-    }>;
-    // Two homework problems per topic, and up to ten exam questions.
-    const homework: typeof allProblems = [];
-    const perTopic = new Map<number, number>();
-    for (const p of allProblems.filter((x) => x.kind === "homework")) {
-      const n = perTopic.get(p.topic_id) ?? 0;
-      if (n < 2) {
-        homework.push(p);
-        perTopic.set(p.topic_id, n + 1);
-      }
-    }
-    const exam = allProblems
-      .filter((x) => x.kind === "test" || x.kind === "midterm" || x.kind === "final")
-      .filter((_, i) => i % 2 === 0)
-      .slice(0, 10);
+    const { topics, lectureByTopic, homework, exam } =
+      await loadCourseReaderData();
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

@@ -4,8 +4,8 @@ import { AppShell } from '../AppShell';
 
 export function Scene3() {
   const topics = [
-    "1.1 Numbers as meaning: why AI is really math",
-    "1.2 How AI learns: from matrices to backpropagation"
+    "Numbers as meaning: why AI is really math",
+    "How AI learns: from matrices to backpropagation"
   ];
 
   return (

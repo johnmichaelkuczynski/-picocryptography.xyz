@@ -14,7 +14,7 @@ import { logger } from "./logger";
 // the value stored in seed_meta; a mismatch forces a full re-seed, so content
 // edits self-heal in every environment (including a republished production)
 // without a manual database wipe.
-const SEED_CONTENT_VERSION = "2026-08-15-basic-ai-math-one-day-v2";
+const SEED_CONTENT_VERSION = "2026-08-15-basic-ai-math-one-day-v3";
 
 type SeedTopic = {
   slug: string;
@@ -33,7 +33,7 @@ const TOPICS: SeedTopic[] = [
     weekNumber: 1,
     blurb:
       "When a chatbot writes a poem it feels like magic — but underneath it is all numbers and arithmetic, and 'meaning' itself becomes a location in space.",
-    lectureTitle: "1.1 Numbers as meaning: why AI is really math",
+    lectureTitle: "Numbers as meaning: why AI is really math",
     body: `# Numbers as meaning: why AI is really math
 
 You type a question and a chatbot answers in fluent, natural sentences — it really does feel like there's a mind inside the box. There isn't. Underneath the human-sounding words, an AI is doing one thing: an unimaginable amount of plain arithmetic on lists of numbers. This one-day intensive is about that surprising truth — **AI is really math** — and this first session covers the front half of the story: how the world becomes numbers, and how those numbers come to carry meaning.
@@ -68,7 +68,7 @@ When a search engine understands that "how to fix a flat tire" and "repairing a 
     weekNumber: 1,
     blurb:
       "From matrices that move information through a network, to loss, gradients, gradient descent, probability, and backpropagation — the whole learning loop in one session.",
-    lectureTitle: "1.2 How AI learns: from matrices to backpropagation",
+    lectureTitle: "How AI learns: from matrices to backpropagation",
     body: `# How AI learns: from matrices to backpropagation
 
 The first session turned meaning into numbers and locations. This closing session answers the remaining question: how does a machine that only does arithmetic actually *get good* at anything? The answer is a single loop — guess, measure how wrong, assign blame, nudge every dial — built from a handful of humble ideas: matrices, loss, gradients, gradient descent, probability, and backpropagation.
@@ -123,7 +123,7 @@ const ASSIGNMENTS: SeedAssignment[] = [
     isTimed: false,
     timeLimitMinutes: null,
     instructions:
-      "Untimed practice covering section 1.1 (the morning session). Answer each question in a few sentences (about 3–5) in your own words. You don't need to do any calculations — just explain the idea clearly. One-word answers won't receive credit.",
+      "Untimed practice covering the morning session (Numbers as meaning). Answer each question in a few sentences (about 3–5) in your own words. You don't need to do any calculations — just explain the idea clearly. One-word answers won't receive credit.",
     problems: [
       {
         topicSlug: "numbers-as-meaning",
@@ -153,7 +153,7 @@ const ASSIGNMENTS: SeedAssignment[] = [
     isTimed: false,
     timeLimitMinutes: null,
     instructions:
-      "Untimed practice covering section 1.2 (the afternoon session). Answer each question in a few sentences (about 3–5) in your own words. No calculations are required — explain your reasoning. One-word answers won't receive credit.",
+      "Untimed practice covering the afternoon session (How AI learns). Answer each question in a few sentences (about 3–5) in your own words. No calculations are required — explain your reasoning. One-word answers won't receive credit.",
     problems: [
       {
         topicSlug: "how-ai-learns",
@@ -182,7 +182,7 @@ const ASSIGNMENTS: SeedAssignment[] = [
     isTimed: true,
     timeLimitMinutes: 15,
     instructions:
-      "Timed. 15 minutes. Covers both sessions (sections 1.1–1.2). Answer each question in a few sentences (about 4–6) in your own words. No calculations are required. Pasting is disabled; keystrokes are screened for AI use.",
+      "Timed. 15 minutes. Covers both sessions of the course. Answer each question in a few sentences (about 4–6) in your own words. No calculations are required. Pasting is disabled; keystrokes are screened for AI use.",
     problems: [
       {
         topicSlug: "numbers-as-meaning",
@@ -220,7 +220,7 @@ const ASSIGNMENTS: SeedAssignment[] = [
     isTimed: true,
     timeLimitMinutes: 25,
     instructions:
-      "Timed cumulative final. 25 minutes. Covers the whole one-day course (sections 1.1–1.2). Answer each question in a paragraph (about 5–7 sentences) in your own words. No calculations are required. Pasting is disabled; keystrokes are screened for AI use.",
+      "Timed cumulative final. 25 minutes. Covers the whole one-day course. Answer each question in a paragraph (about 5–7 sentences) in your own words. No calculations are required. Pasting is disabled; keystrokes are screened for AI use.",
     problems: [
       {
         topicSlug: "how-ai-learns",

@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { ReasoningCallout } from "@/components/ReasoningCallout";
+import TopicsRail from "@/components/TopicsRail";
 
 export default function Dashboard() {
   const { data: overview, isLoading: isLoadingOverview } = useGetCourseOverview();
@@ -13,7 +14,11 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="p-8 max-w-6xl mx-auto w-full flex flex-col gap-8">
+      <div className="flex items-start w-full">
+        <div className="hidden xl:block pl-6 pt-6">
+          <TopicsRail />
+        </div>
+      <div className="p-8 max-w-6xl mx-auto w-full flex flex-col gap-8 min-w-0">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary mb-2">
             {overview ? overview.title : <Skeleton className="h-9 w-64" />}
@@ -104,6 +109,7 @@ export default function Dashboard() {
             </Card>
           </div>
         </div>
+      </div>
       </div>
     </Layout>
   );
