@@ -48,17 +48,17 @@ export default function TopicsRail() {
       className="w-56 shrink-0 rounded-lg border border-border bg-card p-4"
       data-testid="topics-rail"
     >
-      <h2 className="font-serif font-semibold text-sm mb-0.5">
+      <h2 className="font-serif font-bold text-base mb-0.5">
         Topics Covered in This Course
       </h2>
       <p className="text-[11px] text-muted-foreground mb-3">
         {titles.length} topics
       </p>
-      <ul className="space-y-2">
+      <ul className="space-y-2.5">
         {titles.map((t) => (
           <li
             key={t}
-            className="text-xs leading-snug text-muted-foreground"
+            className="text-sm font-medium leading-snug text-foreground"
             data-testid={`topics-rail-item`}
           >
             {t}
