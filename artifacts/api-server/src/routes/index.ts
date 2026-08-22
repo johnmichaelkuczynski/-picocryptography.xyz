@@ -10,22 +10,19 @@ import analyticsRouter from "./analytics";
 import diagnosticsRouter from "./diagnostics";
 import reasoningRouter from "./reasoning";
 import adminRouter from "./admin";
-import { meterAnonymousAI } from "../aiMeter";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
-// Routers whose write operations trigger AI generation are metered for
-// signed-out visitors (small free preview, then Google login required).
-router.use(meterAnonymousAI, courseRouter);
-router.use(meterAnonymousAI, assignmentsRouter);
-router.use(meterAnonymousAI, practiceRouter);
-router.use(meterAnonymousAI, practiceAssignmentsRouter);
-router.use(meterAnonymousAI, tutorRouter);
-router.use(meterAnonymousAI, detectionRouter);
-router.use(meterAnonymousAI, analyticsRouter);
-router.use(meterAnonymousAI, diagnosticsRouter);
-router.use(meterAnonymousAI, reasoningRouter);
+router.use(courseRouter);
+router.use(assignmentsRouter);
+router.use(practiceRouter);
+router.use(practiceAssignmentsRouter);
+router.use(tutorRouter);
+router.use(detectionRouter);
+router.use(analyticsRouter);
+router.use(diagnosticsRouter);
+router.use(reasoningRouter);
 router.use(adminRouter);
 
 export default router;

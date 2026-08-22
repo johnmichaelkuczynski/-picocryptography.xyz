@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, PenTool, BarChart3, Activity, RotateCcw, Sparkles, Scale, GraduationCap, ShieldCheck, Search, LogIn, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, PenTool, BarChart3, Activity, RotateCcw, Sparkles, Scale, GraduationCap, ShieldCheck, Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminMode } from "@/lib/adminMode";
-import { useAuth, loginUrl } from "@/lib/auth";
-import { checkLoginRequired } from "@/lib/loginRequired";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export function Sidebar() {
   const [location] = useLocation();
   const [adminMode] = useAdminMode();
-  const { authenticated } = useAuth();
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -21,9 +18,6 @@ export function Sidebar() {
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     ...(adminMode
       ? [{ href: "/admin", label: "Administrator", icon: ShieldCheck }]
-      : []),
-    ...(authenticated
-      ? [{ href: "/administrative", label: "Administrative", icon: Users }]
       : []),
   ];
 
@@ -72,7 +66,6 @@ function TopBar() {
   const active = location.startsWith("/diagnostics");
   const [adminMode, setAdminMode] = useAdminMode();
   const qc = useQueryClient();
-  const { authenticated, user, logout, isLoading: authLoading } = useAuth();
   const [resetting, setResetting] = useState(false);
   const [expanding, setExpanding] = useState(false);
   const [expandProgress, setExpandProgress] = useState<string | null>(null);
@@ -105,10 +98,6 @@ function TopBar() {
             `${basePath}/api/diagnostics/expand-lectures?level=${job.level}&id=${job.id}`,
             { method: "POST" },
           );
-          if (await checkLoginRequired(res)) {
-            failed++;
-            break;
-          }
           if (!res.ok) {
             failed++;
             continue;
@@ -135,7 +124,6 @@ function TopBar() {
     setResetting(true);
     try {
       const res = await fetch("/api/diagnostics/reset", { method: "POST" });
-      if (await checkLoginRequired(res)) throw new Error("Sign in required");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await qc.invalidateQueries();
       setLocation("/");
@@ -196,39 +184,6 @@ function TopBar() {
         {adminMode ? "Admin: On" : "Admin: Off"}
       </button>
 
-      <div className="mx-1 h-6 w-px bg-border" />
-
-      {!authLoading &&
-        (authenticated ? (
-          <>
-            <span
-              className="hidden sm:inline text-sm text-muted-foreground max-w-[12rem] truncate"
-              title={user?.email ?? undefined}
-              data-testid="text-user-email"
-            >
-              {user?.email ?? user?.displayName ?? user?.username ?? "Account"}
-            </span>
-            <button
-              onClick={() => void logout()}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border border-border hover:bg-secondary"
-              data-testid="button-sign-out"
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign out
-            </button>
-          </>
-        ) : (
-          <a
-            href={loginUrl}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
-            data-testid="button-sign-in"
-            title="Sign in with Google"
-          >
-            <LogIn className="w-4 h-4" />
-            Sign in with Google
-          </a>
-        ))}
     </div>
   );
 }

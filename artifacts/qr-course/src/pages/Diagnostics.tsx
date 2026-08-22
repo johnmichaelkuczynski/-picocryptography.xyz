@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { CheckCircle2, XCircle, Loader2, PlayCircle, Activity, ShieldCheck } from "lucide-react";
-import { checkLoginRequired } from "@/lib/loginRequired";
 
 type Step = {
   name: string;
@@ -90,7 +89,6 @@ export default function Diagnostics() {
     setSysResult(null);
     try {
       const r = await fetch(apiUrl("/diagnostics/system"));
-      if (await checkLoginRequired(r)) throw new Error("Sign in with Google to continue.");
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setSysResult(await r.json());
     } catch (e) {
@@ -110,7 +108,6 @@ export default function Diagnostics() {
         headers: { "content-type": "application/json" },
         body: "{}",
       });
-      if (await checkLoginRequired(r)) throw new Error("Sign in with Google to continue.");
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setSynthResult(await r.json());
     } catch (e) {
@@ -130,7 +127,6 @@ export default function Diagnostics() {
         headers: { "content-type": "application/json" },
         body: "{}",
       });
-      if (await checkLoginRequired(r)) throw new Error("Sign in with Google to continue.");
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setQcResult(await r.json());
     } catch (e) {

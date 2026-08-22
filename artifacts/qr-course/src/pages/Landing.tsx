@@ -7,51 +7,9 @@ import {
   ClipboardCheck,
   ShieldCheck,
   Search,
-  LogIn,
-  LogOut,
   Download,
 } from "lucide-react";
-import { useAuth, loginUrl } from "@/lib/auth";
 import TopicsRail, { pdfUrl, txtUrl } from "@/components/TopicsRail";
-
-function LandingAuthControls() {
-  const { authenticated, user, logout, isLoading } = useAuth();
-
-  if (isLoading) return null;
-
-  if (authenticated) {
-    return (
-      <div className="flex items-center gap-2">
-        <span
-          className="hidden sm:inline text-sm text-muted-foreground max-w-[12rem] truncate"
-          title={user?.email ?? undefined}
-          data-testid="text-landing-user-email"
-        >
-          {user?.email ?? user?.displayName ?? user?.username ?? "Account"}
-        </span>
-        <button
-          onClick={() => void logout()}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium border border-border hover:bg-secondary transition-colors"
-          data-testid="button-landing-sign-out"
-        >
-          <LogOut className="w-4 h-4" />
-          Sign out
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <a
-      href={loginUrl}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium border border-border hover:bg-secondary transition-colors"
-      data-testid="button-landing-sign-in"
-    >
-      <LogIn className="w-4 h-4" />
-      Sign in with Google
-    </a>
-  );
-}
 
 const features = [
   {
@@ -100,9 +58,6 @@ function CourseEntryButton({
   className: string;
   testId: string;
 }) {
-  // The course is fully browsable without signing in — never send visitors
-  // to the login page from the entry buttons. Sign-in is only required once
-  // AI usage exceeds the free allowance (handled by the metering modal).
   return (
     <Link href="/dashboard">
       <button className={className} data-testid={testId}>
@@ -125,7 +80,6 @@ export default function Landing() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <LandingAuthControls />
           <CourseEntryButton
             label="Enter the course"
             className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"

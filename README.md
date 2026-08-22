@@ -20,7 +20,7 @@ AI Math Level 1 is a self-paced web course on the mathematics behind artificial 
 - **Two-Layer Academic-Integrity Screening** — Every submission is checked for AI authorship by an industry text classifier and by analysis of how the answer was actually typed, each producing a clear verdict.
 - **Ungraded Diagnostic Instruments** — Subject-reasoning and general-reasoning checks in three formats and three lengths, offered before, during, and after the course — unlimited attempts, fresh questions every time, never affecting the grade.
 - **Free Course Download** — The full reader (every short lecture plus sample homework and exam problems) downloads as a PDF or TXT, no sign-in required.
-- **Try Before Signing In** — The entire course is browsable without an account; sign-in is only requested once a visitor's free AI usage allowance is used up.
+- **No Account Required** — The entire course and all AI-powered features are available without creating an account or signing in.
 - **Live Analytics** — Dashboard KPIs, per-topic mastery, and a recent-activity feed for the student; private visitor analytics for the owner.
 - **Search-Engine Ready** — Fully indexed and structured for Google, Bing, and other major search engines, with rich course metadata.
 - **Built-In Product Demo Video** — A short animated walkthrough of the live product ships alongside the course.
