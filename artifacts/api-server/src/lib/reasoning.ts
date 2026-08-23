@@ -190,7 +190,7 @@ function buildMetrics(
 
 // Grade every item for the attempt, returning a per-item grade map and a score
 // summary. mcq/hybrid correctness is the chosen option matching the (model-
-// judged, for critical) correct option; written correctness is AI semantic
+// judged, for general reasoning) correct option; written correctness is AI semantic
 // equivalence against the item's model answer. Hybrid keeps the written
 // justification for review but scores on the option choice.
 export async function gradeAssessment(
@@ -285,7 +285,7 @@ function deterministicFeedback(
         : " Your reasoning was solid across the items.";
     return `Thanks for working through this reasoning check.${overall?.value ? ` You scored ${overall.value}.` : ""}${weakLine} Remember that a strong answer follows only from the reasons given — distinguish what is stated, what is assumed, and what is merely plausible.`;
   }
-  return `Thanks for working through these AI-math cases.${overall?.value ? ` You scored ${overall.value}.` : ""} Strong answers here come from reasoning about the case — looking for multiple interacting factors, weighing how reliable the evidence is, and resisting single-cause or 'obvious' explanations.`;
+  return `Thanks for working through these Generative AI Integration cases.${overall?.value ? ` You scored ${overall.value}.` : ""} Strong answers identify the failing layer from the scene and avoid treating a better prompt as the universal fix; check context, retrieval, validation, tools, evaluation, and operations.`;
 }
 
 export async function generateFeedback(
@@ -298,7 +298,7 @@ export async function generateFeedback(
     .join("\n");
   const system =
     instrument === "subject"
-      ? "You are an instructor giving warm, specific feedback on a student's AI-math reasoning check (realistic short cases about the course material). 2-4 sentences. Note their overall performance and offer one concrete way to reason better about cases. Use only the metrics provided; do not invent numbers. Plain prose, no markdown headings."
+      ? "You are an instructor giving warm, specific feedback on a student's Generative AI Integration reasoning check (brief realistic system cases). 2-4 sentences. Note overall performance and offer one concrete way to identify the responsible integration layer from scene evidence. Use only the metrics provided; do not invent numbers. Plain prose, no markdown headings."
       : "You are a reasoning instructor giving warm, specific feedback on a student's general-reasoning check. 2-4 sentences. Note overall performance and the skill areas to strengthen, using only the metrics provided. Plain prose, no markdown headings.";
   const user = `Assessment: ${assessmentTitle}\nResult summary: ${summary.headline}\nMetrics:\n${metricsText}`;
   try {
@@ -412,8 +412,8 @@ async function generateSubjectVariant(
 ): Promise<GeneratedItemContent[]> {
   const spec = genSpecFor("subject", phase);
   const system =
-    "You are an assessment author writing ORIGINAL AI-math questions for an intro course. " +
-    "Every question must be a short, realistic CASE (a concrete scenario about how AI uses math) that rewards REASONING about the case, never recall of a definition or a one-word fact. " +
+    "You are an assessment author writing ORIGINAL questions for a Generative AI Integration course. " +
+    "Every question must be a brief, realistic CASE about integrating a generative model into software that rewards REASONING from a decisive scene detail, never definition recall or a one-word fact. Keep it answerable with one sentence. " +
     "Each has exactly four answer options with one clearly best, well-supported answer. " +
     "List the CORRECT option FIRST, followed by three plausible but worse distractors (an over-simple single-cause claim, an 'obvious'/sensational answer, or an irrelevant one). " +
     "Also write a one-sentence model answer explaining why the first option is best. " +
@@ -422,7 +422,7 @@ async function generateSubjectVariant(
     `Stay strictly within this scope: ${spec.topicFocus} ` +
     'Respond ONLY as JSON of the form {"items":[{"prompt":"short case ending in a question","options":["best","worse","worse","worse"],"modelAnswer":"why the first option is best"}]}.';
   const user =
-    `Write ${count} new, distinct AI-math case questions within the scope above.\n` +
+    `Write ${count} new, distinct Generative AI Integration case questions within the scope above.\n` +
     `For style only (do NOT copy these): ${JSON.stringify(examplePrompts)}.`;
   const out = await chatJson<{
     items?: { prompt?: unknown; options?: unknown; modelAnswer?: unknown }[];

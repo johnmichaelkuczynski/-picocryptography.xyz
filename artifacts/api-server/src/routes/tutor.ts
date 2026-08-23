@@ -22,23 +22,24 @@ router.get("/tutor/suggestions/:lectureId", async (req, res): Promise<void> => {
   }
 
   const SYSTEM_PROMPT =
-    'You are a rigorous introductory AI math tutor writing study questions. Reply as strict JSON of the form {"questions": string[]} with NO other keys.';
+    'You are a rigorous Generative AI Integration tutor writing study questions. Reply as strict JSON of the form {"questions": string[]} with NO other keys.';
   const buildUserPrompt = (extra: string) =>
     extra +
-    `From the lecture below, write 6 starter questions that make the student APPLY the lecture's ideas to a CONCRETE EXAMPLE. Every question must hang on a specific case and ask the student to reason about that case.\n\n` +
-    `THE SINGLE MOST IMPORTANT RULE: every question must contain an explicit, concrete, EVERYDAY example — a specific relatable situation (e.g. "the words 'cat' and 'kitten' end up as two points that sit very close together while 'cat' and 'bicycle' sit far apart", "a music app lines up songs by how similar they are to one you just liked", "a model takes too big a step while learning and shoots straight past the best answer", "a chatbot answers a question with total confidence but gets it completely wrong"). Keep examples plain-language and intuitive — no heavy formulas, study citations, or jargon. The question must ask the student to analyze, explain, judge, or predict something about THAT example. Reuse the lecture's own examples when it has them; otherwise invent a vivid, specific one.\n\n` +
+    `From the lecture below, write 6 starter questions that make the student APPLY the lecture's ideas to a CONCRETE NAMED SCENARIO. Every question must name a person, organization, product, or deployed feature and ask the student to reason about that case.\n\n` +
+    `THE SINGLE MOST IMPORTANT RULE: every question must contain an explicit, realistic generative-model integration situation (e.g. "Northstar Support's assistant invents a refund policy when no help-center passage was retrieved", "Priya's agent repeats the same inventory tool call after each result", "Harbor Health's extractor returns prose instead of the required JSON schema under load", "Mateo's team sees token costs triple after adding long examples to every prompt"). The question must ask the student to analyze, explain, judge, decide, or predict something about THAT named scenario. Reuse concrete lecture cases when available; otherwise invent a vivid, specific deployment case consistent with the lecture.\n\n` +
     `ABSOLUTELY FORBIDDEN — never produce any of these:\n` +
     `- Questions that ask for a definition ("What is X?", "What does X mean?", "Define X").\n` +
     `- Questions that ask to distinguish or compare concepts in the abstract ("How do X and Y differ?", "What is the difference between X and Y?", "How does X relate to Y?").\n` +
     `- Questions about terminology, labels, or what something is "called".\n` +
-    `- Any question that could be answered without referring to a specific case.\n\n` +
+    `- Any question that could be answered without referring to a specific named case.\n` +
+    `- One-word, terminology-recall, or bare yes/no questions; every answer must require multiple sentences of reasoning.\n\n` +
     `If a question does not name a concrete example and ask the student to reason about it, REWRITE it until it does.\n\n` +
     `GOOD vs BAD:\n` +
-    `- BAD: "What's the difference between a dot product and cosine similarity?"\n` +
-    `- GOOD: "A search engine has two articles whose word-lists point in almost the same direction but one is much longer — what does this suggest about whether raw size or direction should decide which is the better match?"\n` +
-    `- BAD: "What is an embedding?"\n` +
-    `- GOOD: "The words 'cat' and 'kitten' land as two points sitting right next to each other while 'cat' and 'bicycle' land far apart — explain what this closeness shows about how the model has captured their meaning."\n\n` +
-    `Cover several different major ideas from the reading across the 6 questions. One clear sentence each (roughly 12–28 words), in the student's own voice, no compound double-questions. Use $...$ for any inline math.\n\n` +
+    `- BAD: "What's the difference between retrieval and a longer prompt?"\n` +
+    `- GOOD: "Northstar Support's assistant invents a refund rule after retrieval returns no policy passage; explain which integration change Maya should test and why."\n` +
+    `- BAD: "What is structured output?"\n` +
+    `- GOOD: "Harbor Health's intake extractor sometimes wraps valid fields in prose; judge how Priya should change the API contract and validate responses before storage."\n\n` +
+    `Cover several different major ideas from the reading across the 6 questions. One clear sentence each (roughly 18–35 words), no compound double-questions. Each must require a reasoned multi-sentence answer.\n\n` +
     `Return exactly 6 questions.\n\nLECTURE TITLE: ${lecture.title}\n\nLECTURE BODY:\n"""\n${lecture.body}\n"""`;
 
   // Reject abstract / definition / comparison questions so none reach the UI.
@@ -46,7 +47,31 @@ router.get("/tutor/suggestions/:lectureId", async (req, res): Promise<void> => {
   // should Alex do after lying?"), since the prompt + retry do the heavy lifting.
   const isAbstract = (q: string): boolean => {
     const t = q.toLowerCase().trim();
+    const capitalized = q.match(/\b[A-Z][A-Za-z]*(?:['’]s)?\b/g) ?? [];
+    const questionWords = new Set([
+      "A",
+      "An",
+      "At",
+      "For",
+      "How",
+      "In",
+      "The",
+      "What",
+      "When",
+      "Where",
+      "Which",
+      "Why",
+    ]);
+    const hasNamedScenario = capitalized.some(
+      (word) => !questionWords.has(word.replace(/['’]s$/, "")),
+    );
+    const requiresReasoning =
+      /\b(analy[sz]e|explain|judge|decide|predict|recommend|diagnose|justify|reason|evaluate|should)\b/.test(
+        t,
+      );
     return (
+      !hasNamedScenario ||
+      !requiresReasoning ||
       /\bdefine\b/.test(t) ||
       /\bwhat does .+\bmean\b/.test(t) ||
       /\bwhat (is|are) (the )?(meaning|definition)\b/.test(t) ||
@@ -72,7 +97,7 @@ router.get("/tutor/suggestions/:lectureId", async (req, res): Promise<void> => {
     const good: string[] = [];
     const seen = new Set<string>();
     const retryNote =
-      "Your previous attempt included abstract or definition-style questions, which are unacceptable. EVERY question MUST describe a specific situation with a named person or concrete act. ";
+      "Your previous attempt included abstract, definition-style, or unnamed questions, which are unacceptable. EVERY question MUST name a specific person, organization, product, or deployed feature and require multi-sentence reasoning about its concrete situation. ";
     // Bounded refill loop: regenerate until we have 6 concrete questions.
     for (let attempt = 0; attempt < 3 && good.length < 6; attempt++) {
       const batch = (await generate(attempt === 0 ? "" : retryNote)).filter(
@@ -104,7 +129,7 @@ router.post("/tutor/ask", async (req, res): Promise<void> => {
   const { message, selectedLectureText } = parsed.data;
 
   const sys =
-    "You are an encouraging introductory AI math tutor. Explain step by step, use clear examples and relatable cases, and define key terms (e.g. vectors, embeddings, dot product, cosine similarity, matrices, slope/gradient, gradient descent, probability, backpropagation) when they come up. Keep replies short (3-6 sentences) unless the student asks for more detail. Never just give the answer — guide them.";
+    "You are an encouraging Generative AI Integration tutor. Explain step by step with concrete production cases, grounding your guidance in model API behavior, context budgets, structured output and tool calling, retrieval, evaluation, guardrails, and operations as relevant. Clarify key integration terms when they come up. Keep replies short (3-6 sentences) unless the student asks for more detail. Never just give the answer — guide them.";
   const user = selectedLectureText
     ? `Context from the lecture the student is reading:\n"""\n${selectedLectureText}\n"""\n\nStudent question: ${message}`
     : message;

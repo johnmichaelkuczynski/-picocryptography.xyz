@@ -1,45 +1,48 @@
-# YouTube — AI Math Level 1
+# YouTube — Generative AI Integration
 
-## 🎬 Title
+## Title
 
-AI Math Level 1 — AI-Powered Course
-
----
-
-## 📝 Description (paste into YouTube)
-
-**AI Math Level 1** is a rigorous, self-paced course on the mathematics behind modern artificial intelligence — taught, tutored, drilled, and graded entirely by AI, with built-in academic-integrity enforcement. It builds the subject from first principles for anyone entering the field: a complete one-day intensive curriculum that explains how AI is, underneath, numbers and arithmetic at scale — from turning words into vectors all the way to backpropagation.
-
-In this video you'll see the whole course in action:
-
-🔎 One intensive day, two topics — from "numbers as meaning: why AI is really math" to "how AI learns: from matrices to backpropagation"
-📖 Three-depth lessons — read any topic Short, Medium, or Long, the same ideas at the depth you want
-💬 A section-scoped AI tutor that answers questions about the exact paragraph you're reading
-🎯 Adaptive practice that gets harder when you're on a streak and eases off when you're stuck
-📝 AI-graded homework, a course test, and a final — each with real written feedback
-🛡️ Two-layer AI-authorship detection on every answer you submit (a text classifier AND a keystroke-pattern detector)
-
-Built for researchers and professionals entering the discipline, instructors evaluating AI-taught coursework, and academic-integrity researchers studying how AI authorship can be detected.
-
-A complete curriculum, an AI tutor, an AI grader, and an integrity check — in one place.
+Generative AI Integration — AI-Powered Course
 
 ---
 
-## ⏱️ Chapters
+## Description (paste into YouTube)
 
-0:00 Inside the machine's mind
-0:08 What the course is
-0:20 The AI tutor, lessons & adaptive practice
-0:35 AI Math Level 1
+**Generative AI Integration** is a rigorous, self-paced course on wiring generative models into real software systems. It is taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
+
+The one-day curriculum has two sessions. The first covers what a generative model API actually provides: prompts and token outputs, message roles, context-window budgets, sampling controls, structured output, function and tool calling, streaming, latency, pricing, and the state, retry, and schema responsibilities of an integration layer. The second covers production engineering: prompt contracts, retrieval-augmented generation, agents and tool-use loops, evaluation and regression testing, guardrails, prompt injection, PII, cost and rate limits, caching, observability, model version pinning, and a grounded support assistant traced end to end.
+
+The course also includes two diagnostic primers. Integration cases require identifying the concept and scene detail that explain a failure. General reasoning applies analysis, inference, evaluation, deduction, and induction to AI systems.
+
+In this video:
+
+- One intensive day with two sessions
+- Short, Medium, and Long lesson depths
+- A section-scoped AI tutor
+- Adaptive practice
+- AI-graded homework, a course test, and a final
+- Text-based and keystroke-pattern AI-authorship detection
+- Ungraded integration-case and general-reasoning diagnostics
+
+The course is designed for adult researchers, professionals, product teams, engineers, instructors, and academic-integrity researchers.
 
 ---
 
-## 🏷️ Hashtags
+## Chapters
 
-#AImath #ArtificialIntelligence #MachineLearning #AIeducation #EdTech #OnlineLearning #HowAIWorks #DeepLearning
+0:00 Course overview
+0:08 Curriculum and sessions
+0:20 AI tutor, lessons, and adaptive practice
+0:35 Generative AI Integration
 
 ---
 
-## 🔍 Tags
+## Hashtags
 
-AI math, the math behind AI, how AI works, machine learning, AI tutor, AI education, edtech, online learning, adaptive learning, vectors and embeddings, dot product, matrices, gradient descent, backpropagation, probability, neural networks, self-paced course, AI grading, academic integrity
+#GenerativeAI #AIIntegration #LLMEngineering #RAG #AIAgents #LLMEvaluation #AIeducation #EdTech
+
+---
+
+## Tags
+
+generative AI integration, LLM API, model API, structured output, function calling, tool calling, context windows, token pricing, retrieval augmented generation, RAG, embeddings, vector search, AI agents, tool use, prompt engineering, output contracts, LLM evaluation, regression testing, prompt injection, PII, AI guardrails, observability, model version pinning, AI tutor, adaptive learning, AI grading, academic integrity

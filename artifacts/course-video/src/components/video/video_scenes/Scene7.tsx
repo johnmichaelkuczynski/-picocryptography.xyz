@@ -32,7 +32,7 @@ export function Scene7() {
               className="text-center mb-12"
             >
               <div className="text-sm font-mono text-white/50 mb-2 uppercase tracking-widest">Assessment Graded</div>
-              <h2 className="text-4xl font-display font-bold text-white">Day 1: The math behind the machine</h2>
+              <h2 className="text-4xl font-display font-bold text-white">Day 1: Generative AI Integration</h2>
             </motion.div>
 
             <div className="flex gap-8 items-center">
@@ -65,7 +65,7 @@ export function Scene7() {
                     <span className="font-bold text-sm uppercase tracking-wider text-white/70">Grader Rationale</span>
                   </div>
                   <p className="text-white/80 leading-relaxed text-lg">
-                    Excellent grasp of the core concepts. You clearly explained how dot products measure cosine similarity in embeddings. Minor deduction on question 4 regarding gradient calculation steps.
+                    Excellent grasp of the core concepts. You clearly explained how context windows function as a budget rather than a memory. Minor deduction on question 4 regarding specific tool-calling error fallbacks.
                   </p>
                 </motion.div>
 

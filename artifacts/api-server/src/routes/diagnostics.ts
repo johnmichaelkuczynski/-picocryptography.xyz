@@ -116,7 +116,7 @@ router.get("/diagnostics/system", async (_req, res) => {
       if (!process.env.GPTZERO_API_KEY)
         throw new Error("GPTZERO_API_KEY is not set");
       const score = await gptzeroAiScore(
-        "In conclusion, the multifaceted tapestry of data-driven decision-making is paramount to navigating the labyrinthine landscape of contemporary business intelligence and its many implications.",
+        "In conclusion, the multifaceted tapestry of generative-model integration is paramount to navigating the labyrinthine landscape of retrieval grounding, tool orchestration, response validation, and production observability.",
       );
       if (score == null)
         throw new Error("GPTZero returned no score (key invalid or API down)");
@@ -127,11 +127,14 @@ router.get("/diagnostics/system", async (_req, res) => {
   steps.push(
     await run("Grader: equivalence check", async () => {
       const g = await gradeAnswer({
-        prompt: "What is 2 + 2?",
-        correctAnswer: "4",
-        userAnswer: "four",
+        prompt:
+          "At Northstar Support, the assistant invents a refund policy because no policy passage was supplied. Explain what the integration should add and why.",
+        correctAnswer:
+          "The integration should retrieve the relevant help-center passage and include it as grounded context before generation. It should also validate or refuse unsupported answers so plausible wording is not mistaken for policy evidence.",
+        userAnswer:
+          "Retrieve the matching refund-policy passage into the prompt, then validate that the answer is supported. The model's fluent output alone does not prove it used company policy.",
       });
-      if (!g.correct) throw new Error('"four" should equal "4"');
+      if (!g.correct) throw new Error("equivalent grounded-integration answer was rejected");
       return "semantic equivalence ok";
     }),
   );
@@ -331,7 +334,7 @@ router.post("/diagnostics/synthetic-run", async (_req, res) => {
           correctAnswer: string;
           explanation: string;
         }>(
-          `You generate a single introductory AI math practice problem on "${topic.title}" at easy difficulty, with a short answer (a word, term, "yes"/"no", or short phrase). Respond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}.`,
+          `You generate a single Generative AI Integration practice problem on "${topic.title}" at easy difficulty. Use a specific realistic named deployment scenario and require a reasoned 2-4 sentence answer that applies the topic to decisive facts. Never ask for definitions, abstract comparisons, terminology recall, one-word answers, or bare yes/no. Respond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}.`,
           `New problem on ${topic.title}.`,
         );
         const [stored] = await db
@@ -370,7 +373,7 @@ router.post("/diagnostics/synthetic-run", async (_req, res) => {
       const ctx = (lectures[0]?.body ?? "").slice(0, 400);
       const txt = await chatText(
         "You are a concise tutor. Reply in 2 sentences.",
-        `Context from a lecture:\n"""${ctx}"""\n\nStudent question: Can you summarize the key takeaway?`,
+        `Context from a lecture:\n"""${ctx}"""\n\nStudent question: Northstar Support's chat demo works, but its production service has no conversation state, retries, or schema validation. Which detail from this lecture should Maya address first, and why?`,
       );
       if (!txt) throw new Error("tutor returned nothing");
       return `${txt.length} chars`;
@@ -380,7 +383,7 @@ router.post("/diagnostics/synthetic-run", async (_req, res) => {
   steps.push(
     await run("AI detection scan (pasted-style text should flag)", async () => {
       const r = await detect(
-        "In conclusion, the multifaceted tapestry of data-driven decision-making is paramount to navigating the labyrinthine landscape of contemporary business intelligence.",
+        "In conclusion, the multifaceted tapestry of generative-model integration is paramount to navigating the labyrinthine landscape of retrieval grounding, tool orchestration, response validation, and production observability.",
         {
           keystrokeCount: 8,
           eraseCount: 0,
@@ -547,7 +550,7 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
           // The course is grounded in a specific source text, whose framework and
           // terminology can differ from mainstream treatments. The check judges
           // keys against what the course actually teaches — not generic textbook
-          // AI math. Homework is scoped to its own topic's lecture, but
+            // generative-model integration. Homework is scoped to its own topic's lecture, but
           // cumulative assessments (test/midterm/final) draw on examples from
           // across the whole unit, so they are grounded in every lecture in the
           // unit; otherwise a correct key citing a sibling topic's example
@@ -565,9 +568,9 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
           // course's own lecture material, blind to the seeded key, so the
           // verdict can't just rubber-stamp the key.
           const derived = await chatText(
-            "You are a strong introductory AI math student answering a short-answer problem. " +
+            "You are a strong Generative AI Integration student answering a scenario-based problem. " +
               `Base your answer on ${sourceLabel} provided, using its framework and terminology rather than outside theories. ` +
-              "Answer the prompt directly and concisely (one or two sentences, or just the requested word). " +
+              "Answer the prompt directly with concise, multi-sentence reasoning tied to the scenario. " +
               "Do not restate the prompt or add commentary.\n\n=== COURSE LECTURE MATERIAL ===\n" +
               lecture,
             p.prompt,
@@ -581,7 +584,7 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
             confidence: number;
             rationale: string;
           }>(
-            "You are an academic quality-control reviewer for an introductory AI math course. " +
+            "You are an academic quality-control reviewer for the course Generative AI Integration. " +
               `You are given ${sourceLabel} the problem is drawn from, a problem prompt, the SHORT answer key the course grades students against, and an independently derived answer produced without seeing the key. ` +
               "Judge the key ONLY against what the provided course material teaches — its definitions, framework, terminology, and examples — not against outside or mainstream treatments that the course does not use. " +
               "When the provided material contains multiple lectures, an example or term taught in ANY of them counts as taught by the course; do not flag a key merely because the example appears in a different lecture than the one most associated with the prompt. " +
@@ -680,15 +683,15 @@ router.post("/diagnostics/expand-lectures", async (req, res) => {
   const ratio = level === "long" ? "roughly 2x to 3x the length of the SHORT version" : "roughly 1.5x to 2x the length of the SHORT version";
   const moreExamples =
     level === "long"
-      ? "At least TWO additional fully worked examples for every concept beyond what the short version has — pick contrasting cases (edge cases, common mistakes, larger numbers, real-world framings)."
+      ? "At least TWO additional worked-through integration cases for every concept beyond what the short version has — pick contrasting deployments, edge cases, and common failure modes."
       : "At least ONE additional fully worked example for every concept beyond what the short version has.";
   const moreExplanation =
     level === "long"
-      ? "Considerably more explanation: motivate every rule, explain WHY it works, name common pitfalls, and add brief 'sanity check' notes after computations."
-      : "Noticeably more explanation: clarify each definition, motivate each rule, and add a short 'why this works' note where useful.";
+      ? "Considerably more explanation: motivate every design choice, explain WHY it works, name common pitfalls, and add brief validation checks after each worked case."
+      : "Noticeably more explanation: clarify each concept, motivate each design choice, and add a short 'why this works' note where useful.";
 
   const sys =
-    `You are an introductory AI math lecturer producing the ${level.toUpperCase()} version of a lecture. ` +
+    `You are a Generative AI Integration lecturer producing the ${level.toUpperCase()} version of a lecture. ` +
     "You are given the SHORT version of the lecture. Rewrite it as a longer teaching version. RULES, no exceptions:\n" +
     "1. KEEP every heading and every concept from the SHORT version, in the same order, with the same names. You may add new sub-sections only when needed to introduce additional examples — but no new top-level topics.\n" +
     `2. ${moreExplanation}\n` +

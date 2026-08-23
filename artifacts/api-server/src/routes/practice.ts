@@ -25,6 +25,24 @@ function parseIdParam(raw: unknown): number {
   return parseInt(s ?? "", 10);
 }
 
+function isValidReasoningProblem(problem: {
+  prompt: string;
+  correctAnswer: string;
+  explanation: string;
+}): boolean {
+  const prompt = problem.prompt.trim();
+  const answer = problem.correctAnswer.trim();
+  const sentenceCount = answer.split(/[.!?]+(?:\s|$)/).filter(Boolean).length;
+  return (
+    prompt.length >= 80 &&
+    answer.length >= 100 &&
+    sentenceCount >= 2 &&
+    !/\b(define|what (?:is|are) .+ called|what does .+ mean|difference between)\b/i.test(
+      prompt,
+    )
+  );
+}
+
 async function pickTopicId(
   weekNumber: number | null | undefined,
   preferred: number | null | undefined,
@@ -155,18 +173,21 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
       correctAnswer: string;
       explanation: string;
     }>(
-      `You generate a single introductory AI math practice problem for a curious beginner. The problem MUST be on the topic "${topic.title}" and at difficulty "${difficultyLabel}" (${difficulty.toFixed(
+      `You generate a single practice problem for the course Generative AI Integration. The problem MUST be on the topic "${topic.title}" and at difficulty "${difficultyLabel}" (${difficulty.toFixed(
         1,
-      )}/5). Test general understanding of the SUBJECT of the math behind AI, not recall of any particular book, lecture, or course. The question MUST be fully self-contained and answerable by anyone who knows the discipline: do NOT reference "the lecture", "the text", "the course", "the example", "the case", or any named character or example a student would only recognize from a specific reading.\n\nSTRICT QUESTION RULES (no exceptions):\n- Every question must present a SPECIFIC, concrete everyday scenario (e.g. the word-embeddings for "cat" and "kitten" landing as two points sitting very close together while "cat" and "bicycle" sit far apart, a music app ranking songs by how similar they are to one you just liked, a model taking too big a learning-rate step and shooting straight past the best answer, a chatbot answering with total confidence but getting the fact completely wrong) and ask the student to APPLY the topic's idea to THAT scenario — to judge, compare, explain, interpret, or decide. Explain ideas intuitively, in plain words — do NOT ask the student to crunch numbers or compute a formula.\n- NEVER ask for a definition, a term, or what something is "called"; NEVER ask the student to recite an abstract formulation from any reading.\n- NEVER write a question whose answer is a single word, a single term, or a bare "yes"/"no". The answer must require reasoning that is HARD TO SHARE: the student must explain their thinking about the specific scenario in 2-4 sentences.\n- The "correctAnswer" is the model answer (2-4 sentences) showing the operational reasoning a strong student would give for THIS scenario. The "explanation" briefly says what earns full credit.\n\nRespond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}. Avoid these recent prompts: ${JSON.stringify(
+      )}/5). Test practical understanding of generative-model integration, not recall of any particular reading. The question MUST be fully self-contained: do NOT reference "the lecture", "the text", "the course", "the example", or "the case"; state every fact needed to reason about the situation.\n\nSTRICT QUESTION RULES (no exceptions):\n- Every question must present a SPECIFIC, realistic, NAMED deployment scenario (for example, Northstar Support's assistant invents a refund policy because its prompt has no retrieved policy passage; Priya's tool-using agent repeats the same inventory call after every tool result; Harbor Health's JSON extractor works in a chat demo but returns invalid fields under production traffic; Mateo's team sees token cost triple after adding long examples to every prompt). Ask the student to APPLY the topic's idea to THAT scenario by diagnosing the decisive detail and recommending or predicting an operational consequence.\n- NEVER ask for a definition, an abstract comparison, a term, or what something is "called"; NEVER ask the student to recite terminology.\n- NEVER write a question whose answer is a single word, a single term, or a bare "yes"/"no". Require a reasoned 2-4 sentence answer tied to the scenario.\n- The "correctAnswer" must be a 2-4 sentence model answer showing the operational reasoning for THIS scenario. The "explanation" briefly says what earns full credit.\n\nRespond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}. Avoid these recent prompts: ${JSON.stringify(
         lastProblems.map((p) => p.prompt),
       )}.`,
       userRequest || `Generate a new ${difficultyLabel} problem on ${topic.title}.`,
     );
+    if (!isValidReasoningProblem(generated)) {
+      throw new Error("generated problem did not meet scenario-reasoning requirements");
+    }
   } catch {
     generated = {
-      prompt: `Practice (${topic.title}): A friend reads about a real case and jumps to a quick conclusion about why the person did it. Using the idea behind "${topic.title}", walk through how you'd help them think it through more carefully, and explain your reasoning in 2-4 sentences about that situation.`,
+      prompt: `At Northstar Support, Maya's help-center assistant gives a plausible refund answer even though the integration supplied no retrieved policy passage. Apply "${topic.title}" to diagnose the decisive system detail and recommend what Maya should change. Justify your answer in 2-4 sentences.`,
       correctAnswer:
-        "A strong answer applies the topic to the concrete situation step by step — saying what to look at, what it would mean, and what to do next — rather than just naming or defining the idea.",
+        `A strong answer applies "${topic.title}" to the missing grounded evidence in Northstar Support's integration, explains what the observed output does and does not establish, and recommends a concrete system change with a way to verify it. It reasons from the scenario rather than merely naming a concept.`,
       explanation:
         "Full credit reasons about the specific situation and shows operational understanding; restating a definition does not earn credit.",
     };
@@ -257,7 +278,7 @@ router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<voi
     try {
       tutorTip = (
         await chatJson<{ tip: string }>(
-          "You are a kind, concise AI math tutor. Given a problem, the correct answer, and the student's wrong attempt, give ONE focused next-step tip (2 sentences max). Respond as strict JSON: {\"tip\": string}.",
+          "You are a kind, concise Generative AI Integration tutor. Given a problem, the correct answer, and the student's wrong attempt, give ONE focused next-step tip (2 sentences max). Respond as strict JSON: {\"tip\": string}.",
           JSON.stringify({
             prompt: problem.prompt,
             correctAnswer: problem.correctAnswer,

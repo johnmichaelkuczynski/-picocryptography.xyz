@@ -11,21 +11,25 @@ id = "zpoa4kJaFwLQ67_UaLoks"
 uri = "file://BLUEPRINT.md"
 type = "text"
 title = "QuantReason — App Blueprint"
+logical_id = "7fa675a3-3100-496a-8c42-57bef36936da"
 
 [[outputs]]
 id = "gBlmXbiu3K5FNCNv2fX9f"
 uri = "file://README.md"
 type = "text"
 title = "README — Baby AI Math"
+logical_id = "d7272a71-ecf3-4b8a-b9c6-45410ce4e7a4"
 
 [[outputs]]
 id = "IhlBFpvwhqNicclr5C_QR"
 uri = "file://youtube-description.md"
 type = "text"
 title = "YouTube Description — Baby AI Math"
+logical_id = "dc599c2a-124a-4342-b373-be71b36d9842"
 
 [[outputs]]
 id = "Qpzwo_NPMNo_tjMm6_ppp"
 uri = "file://artifacts/course-video/public/audio/bg_music.mp3"
 type = "audio"
 title = "background music"
+logical_id = "c293f880-625a-4534-bf49-6ceb17e64a8d"

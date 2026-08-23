@@ -24,6 +24,23 @@ function parseIdParam(raw: unknown): number {
   return parseInt(s ?? "", 10);
 }
 
+function isValidReasoningProblem(problem: {
+  prompt: string;
+  correctAnswer: string;
+}): boolean {
+  const prompt = problem.prompt.trim();
+  const answer = problem.correctAnswer.trim();
+  const sentenceCount = answer.split(/[.!?]+(?:\s|$)/).filter(Boolean).length;
+  return (
+    prompt.length >= 80 &&
+    answer.length >= 100 &&
+    sentenceCount >= 2 &&
+    !/\b(define|what (?:is|are) .+ called|what does .+ mean|difference between)\b/i.test(
+      prompt,
+    )
+  );
+}
+
 // Generate a fresh, never-graded PRACTICE version of a graded assignment.
 // Each call produces a brand-new set of problems modeled on the source
 // assignment (same topics, same kind, same reasoning-answer format) — so the
@@ -82,13 +99,13 @@ router.post(
           explanation: string;
         }>;
       }>(
-        `You write a PRACTICE version of an introductory AI math ${assignment.kind} titled "${assignment.title}". You are given the real assignment's problems as templates. Produce EXACTLY ${templates.length} NEW problems, one per template, in the same order. Each new problem must: (1) cover the SAME topic and test the SAME concept as its template, (2) be clearly DIFFERENT in wording, scenario, and specifics (never copy the template), (3) match the template's style and answer length (if the template expects a reasoned paragraph, write a problem that calls for a reasoned paragraph), (4) be fully self-contained — do NOT reference "the lecture", "the text", "the course", or any named example a student would only know from a specific reading; state any scenario in full inside the problem. For each problem also write the model "correctAnswer" (what a strong student answer contains) and a short "explanation" of the reasoning. Respond as strict JSON: {"problems": [{"prompt": string, "correctAnswer": string, "explanation": string}, ...]} with exactly ${templates.length} items.`,
+        `You write a PRACTICE version of a Generative AI Integration ${assignment.kind} titled "${assignment.title}". You are given the real assignment's problems as templates. Produce EXACTLY ${templates.length} NEW problems, one per template, in the same order. Each new problem must: (1) cover the SAME topic and test the SAME integration concept as its template, (2) use a clearly DIFFERENT, specific, realistic named deployment scenario (never copy the template), (3) require the student to analyze evidence and justify an operational decision in a multi-sentence answer, and (4) be fully self-contained — do NOT reference "the lecture", "the text", or "the course"; state all relevant facts from the scenario in the problem. NEVER ask for a definition, abstract comparison, terminology recall, a one-word answer, or bare yes/no. For each problem also write a multi-sentence model "correctAnswer" showing the case-specific reasoning and a short "explanation" of what earns full credit. Respond as strict JSON: {"problems": [{"prompt": string, "correctAnswer": string, "explanation": string}, ...]} with exactly ${templates.length} items.`,
         JSON.stringify({
           assignmentKind: assignment.kind,
           assignmentTitle: assignment.title,
           templates: templates.map((t, i) => ({
             number: i + 1,
-            topic: t.topicTitle ?? "the math behind AI",
+            topic: t.topicTitle ?? "generative-model integration",
             promptStyleExample: t.prompt,
             modelAnswerExample: t.correctAnswer,
           })),
@@ -99,16 +116,16 @@ router.post(
       generated = [];
     }
 
-    // Fall back to a self-contained restatement if generation failed/short.
+    // Fall back to the grounded source item if generation failed/short.
     const finalProblems = templates.map((t, i) => {
       const g = generated[i];
-      const topic = t.topicTitle ?? "this topic";
       if (
         g &&
         typeof g.prompt === "string" &&
         g.prompt.trim() &&
         typeof g.correctAnswer === "string" &&
-        g.correctAnswer.trim()
+        g.correctAnswer.trim() &&
+        isValidReasoningProblem(g)
       ) {
         return {
           topicId: t.topicId,
@@ -121,10 +138,10 @@ router.post(
       }
       return {
         topicId: t.topicId,
-        prompt: `Practice (${topic}): In a short paragraph, explain the central idea of "${topic}" and apply it to an original example you describe in full.`,
+        prompt: t.prompt,
         correctAnswer: t.correctAnswer,
         explanation:
-          "Re-read the relevant section, state the main claim in your own words, and ground it with a concrete example.",
+          "Apply the relevant integration concept to the specific facts in the scenario and justify the operational conclusion in multiple sentences.",
       };
     });
 

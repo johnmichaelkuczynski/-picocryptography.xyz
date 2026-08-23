@@ -40,13 +40,19 @@ const features = [
   {
     icon: BarChart3,
     title: "One Intensive Day, 2 Topics",
-    body: "From why AI is really math all the way to how it teaches itself.",
+    body: "From the generative-model API surface through a production integration.",
   },
 ];
 
 const topics = [
-  { session: "Morning session", title: "Numbers as meaning: why AI is really math" },
-  { session: "Afternoon session", title: "How AI learns: from matrices to backpropagation" },
+  {
+    session: "Morning session",
+    title: "Models as tools: what a generative model actually gives you",
+  },
+  {
+    session: "Afternoon session",
+    title: "Building with generation: wiring a model into a real system",
+  },
 ];
 
 function CourseEntryButton({
@@ -76,7 +82,7 @@ export default function Landing() {
             <Search className="w-4 h-4" />
           </div>
           <span className="font-serif font-semibold text-lg tracking-tight">
-            AI Math Level 1
+            Generative AI Integration
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -95,7 +101,7 @@ export default function Landing() {
         <div className="flex-1 min-w-0">
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-8">
-            A one-day intensive course on the mathematics behind modern AI.
+            A one-day intensive course on integrating generative AI into real systems.
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <CourseEntryButton
@@ -168,7 +174,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        AI Math Level 1
+        Generative AI Integration
       </footer>
     </div>
   );

@@ -13,6 +13,11 @@ function plainTitle(title: string): string {
 type OverviewWeek = { lectures?: Array<{ title: string }> };
 type Overview = { weeks?: OverviewWeek[] };
 
+const COURSE_TOPIC_TITLES = [
+  "Models as tools: what a generative model actually gives you",
+  "Building with generation: wiring a model into a real system",
+];
+
 export function useCourseTopicTitles(): string[] {
   const [titles, setTitles] = useState<string[]>([]);
   useEffect(() => {
@@ -24,7 +29,11 @@ export function useCourseTopicTitles(): string[] {
         const list = data.weeks.flatMap(
           (w) => w.lectures?.map((l) => plainTitle(l.title)) ?? [],
         );
-        setTitles(list);
+        setTitles(
+          list.map(
+            (title, index) => COURSE_TOPIC_TITLES[index] ?? plainTitle(title),
+          ),
+        );
       })
       .catch(() => {});
     return () => {

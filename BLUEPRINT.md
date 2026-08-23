@@ -1,12 +1,14 @@
-# AI Math Level 1 — App Blueprint
+# Generative AI Integration — App Blueprint
 
-A complete architectural blueprint for the AI Math Level 1 one-day intensive intro course on the math behind AI. This document is the single reference for what the app does, how it's wired, and the contracts between pieces. For day-to-day commands and gotchas see `replit.md`.
+A complete architectural blueprint for the Generative AI Integration one-day intensive course. This document is the single reference for what the app does, how it is wired, and the contracts between pieces. For day-to-day commands and gotchas see `replit.md`.
 
 ---
 
 ## 1. Product summary
 
-AI Math Level 1 is a self-paced, single-user, no-login web course covering a one-day intensive, plain-language intro to the math behind artificial intelligence (2 topics across two sessions, from "why AI is really math" through backpropagation). Students read AI-rewritten lecture notes at three lengths, ask an AI tutor scoped to the section they're reading, drill on adaptive practice problems, and submit homework / a course test / a final that are AI-graded and AI-detection-screened.
+Generative AI Integration is a self-paced, single-user, no-login web course covering two sessions. **Models as tools** explains the model API surface: prompts and tokens, message roles, context-window budgets, sampling controls, structured output, tool calling, streaming, latency, pricing, and the responsibilities of an integration layer. **Building with generation** covers prompt contracts, retrieval-augmented generation, agents and tool-use loops, evaluation, guardrails, and deployment through an end-to-end grounded support assistant. Students read AI-rewritten lecture notes at three lengths, ask an AI tutor scoped to the section they are reading, drill on adaptive practice problems, and submit homework, a course test, and a final that are AI-graded and AI-detection-screened.
+
+Two diagnostic primers accompany the sessions. The subject primer asks students to identify the concept and deciding evidence in concrete integration failures rather than defaulting to a better-prompt explanation. The general primer applies analysis, inference, evaluation, deduction, and induction to AI systems, with particular attention to what outputs prove, what architecture guarantees, and why a demonstration does not establish reliability.
 
 The product surface is two deployable artifacts in one pnpm monorepo:
 
@@ -145,7 +147,7 @@ It adds penalty points for:
 | `longestBulkInsertChars > 40` *or* `longestBulkInsertChars / textLen > 0.4` | +0.50 | One paste covers most of the answer. |
 | `bulkInsertCount >= 2 && longestBulkInsert > 25` | +0.15 | Multiple paste events. |
 | `keystrokeCount / textLen < 0.6` with `textLen > 30` | +0.30 | Far fewer keys pressed than characters of output — paste-like. |
-| `charsPerSecond > 12` with `textLen > 30` | +0.20 | Sustained typing speed no human freshman maintains. |
+| `charsPerSecond > 12` with `textLen > 30` | +0.20 | Sustained typing speed that does not resemble normal human composition. |
 | `longestBulkInsert > 30 && rewriteSegments >= 2` | +0.15 | Big paste followed by reword passes — the giveaway pattern. |
 
 Clamped to `[0, 1]`. `diachronicFlagged = diachronicScore >= 0.55`.

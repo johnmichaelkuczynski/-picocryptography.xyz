@@ -4,8 +4,8 @@ import { AppShell } from '../AppShell';
 
 export function Scene5() {
   const [phase, setPhase] = useState(0);
-  const question = "Why do similar words end up close together?";
-  const answer = "Because during training, the AI adjusted the coordinates based on context. Words that appear in similar sentences get nudged closer together in the math space.";
+  const question = "Why doesn't the model remember our previous conversation in production?";
+  const answer = "Because the API is stateless. The model doesn't remember previous calls; your integration layer must pass the entire conversation history in every new request.";
   const [typedQ, setTypedQ] = useState("");
   const [typedA, setTypedA] = useState("");
 

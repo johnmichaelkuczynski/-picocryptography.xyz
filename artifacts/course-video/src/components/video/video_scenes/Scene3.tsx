@@ -4,8 +4,10 @@ import { AppShell } from '../AppShell';
 
 export function Scene3() {
   const topics = [
-    "Numbers as meaning: why AI is really math",
-    "How AI learns: from matrices to backpropagation"
+    "Models as tools: what a model actually gives you",
+    "Building with generation: wiring into a real system",
+    "Subject reasoning: diagnosing integration cases",
+    "General reasoning: core reasoning skills"
   ];
 
   return (
@@ -23,9 +25,9 @@ export function Scene3() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <div className="text-sm font-medium text-[#718096] mb-1">DAY 1</div>
-            <h2 className="text-3xl font-display font-bold text-[#1A2B3D]">The math behind the machine</h2>
-            <p className="text-[#4A5568] mt-2">2 topics • One intensive day</p>
+            <div className="text-sm font-medium text-[#718096] mb-1">ONE-DAY INTENSIVE</div>
+            <h2 className="text-3xl font-display font-bold text-[#1A2B3D]">Generative AI Integration</h2>
+            <p className="text-[#4A5568] mt-2">2 course topics • 2 diagnostic primers</p>
           </motion.div>
 
           <div className="flex-1 bg-white rounded-lg border border-[#E2E8F0] shadow-sm overflow-hidden flex flex-col relative">

@@ -57,7 +57,7 @@ export async function gradeAnswer(opts: {
   try {
     const out = await chatJson<{ correct: boolean; explanation: string }>(
       [
-        "You grade short introductory AI math answers. Judge whether the student's answer is ACTUALLY CORRECT as an answer to the question, using your own expert knowledge of the math behind AI and reasoning. Judge on substance alone.",
+        "You grade short answers for the course Generative AI Integration. Judge whether the student's answer is ACTUALLY CORRECT as an answer to the question, using expert knowledge of production generative-model integration and careful reasoning. Judge on substance alone.",
         "",
         "About the reference answer:",
         "- A `reference_answer` is provided. It is only a FALLIBLE HINT from the course materials — it may be incomplete, narrow, or simply WRONG. It is NOT ground truth.",
@@ -123,9 +123,9 @@ export async function gradePracticeEssay(opts: {
       feedback: string;
     }>(
       [
-        "You are a warm, rigorous introductory AI math tutor giving feedback on a PRACTICE answer (never penalized — the goal is to help the student improve before the real graded version).",
+        "You are a warm, rigorous Generative AI Integration tutor giving feedback on a PRACTICE answer (never penalized — the goal is to help the student improve before the real graded version).",
         "",
-        "Decide `correct` by whether the student's answer is ACTUALLY CORRECT on the merits, using your own expert knowledge of the math behind AI — not by similarity to any reference. A `reference_answer` is provided, but it is only a FALLIBLE HINT from the course materials: it may be incomplete, narrow, or simply WRONG, and is NOT ground truth. If the student is actually correct but differs from or contradicts the reference, mark `correct` = true; if the reference is wrong, ignore it.",
+        "Decide `correct` by whether the student's answer is ACTUALLY CORRECT on the merits, using expert knowledge of production generative-model integration — not by similarity to any reference. A `reference_answer` is provided, but it is only a FALLIBLE HINT from the course materials: it may be incomplete, narrow, or simply WRONG, and is NOT ground truth. If the student is actually correct but differs from or contradicts the reference, mark `correct` = true; if the reference is wrong, ignore it.",
         "",
         "Work out what the question actually asks for, then mark `correct` = true if the student genuinely supplies a correct answer. Accept paraphrases, different wording, different examples, and equivalent reasoning. If two answers do not differ in substance they get the same result.",
         "",

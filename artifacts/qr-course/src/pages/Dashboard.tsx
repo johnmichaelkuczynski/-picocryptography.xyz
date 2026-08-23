@@ -21,9 +21,9 @@ export default function Dashboard() {
       <div className="p-8 max-w-6xl mx-auto w-full flex flex-col gap-8 min-w-0">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary mb-2">
-            {overview ? overview.title : <Skeleton className="h-9 w-64" />}
+            {overview ? "Generative AI Integration" : <Skeleton className="h-9 w-64" />}
           </h1>
-          <p className="text-muted-foreground">Welcome to your AI Math Level 1 course workspace.</p>
+          <p className="text-muted-foreground">Welcome to your Generative AI Integration course workspace.</p>
         </div>
 
         <ReasoningCallout phase="before" />

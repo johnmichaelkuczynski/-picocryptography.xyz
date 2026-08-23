@@ -3,8 +3,8 @@
 //
 // Two instruments, each offered at FOUR time-points (phases) so a student can
 // gauge themselves before, during, and after the course:
-//   - subject  — AI Math subject-specific reasoning. Realistic short cases
-//     about the course material (the math behind AI); the best-supported answer
+//   - subject  — Generative AI Integration reasoning. Realistic short cases
+//     about model APIs and production integration; the best-supported answer
 //     is keyed first.
 //   - general  — General Reasoning. Genuine reasoning items spanning analysis,
 //     inference, evaluation, deduction, and induction (NOT a "docility"/agree-
@@ -86,27 +86,27 @@ export type GenSpec = { topicFocus: string; level: string };
 const SUBJECT_SPECS: Record<Phase, GenSpec> = {
   before: {
     level:
-      "Intro level: answerable by a thoughtful newcomer reasoning carefully, BEFORE any lessons. Do not assume prior course knowledge or technical terms. No calculations — reward plain-language reasoning.",
+      "Intro level: answerable by a thoughtful newcomer before lessons. Do not require technical vocabulary; reward brief plain-language reasoning from details in the scene.",
     topicFocus:
-      "What 'AI is really math' means and how to think about it: that an AI, however human it sounds, is doing an enormous amount of plain arithmetic on lists of numbers rather than truly understanding; that everything (text, images, sound) is first turned into numbers; that a model is a giant pile of tunable numbers ('weights') that learning adjusts; and that AI is math, not magic — so it has no secret wisdom and can be confidently wrong.",
+      "Basic boundaries of a generative feature: the API returns generated text rather than verified truth or durable memory; a production application must supply conversation state, validation, authorization, retries, and safe failure behavior. Use simple cases such as invented policy, forgotten preferences, or malformed output.",
   },
   third: {
     level:
-      "Early course level: covers roughly the first third of the one-day course. Plain language, short realistic cases, no calculations.",
+      "Early course level: covers Session 1 fundamentals through context and generation controls. Keep cases brief and one-sentence-friendly.",
     topicFocus:
-      "Most of the morning session (Numbers as meaning): AI is really math (inputs become numbers; weights are tunable numbers; learning adjusts them; math not magic); vectors and embeddings (a vector is a list of numbers acting as a location, an embedding places similar-meaning things near each other so nearness IS meaning, and directions can carry meaning like king-man+woman≈queen); and measuring likeness (small distance or a large dot product between vectors signals similarity, as used by search and recommendations).",
+      "The model API contract (prompt/messages in, tokens out), system/user/assistant roles, stateless calls, context windows as finite per-request budgets rather than memory, and temperature/top-p/stop sequences as generation controls that do not ensure truth.",
   },
   twothirds: {
     level:
-      "Mid course level: covers roughly the first two-thirds of the one-day course. Realistic short cases requiring a step of reasoning, no calculations.",
+      "Mid-course level: covers all of Session 1 and early Session 2. Use short cases requiring one clear diagnostic step.",
     topicFocus:
-      "All of the morning session (Numbers as meaning) plus the start of the afternoon session (How AI learns): AI as math, vectors/embeddings, and measuring likeness (distance is how far apart two vectors are, the dot product checks whether they point the same way, cosine similarity ignores size — used for search and recommendations), PLUS matrices (a grid of numbers that reshapes a vector by taking weighted blends of inputs, so one layer of a network is a matrix and stacking them moves information), slopes and gradients (a loss measures how wrong the model is, and the gradient is the per-dial slope pointing uphill toward more error, so you move the opposite way), and gradient descent (learning by repeated small downhill steps on the error landscape, where the learning-rate step size matters — too big and the model overshoots and bounces).",
+      "All Session 1 concepts including structured output, tool calling, streaming, latency, token pricing, and the integration layer; plus prompt contracts and RAG using chunking, embeddings, vector search, grounding, and the distinction between finding a document and finding the right passage.",
   },
   after: {
     level:
-      "End-of-course level: covers the whole one-day course. Integrative short cases that apply more than one idea, no calculations.",
+      "End-of-course level: covers both sessions. Use concise integrative cases, still answerable in one sentence.",
     topicFocus:
-      "The full one-day course, both sessions: AI as math, vectors/embeddings, measuring likeness, matrices, slopes/gradients, and gradient descent (learning by repeatedly stepping downhill on the error landscape, where the learning-rate step size matters and you can get stuck in local valleys), PLUS probability (AI assigns probabilities rather than knowing facts, a chatbot predicts the next word, confidence reflects pattern-fit not truth so it can be confidently wrong, and a little randomness/'temperature' adds variety) and backpropagation (the self-teaching loop: a forward pass guesses, the loss scores the error, blame is passed backward to give each weight a gradient, gradient descent nudges them, repeated millions of times).",
+      "The full course: model API and context limits; output/tool contracts; streaming, latency, and cost; robust prompts; RAG; controlled agent loops; golden sets, repeated regression tests, and calibrated LLM-as-judge; validation, bounded retries, fallbacks, prompt injection, PII, rate/cost limits; caching, observability, model pinning, and end-to-end grounded support assistants.",
   },
 };
 
@@ -152,7 +152,7 @@ const FORMAT_LABEL: Record<DiagFormat, string> = {
 function instructionsFor(instrument: Instrument, format: DiagFormat): string {
   const subject =
     instrument === "subject"
-      ? "Answer each question about the math behind AI — these reward careful reasoning about realistic cases (no calculations), not memorized facts"
+      ? "Answer each Generative AI Integration case — these reward careful reasoning from the scene, not memorized definitions"
       : "Answer each reasoning question — these measure how you think, not what you recall";
   const body =
     format === "mcq"
@@ -164,86 +164,86 @@ function instructionsFor(instrument: Instrument, format: DiagFormat): string {
 }
 
 // ===========================================================================
-// SUBJECT — AI Math blueprint cases (best answer keyed FIRST)
+// SUBJECT — Generative AI Integration blueprint cases (best answer keyed FIRST)
 // ===========================================================================
 
 const SUBJECT_BEFORE: DiagItem[] = [
   {
     prompt:
-      "A reporter asks an AI researcher how a chatbot manages to write a clever poem. The researcher would most likely explain it in terms of:",
+      "A support bot confidently invents a refund rule that is absent from company policy; which response best addresses the immediate risk?",
     options: [
-      "an enormous amount of arithmetic on numbers producing a likely-looking output, not genuine understanding",
-      "a tiny conscious mind inside the computer feeling inspired",
-      "the computer copying the poem word-for-word from one place",
-      "the reporter's personal opinion of poetry",
+      "Check its answer against approved policy evidence and withhold or escalate unsupported claims",
+      "Trust it because confident wording signals verified knowledge",
+      "Raise temperature so it offers more varied policies",
+      "Ask customers to decide whether the policy sounds official",
     ],
     modelAnswer:
-      "The course's view is that AI is really math: a chatbot does a huge amount of arithmetic on numbers to produce a likely-looking output, rather than truly understanding or having a mind.",
+      "Generated confidence is not verification, so the system should ground and validate the answer, then abstain or escalate when policy support is absent.",
   },
   {
     prompt:
-      "A headline claims 'AI just KNOWS the right answer — it's basically magic.' How would someone who understands AI most likely treat this claim?",
+      "A prototype remembers a user's address in one chat, but separate production API calls do not; what is the best explanation?",
     options: [
-      "As an oversimplification, since AI is arithmetic on numbers and can be confidently wrong",
-      "As obviously true and needing no evidence",
-      "As proof that AI can never make a mistake",
-      "As true only for very expensive AI",
+      "The chat product managed history, while the raw model call has no durable conversation state",
+      "Production models intentionally forget all addresses for politeness",
+      "A higher temperature would restore the missing address",
+      "The model can only remember data entered on weekends",
     ],
     modelAnswer:
-      "It is an oversimplification; AI is math, not magic — it works by arithmetic on numbers, has no secret wisdom, and can be confidently wrong.",
+      "The raw API call is stateless; the application must persist and selectively resend relevant state.",
   },
   {
     prompt:
-      "A product demo shows one AI system captioning photos, answering questions, and composing music. According to this course, what is actually going on inside it in every one of those cases?",
+      "A model returns a refund amount in an eloquent paragraph that billing code cannot safely consume; what should the team add?",
     options: [
-      "A system doing huge amounts of arithmetic on lists of numbers",
-      "A private library storing every fact ever written",
-      "A computer that feels emotions like a person",
-      "A short list of if-then rules written by hand",
+      "A schema-constrained response plus code validation before any action",
+      "More adjectives so the paragraph sounds decisive",
+      "A longer conversation with no output contract",
+      "Automatic execution whenever the prose contains a number",
     ],
     modelAnswer:
-      "At bottom an AI is doing an enormous amount of plain arithmetic on lists of numbers — that's the core 'AI is really math' idea.",
+      "The application needs structured output and validation because fluent text is not a safe software contract.",
   },
 ];
 
 const SUBJECT_THIRD: DiagItem[] = [
   {
     prompt:
-      "A search engine returns a great match for 'how to fix a flat tire' when you actually typed 'repairing a punctured wheel,' even though the two share almost no words. This is best understood as showing that:",
+      "A long chat suddenly loses its earliest requirement after a large document is added; which diagnosis best fits?",
     options: [
-      "both phrases are turned into vectors that land near each other on a meaning map (an embedding)",
-      "the engine secretly stored every possible phrasing of every question",
-      "the two phrases share spelling the computer happened to notice",
-      "the engine guessed randomly and got lucky",
+      "History, document text, instructions, and output compete for a finite context budget",
+      "The system role permanently stores only the newest requirement",
+      "Temperature erased a database record",
+      "Streaming prevents the model from reading early messages",
     ],
     modelAnswer:
-      "An embedding turns each phrase into a vector (a location), placing similar meanings close together, so differently-worded phrases that mean the same thing land near each other and match.",
+      "The context window is finite working space, so added documents can displace or crowd out earlier relevant content.",
     skillArea: "analysis",
   },
   {
     prompt:
-      "A music app turns songs into vectors, notices that a new song's vector sits close to ones you love, and recommends it. This best illustrates that:",
+      "A developer lowers temperature, but the bot still cites a nonexistent policy; what follows?",
     options: [
-      "AI finds similar things by measuring likeness between vectors (small distance or a large dot product)",
-      "the app has actually listened to and understood every song",
-      "recommendations are just whatever songs are newest",
-      "the app reads your mind directly",
+      "Sampling controls can reduce variation but cannot guarantee factual truth",
+      "Low temperature verifies every cited fact",
+      "Top-p is the only possible cause of hallucination",
+      "A stop sequence would supply the missing policy",
     ],
     modelAnswer:
-      "The app represents songs as vectors and measures likeness (small distance / large dot product) between what you like and other songs, ranking the closest — no real understanding of the audio needed.",
+      "Temperature changes token sampling, not grounding or verification, so evidence and validation are still required.",
     skillArea: "inference",
   },
   {
     prompt:
-      "Someone says, 'A computer can't possibly handle the meaning of words — meaning isn't a number.' Given the course, why would you push back?",
+      "A system instruction says to be concise, while a user asks for a poem; why are message roles useful here?",
     options: [
-      "Because an embedding turns meaning into a location in space, so similar meanings sit close and nearness stands in for meaning",
-      "Because computers secretly understand language exactly like people do",
-      "Because words don't really have any meaning at all",
-      "Because meaning is something that can never be studied",
+      "They distinguish standing application instructions from the current request, though code must still enforce security",
+      "They make user content physically unable to influence behavior",
+      "They give the model durable memory between API calls",
+      "They eliminate the need to resend relevant history",
     ],
     modelAnswer:
-      "Embeddings make meaning a location in space: similar-meaning words are placed near each other, so for a machine nearness IS meaning — meaning becomes geometry it can compute with.",
+      "Roles organize instruction priority and conversation turns, but they are not a security or memory boundary.",
     skillArea: "evaluation",
   },
 ];
@@ -251,41 +251,41 @@ const SUBJECT_THIRD: DiagItem[] = [
 const SUBJECT_TWOTHIRDS: DiagItem[] = [
   {
     prompt:
-      "A model's answers are terrible at first, but after training they're good — even though each training step barely changes anything. What does this best illustrate?",
+      "Retrieval finds the correct policy file but returns a chunk containing the wrong exception; what should be investigated first?",
     options: [
-      "Gradient descent: repeated small downhill steps on the error landscape slowly drive the loss down",
-      "The model suddenly understood the topic in a single moment",
-      "Someone hand-set the millions of dials to the right values",
-      "Training does nothing; the model was always good",
+      "Chunk boundaries, metadata, ranking, and passage-level retrieval evaluation",
+      "Only the color of the chat interface",
+      "Whether temperature can recreate the missing passage",
+      "Whether the user typed the exact document title",
     ],
     modelAnswer:
-      "It shows gradient descent: many tiny downhill steps on the error landscape accumulate, carrying the model from high error to low error even though each step is small.",
+      "Document recall succeeded but passage retrieval failed, so chunking and ranking should be tested independently of generation.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "During training, a model's error keeps bouncing up and down and never settles into a low value. What is the most likely explanation?",
+      "A streaming endpoint shows words quickly but the complete answer still takes ten seconds; which conclusion is strongest?",
     options: [
-      "The learning rate (step size) is too big, so it overshoots the valley and bounces around",
-      "The model has no weights left to adjust",
-      "The data was turned into letters instead of numbers",
-      "Gradients always cause bouncing and nothing can be done",
+      "Streaming improved perceived time to first text, not necessarily total generation latency",
+      "Streaming guarantees lower token cost",
+      "The context window has become permanent memory",
+      "Structured output can no longer be validated",
     ],
     modelAnswer:
-      "A too-large learning rate makes each step overshoot the low point, so the model leaps past the valley and bounces around instead of settling — smaller steps would help.",
+      "Streaming delivers partial tokens sooner but does not guarantee faster completion or less model work.",
     skillArea: "inference",
   },
   {
     prompt:
-      "Inside one layer of a neural network, what is really happening to the numbers that flow through it?",
+      "A model asks to call issue_refund with valid JSON; what must happen before money moves?",
     options: [
-      "A matrix reshapes the vector, making each output a weighted blend of the inputs",
-      "The layer looks up the answer in a stored table",
-      "The layer ponders the meaning the way a person would",
-      "Nothing changes; the numbers pass straight through unaltered",
+      "Code must validate arguments, authorize the user and policy, then execute the tool",
+      "The model's request itself executes the refund",
+      "The JSON schema proves the refund is permitted",
+      "A high top-p setting should approve the transaction",
     ],
     modelAnswer:
-      "A layer is a matrix that transforms the vector: each output number is a weighted blend of all the inputs (using learned weights), which is how information gets mixed and reshaped.",
+      "Tool calling proposes an action; trusted application code retains validation, authorization, and execution.",
     skillArea: "analysis",
   },
 ];
@@ -293,41 +293,41 @@ const SUBJECT_TWOTHIRDS: DiagItem[] = [
 const SUBJECT_AFTER: DiagItem[] = [
   {
     prompt:
-      "A chatbot states a made-up 'fact' in a calm, confident voice, and it turns out to be false. Which explanation fits what the course shows?",
+      "An agent repeats the same tool call after every result until costs spike; which fix is most reliable?",
     options: [
-      "AI assigns probabilities and predicts likely words; confidence reflects pattern-fit, not truth, so it can be confidently wrong",
-      "The chatbot is deliberately lying",
-      "A confident AI is always correct, so this can't really happen",
-      "It must simply have been hacked",
+      "Enforce iteration limits, repeated-call detection, idempotency, and a bounded fallback in code",
+      "Ask the model more politely not to loop",
+      "Increase its context window without any limit",
+      "Cache every tool result across all users",
     ],
     modelAnswer:
-      "AI produces probabilities and predicts likely words rather than knowing facts; its confidence reflects how well an answer fits learned patterns, not whether it's true, so confident-but-wrong is expected.",
+      "Agent control flow belongs in the orchestrator, which must cap loops and prevent duplicate side effects.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "After a wrong answer, a network adjusts millions of dials, even though no one tells it which ones were at fault. How should this be understood?",
+      "A new prompt passes ten favorite examples but fails rare users after launch; what evidence was missing?",
     options: [
-      "Backpropagation assigns blame backward to give each weight a gradient, then gradient descent nudges them all",
-      "The network randomly changes dials and hopes for the best",
-      "A programmer fixes each dial by hand after every mistake",
-      "The network actually can't learn from its mistakes at all",
+      "A representative golden set, repeated regression runs, and slice-level deployment criteria",
+      "A single more enthusiastic LLM judge",
+      "Proof that any ten successes guarantee reliability",
+      "A higher temperature in the demonstration",
     ],
     modelAnswer:
-      "Backpropagation works backward from the error to assign each weight a share of the blame (a gradient), and gradient descent then nudges every weight a small step to reduce the loss.",
+      "Handpicked successes do not support broad reliability; representative repeated evaluation and calibrated judging are needed.",
     skillArea: "inference",
   },
   {
     prompt:
-      "A commentator says, 'AI literally understands and knows the truth — it's a digital mind.' Drawing on the course, the strongest criticism is that:",
+      "A cached assistant answer exposes one customer's details to another; which response best addresses the architecture?",
     options: [
-      "AI is arithmetic on numbers that assigns probabilities; it has no real understanding and can be confidently wrong",
-      "AI really is a conscious mind, so the claim is fine",
-      "AI knows every truth there is, so the claim is fine",
-      "Nothing about AI can ever be studied",
+      "Disable the unsafe cache and key any safe cache by all privacy, authorization, and version context",
+      "Hide the leaked name in the interface but keep the cache",
+      "Raise rate limits so future replies arrive faster",
+      "Let the model decide which users may share entries",
     ],
     modelAnswer:
-      "AI is math — arithmetic on numbers that outputs probabilities — not a knowing mind; it has no guaranteed access to truth and can be confidently wrong, so 'understands and knows the truth' overstates it.",
+      "Caching must never cross authorization boundaries; personalized data requires complete isolation or no shared cache.",
     skillArea: "evaluation",
   },
 ];
@@ -440,7 +440,7 @@ const BASE_CONTENT: BaseContent[] = PHASE_ORDER.flatMap((phase) => {
     {
       instrument: "subject" as const,
       phase,
-      baseTitle: `AI Math Check — ${PHASE_LABEL[phase]}`,
+      baseTitle: `Generative AI Integration Check — ${PHASE_LABEL[phase]}`,
       items: subjectItems[phase],
     },
     {
