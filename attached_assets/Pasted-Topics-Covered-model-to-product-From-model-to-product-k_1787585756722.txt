@@ -1,0 +1,10 @@
+Topics Covered
+
+model-to-product — From model to product
+keeping-it-running — Keeping it running
+reasoning-primer-subject — How to reason about MLOps cases
+reasoning-primer-general — Core reasoning skills
+
+model-to-product: From model to product. Sub-topics: Why a working notebook is not a working system — the gap between an experiment and a service; Data pipelines — where training data actually comes from and why it breaks; Versioning three things at once — code, data, and model; Reproducibility — the same inputs, the same result, months later; Training-serving skew — the model sees one thing in the lab and another in production; Packaging and deployment — batch scores, real-time endpoints, and the model inside the app; The feature store and why teams stop recomputing the same things. In the real world: a fraud model that scored perfectly in testing and quietly failed the day it went live, because a column meant something different in the production database.
+
+keeping-it-running: Keeping it running. Sub-topics: Monitoring beyond uptime — watching predictions, not just servers; Drift — when the world changes out from under a trained model, and the difference between data drift and concept drift; Ground truth arrives late, so how do you know it's wrong before you know it's wrong; Retraining — scheduled, triggered, or never, and the cost of each; Rollback, shadow deployment, and canary releases; A/B testing a model against the one it replaces; Cost, latency, and the tradeoffs nobody mentions until the bill; Incident response and the audit trail — who deployed what, when, and can you prove it. In the real world: a recommendation system whose accuracy decayed for six weeks before anyone noticed, because nothing was broken — it was just gradually wrong. The two primers mirror the originals — one giving students a concrete production scenario and asking which MLOps concept explains it, the other covering the same five general skills (analysis, inference, evaluation, deduction, induction).
