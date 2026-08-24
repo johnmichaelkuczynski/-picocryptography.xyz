@@ -3,8 +3,8 @@
 //
 // Two instruments, each offered at FOUR time-points (phases) so a student can
 // gauge themselves before, during, and after the course:
-//   - subject  — Generative AI Integration reasoning. Realistic short cases
-//     about model APIs and production integration; the best-supported answer
+//   - subject  — Machine Learning Operations reasoning. Realistic short cases
+//     about production ML systems; the best-supported answer
 //     is keyed first.
 //   - general  — General Reasoning. Genuine reasoning items spanning analysis,
 //     inference, evaluation, deduction, and induction (NOT a "docility"/agree-
@@ -88,25 +88,25 @@ const SUBJECT_SPECS: Record<Phase, GenSpec> = {
     level:
       "Intro level: answerable by a thoughtful newcomer before lessons. Do not require technical vocabulary; reward brief plain-language reasoning from details in the scene.",
     topicFocus:
-      "Basic boundaries of a generative feature: the API returns generated text rather than verified truth or durable memory; a production application must supply conversation state, validation, authorization, retries, and safe failure behavior. Use simple cases such as invented policy, forgotten preferences, or malformed output.",
+      "Basic boundaries between a model experiment and a production ML system: real data pipelines change, a model file alone is not reproducible, live inputs must match training meaning, and a service can stay online while prediction quality declines. Use simple cases that reward practical judgment without requiring jargon.",
   },
   third: {
     level:
       "Early course level: covers Session 1 fundamentals through context and generation controls. Keep cases brief and one-sentence-friendly.",
     topicFocus:
-      "The model API contract (prompt/messages in, tokens out), system/user/assistant roles, stateless calls, context windows as finite per-request budgets rather than memory, and temperature/top-p/stop sequences as generation controls that do not ensure truth.",
+      "Session 1 fundamentals: the notebook-to-service gap; data sources and pipeline validation; linked versioning of code, data, configuration, and model artifacts; reproducibility; and training-serving skew caused by inconsistent feature meaning.",
   },
   twothirds: {
     level:
       "Mid-course level: covers all of Session 1 and early Session 2. Use short cases requiring one clear diagnostic step.",
     topicFocus:
-      "All Session 1 concepts including structured output, tool calling, streaming, latency, token pricing, and the integration layer; plus prompt contracts and RAG using chunking, embeddings, vector search, grounding, and the distinction between finding a document and finding the right passage.",
+      "All Session 1 concepts, including batch, real-time, and embedded packaging, model registries, feature consistency, and feature stores; plus early Session 2 monitoring beyond uptime, data versus concept drift, delayed ground truth, and leading indicators.",
   },
   after: {
     level:
       "End-of-course level: covers both sessions. Use concise integrative cases, still answerable in one sentence.",
     topicFocus:
-      "The full course: model API and context limits; output/tool contracts; streaming, latency, and cost; robust prompts; RAG; controlled agent loops; golden sets, repeated regression tests, and calibrated LLM-as-judge; validation, bounded retries, fallbacks, prompt injection, PII, rate/cost limits; caching, observability, model pinning, and end-to-end grounded support assistants.",
+      "The full course: reproducible pipelines and linked versions; training-serving skew; deployment patterns and feature stores; prediction and outcome monitoring; data and concept drift; delayed labels; governed retraining; shadow, canary, A/B, and rollback releases; cost and latency; incident response, lineage, and audit trails.",
   },
 };
 
@@ -152,7 +152,7 @@ const FORMAT_LABEL: Record<DiagFormat, string> = {
 function instructionsFor(instrument: Instrument, format: DiagFormat): string {
   const subject =
     instrument === "subject"
-      ? "Answer each Generative AI Integration case — these reward careful reasoning from the scene, not memorized definitions"
+      ? "Answer each Machine Learning Operations case — these reward careful reasoning from the scene, not memorized definitions"
       : "Answer each reasoning question — these measure how you think, not what you recall";
   const body =
     format === "mcq"
@@ -164,86 +164,86 @@ function instructionsFor(instrument: Instrument, format: DiagFormat): string {
 }
 
 // ===========================================================================
-// SUBJECT — Generative AI Integration blueprint cases (best answer keyed FIRST)
+// SUBJECT — Machine Learning Operations blueprint cases (best answer keyed FIRST)
 // ===========================================================================
 
 const SUBJECT_BEFORE: DiagItem[] = [
   {
     prompt:
-      "A support bot confidently invents a refund rule that is absent from company policy; which response best addresses the immediate risk?",
+      "A model works in one analyst's notebook but nobody else can recreate it because the data file and package versions are unknown; what should the team do first?",
     options: [
-      "Check its answer against approved policy evidence and withhold or escalate unsupported claims",
-      "Trust it because confident wording signals verified knowledge",
-      "Raise temperature so it offers more varied policies",
-      "Ask customers to decide whether the policy sounds official",
+      "Record and version the code, data source, configuration, environment, and resulting model together",
+      "Copy only the final model file to a shared folder",
+      "Keep using the original laptop as the production server",
+      "Rename the notebook so its purpose is clearer",
     ],
     modelAnswer:
-      "Generated confidence is not verification, so the system should ground and validate the answer, then abstain or escalate when policy support is absent.",
+      "The experiment is not reproducible until its code, data, configuration, dependencies, and model artifact are linked and versioned.",
   },
   {
     prompt:
-      "A prototype remembers a user's address in one chat, but separate production API calls do not; what is the best explanation?",
+      "A fraud model tested well, but live scores fail after production sends transaction amounts in cents while training used dollars; what is the best diagnosis?",
     options: [
-      "The chat product managed history, while the raw model call has no durable conversation state",
-      "Production models intentionally forget all addresses for politeness",
-      "A higher temperature would restore the missing address",
-      "The model can only remember data entered on weekends",
+      "Training-serving skew changed the meaning of an input feature",
+      "The model needs a more colorful dashboard",
+      "Fraud models cannot be deployed in real time",
+      "The test set was necessarily too large",
     ],
     modelAnswer:
-      "The raw API call is stateless; the application must persist and selectively resend relevant state.",
+      "The offline and online systems supplied the same named feature in different units, which is training-serving skew.",
   },
   {
     prompt:
-      "A model returns a refund amount in an eloquent paragraph that billing code cannot safely consume; what should the team add?",
+      "A recommendation endpoint has perfect uptime, but customer engagement has fallen for weeks; which response best addresses the immediate blind spot?",
     options: [
-      "A schema-constrained response plus code validation before any action",
-      "More adjectives so the paragraph sounds decisive",
-      "A longer conversation with no output contract",
-      "Automatic execution whenever the prose contains a number",
+      "Monitor prediction behavior and eventual outcomes in addition to server health",
+      "Assume uptime proves recommendation quality",
+      "Increase server memory without examining predictions",
+      "Stop recording which model version made each prediction",
     ],
     modelAnswer:
-      "The application needs structured output and validation because fluent text is not a safe software contract.",
+      "Availability metrics cannot reveal gradual quality decay, so prediction and outcome monitoring must be added.",
   },
 ];
 
 const SUBJECT_THIRD: DiagItem[] = [
   {
     prompt:
-      "A long chat suddenly loses its earliest requirement after a large document is added; which diagnosis best fits?",
+      "A training pipeline succeeds after an upstream team silently changes a category code, but the new model behaves differently; what should be investigated first?",
     options: [
-      "History, document text, instructions, and output compete for a finite context budget",
-      "The system role permanently stores only the newest requirement",
-      "Temperature erased a database record",
-      "Streaming prevents the model from reading early messages",
+      "Data lineage, schema and value checks, and the meaning of the changed source field",
+      "Only whether the model file has a newer timestamp",
+      "Whether the dashboard uses the same font",
+      "Whether batch scoring can be renamed real-time scoring",
     ],
     modelAnswer:
-      "The context window is finite working space, so added documents can displace or crowd out earlier relevant content.",
+      "A successful run can still consume changed meaning, so the source change and its lineage and validation controls should be examined.",
     skillArea: "analysis",
   },
   {
     prompt:
-      "A developer lowers temperature, but the bot still cites a nonexistent policy; what follows?",
+      "A team saves the model artifact but not the training-data snapshot or preprocessing revision; what follows?",
     options: [
-      "Sampling controls can reduce variation but cannot guarantee factual truth",
-      "Low temperature verifies every cited fact",
-      "Top-p is the only possible cause of hallucination",
-      "A stop sequence would supply the missing policy",
+      "The release cannot be reliably reconstructed or explained from the model file alone",
+      "The artifact contains every data transformation automatically",
+      "A model registry makes source data unnecessary",
+      "Reproducibility depends only on the model filename",
     ],
     modelAnswer:
-      "Temperature changes token sampling, not grounding or verification, so evidence and validation are still required.",
+      "Reproducibility requires linked versions of data, code, configuration, environment, and model artifacts.",
     skillArea: "inference",
   },
   {
     prompt:
-      "A system instruction says to be concise, while a user asks for a poem; why are message roles useful here?",
+      "An online feature is recomputed by three services with slightly different definitions; which architectural change best reduces this risk?",
     options: [
-      "They distinguish standing application instructions from the current request, though code must still enforce security",
-      "They make user content physically unable to influence behavior",
-      "They give the model durable memory between API calls",
-      "They eliminate the need to resend relevant history",
+      "Centralize governed feature definitions and reuse them for training and serving",
+      "Let every service keep its own undocumented calculation",
+      "Version only the user interface",
+      "Remove feature freshness checks",
     ],
     modelAnswer:
-      "Roles organize instruction priority and conversation turns, but they are not a security or memory boundary.",
+      "Shared governed feature definitions reduce duplicated logic and training-serving inconsistency.",
     skillArea: "evaluation",
   },
 ];
@@ -251,41 +251,41 @@ const SUBJECT_THIRD: DiagItem[] = [
 const SUBJECT_TWOTHIRDS: DiagItem[] = [
   {
     prompt:
-      "Retrieval finds the correct policy file but returns a chunk containing the wrong exception; what should be investigated first?",
+      "A model's input distribution changes after a new customer segment arrives, but labeled accuracy has not yet changed; which conclusion is best?",
     options: [
-      "Chunk boundaries, metadata, ranking, and passage-level retrieval evaluation",
-      "Only the color of the chat interface",
-      "Whether temperature can recreate the missing passage",
-      "Whether the user typed the exact document title",
+      "Data drift has occurred and should be investigated, but it does not alone prove quality loss",
+      "Concept drift is proven and immediate deployment is required",
+      "The model is guaranteed to remain accurate",
+      "Uptime metrics can determine whether the new segment is predicted correctly",
     ],
     modelAnswer:
-      "Document recall succeeded but passage retrieval failed, so chunking and ranking should be tested independently of generation.",
+      "The changed input distribution is data drift; outcome evidence and pipeline checks are still needed to determine its effect.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A streaming endpoint shows words quickly but the complete answer still takes ten seconds; which conclusion is strongest?",
+      "A real-time model meets accuracy targets but its p99 latency exceeds the checkout budget; which conclusion is strongest?",
     options: [
-      "Streaming improved perceived time to first text, not necessarily total generation latency",
-      "Streaming guarantees lower token cost",
-      "The context window has become permanent memory",
-      "Structured output can no longer be validated",
+      "It is not production-ready for that decision path despite its accuracy",
+      "Accuracy automatically compensates for any latency",
+      "The latency matters only during training",
+      "Renaming the endpoint will meet the budget",
     ],
     modelAnswer:
-      "Streaming delivers partial tokens sooner but does not guarantee faster completion or less model work.",
+      "Operational requirements are part of model quality, so a candidate that misses the decision-time latency budget is not ready.",
     skillArea: "inference",
   },
   {
     prompt:
-      "A model asks to call issue_refund with valid JSON; what must happen before money moves?",
+      "Outcome labels arrive 60 days after prediction; what must the serving system retain now so later evaluation is valid?",
     options: [
-      "Code must validate arguments, authorize the user and policy, then execute the tool",
-      "The model's request itself executes the refund",
-      "The JSON schema proves the refund is permitted",
-      "A high top-p setting should approve the transaction",
+      "Prediction identity, timestamp, model and feature versions, and enough context to join the mature label",
+      "Only the latest aggregate accuracy number",
+      "Only the server's uptime percentage",
+      "No records, because delayed labels cannot be used",
     ],
     modelAnswer:
-      "Tool calling proposes an action; trusted application code retains validation, authorization, and execution.",
+      "Versioned prediction records are needed to join delayed outcomes to the exact release that produced them.",
     skillArea: "analysis",
   },
 ];
@@ -293,41 +293,41 @@ const SUBJECT_TWOTHIRDS: DiagItem[] = [
 const SUBJECT_AFTER: DiagItem[] = [
   {
     prompt:
-      "An agent repeats the same tool call after every result until costs spike; which fix is most reliable?",
+      "A drift alert automatically retrains and deploys a model built from a broken feed; which fix is most reliable?",
     options: [
-      "Enforce iteration limits, repeated-call detection, idempotency, and a bounded fallback in code",
-      "Ask the model more politely not to loop",
-      "Increase its context window without any limit",
-      "Cache every tool result across all users",
+      "Separate alerting, data validation, candidate training, approval, staged release, and rollback",
+      "Raise the drift threshold until alerts disappear",
+      "Deploy every candidate faster",
+      "Treat a completed training job as proof of data quality",
     ],
     modelAnswer:
-      "Agent control flow belongs in the orchestrator, which must cap loops and prevent duplicate side effects.",
+      "A drift signal should start investigation, not bypass data checks and controlled release gates.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A new prompt passes ten favorite examples but fails rare users after launch; what evidence was missing?",
+      "A candidate wins on average accuracy but loses badly for one important region; what evidence was missing from the release decision?",
     options: [
-      "A representative golden set, repeated regression runs, and slice-level deployment criteria",
-      "A single more enthusiastic LLM judge",
-      "Proof that any ten successes guarantee reliability",
-      "A higher temperature in the demonstration",
+      "Representative slice-level evaluation and predefined regional guardrails",
+      "A larger overall average with the region still hidden",
+      "A guarantee that all segments follow the mean",
+      "A shorter model name",
     ],
     modelAnswer:
-      "Handpicked successes do not support broad reliability; representative repeated evaluation and calibrated judging are needed.",
+      "Aggregate performance can hide concentrated harm, so important segments need explicit evidence and release thresholds.",
     skillArea: "inference",
   },
   {
     prompt:
-      "A cached assistant answer exposes one customer's details to another; which response best addresses the architecture?",
+      "During an incident, nobody can determine which model, feature code, or data snapshot produced the affected predictions; what control is missing?",
     options: [
-      "Disable the unsafe cache and key any safe cache by all privacy, authorization, and version context",
-      "Hide the leaked name in the interface but keep the cache",
-      "Raise rate limits so future replies arrive faster",
-      "Let the model decide which users may share entries",
+      "Prediction-level lineage linked to immutable release and training metadata",
+      "A brighter alert color",
+      "A policy to overwrite older model records",
+      "A rule that incidents need no deployment history",
     ],
     modelAnswer:
-      "Caching must never cross authorization boundaries; personalized data requires complete isolation or no shared cache.",
+      "An audit trail must connect affected predictions to the exact model, code, feature, data, and configuration versions.",
     skillArea: "evaluation",
   },
 ];
@@ -440,7 +440,7 @@ const BASE_CONTENT: BaseContent[] = PHASE_ORDER.flatMap((phase) => {
     {
       instrument: "subject" as const,
       phase,
-      baseTitle: `Generative AI Integration Check — ${PHASE_LABEL[phase]}`,
+      baseTitle: `Machine Learning Operations Check — ${PHASE_LABEL[phase]}`,
       items: subjectItems[phase],
     },
     {

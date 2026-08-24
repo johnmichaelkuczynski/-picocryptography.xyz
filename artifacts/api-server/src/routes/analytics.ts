@@ -179,7 +179,7 @@ router.post("/analytics/report", async (_req, res) => {
   let recommendations: string[] = [];
   try {
     const out = await chatJson<{ narrative: string; recommendations: string[] }>(
-      "You are an academic advisor for the course Generative AI Integration, covering model API behavior, context budgets, structured output and tools, retrieval grounding, evaluation, guardrails, and production operations. Write a 2-paragraph, encouraging but honest narrative summary, then list 3 concrete next-step recommendations. Strict JSON: {\"narrative\": string, \"recommendations\": string[]}.",
+      "You are an academic advisor for the course Machine Learning Operations, covering data pipelines, linked versioning, reproducibility, training-serving skew, deployment patterns, prediction monitoring, drift, delayed labels, retraining, staged releases, cost, latency, and incident response. Write a 2-paragraph, encouraging but honest narrative summary, then list 3 concrete next-step recommendations. Strict JSON: {\"narrative\": string, \"recommendations\": string[]}.",
       JSON.stringify({
         officialAverage,
         attempts: submitted.length,

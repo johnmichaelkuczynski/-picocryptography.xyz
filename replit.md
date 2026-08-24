@@ -1,19 +1,19 @@
-# Generative AI Integration
+# Machine Learning Operations
 
-**A rigorous, one-day introduction to integrating generative models into real systems for adult researchers and professionals.**
+**A rigorous, one-day introduction to moving machine-learning models into production and operating them reliably for adult researchers and professionals.**
 
 ---
 
 ## Overview
 
-Generative AI Integration is a self-paced, single-user web course taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
+Machine Learning Operations is a self-paced, single-user web course taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
 
 The curriculum has **one intensive day with two sessions**:
 
-1. **Models as tools — What a generative model actually gives you.** Prompt input and token output; system, user, and assistant roles; context windows as budgets rather than memory; temperature, top-p, and stop sequences; structured output and function or tool calling; streaming and latency; token pricing; and why production software must supply conversation state, retries, schemas, and other integration controls.
-2. **Building with generation — Wiring a model into a real system.** Instructions, examples, and output contracts; retrieval-augmented generation through chunking, embeddings, vector search, and grounding; agents and tool-use loops; golden sets, LLM-as-judge, and regression testing; validation, retries, fallbacks, prompt injection, PII, cost and rate limits; caching, observability, model version pinning; and a grounded support assistant traced from user question to validated answer.
+1. **From model to product.** The notebook-to-service gap; data pipelines; linked code, data, and model versions; reproducibility; training-serving skew; batch, real-time, and embedded deployment; model packaging; and feature stores.
+2. **Keeping it running.** Prediction monitoring beyond uptime; data and concept drift; delayed ground truth; retraining policies; shadow, canary, A/B, and rollback releases; cost, latency, incidents, and audit trails.
 
-The subject reasoning primer uses concrete failures—an invented refund policy, a looping tool call, retrieval finding the correct document but the wrong passage, or costs rising after a prompt edit—and asks for the concept and scene detail that explain each case. The general primer applies analysis, inference, evaluation, deduction, and induction to AI systems.
+The subject reasoning primer uses concrete failures—an irreproducible notebook, training-serving skew, delayed labels, unsafe automatic retraining, or gradual quality decay—and asks for the concept and scene detail that explain each case. The general primer applies analysis, inference, evaluation, deduction, and induction to ML systems.
 
 The course is designed for **researchers and professionals entering the discipline, product and engineering teams, instructors evaluating AI-taught coursework, and researchers studying AI academic integrity**.
 
@@ -53,9 +53,9 @@ The course is designed for **researchers and professionals entering the discipli
 
 - Convert the existing app in place when changing subjects. Preserve its routes, components, page structure, topic rail, download buttons, math keyboards, course mechanics, diagnostic controls, visual design, and functionality.
 - The audience is adults, typically researchers, professionals, PhD students, and professors entering a new discipline. Describe the course as foundational, substantial, and rigorous.
-- The app name must remain the literal title **Generative AI Integration** everywhere relevant.
+- The app name must remain the literal title **Machine Learning Operations** everywhere relevant.
 - Use plain, descriptive copy. Do not add slogans, jokes, cute framing, or unnecessary claims.
 - The “Topics Covered in This Course” list remains a small vertical left-hand rail on the landing page and dashboard, without unit, week, or number markers, and with Download Course PDF and TXT buttons beneath it.
 - Math keyboards remain present on every freeform answer and tutor input, regardless of whether a prompt appears to require notation. Math-keyboard insertions count as genuine keystrokes rather than bulk insertions.
 - Every homework, test, final, practice, and diagnostic question must use a concrete scenario and require reasoned application rather than definition recitation or a one-word answer.
-- The YouTube title must remain exactly **Generative AI Integration — AI-Powered Course**.
+- The YouTube title must remain exactly **Machine Learning Operations — AI-Powered Course**.

@@ -32,7 +32,7 @@ export function Scene7() {
               className="text-center mb-12"
             >
               <div className="text-sm font-mono text-white/50 mb-2 uppercase tracking-widest">Assessment Graded</div>
-              <h2 className="text-4xl font-display font-bold text-white">Day 1: Generative AI Integration</h2>
+              <h2 className="text-4xl font-display font-bold text-white">Day 1: Machine Learning Operations</h2>
             </motion.div>
 
             <div className="flex gap-8 items-center">

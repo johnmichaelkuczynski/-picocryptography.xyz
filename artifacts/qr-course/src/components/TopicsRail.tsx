@@ -14,8 +14,8 @@ type OverviewWeek = { lectures?: Array<{ title: string }> };
 type Overview = { weeks?: OverviewWeek[] };
 
 const COURSE_TOPIC_TITLES = [
-  "Models as tools: what a generative model actually gives you",
-  "Building with generation: wiring a model into a real system",
+  "From model to product",
+  "Keeping it running",
 ];
 
 export function useCourseTopicTitles(): string[] {

@@ -14,7 +14,7 @@ import { logger } from "./logger";
 // the value stored in seed_meta; a mismatch forces a full re-seed, so content
 // edits self-heal in every environment (including a republished production)
 // without a manual database wipe.
-const SEED_CONTENT_VERSION = "2026-08-23-generative-ai-integration-v1";
+const SEED_CONTENT_VERSION = "2026-08-24-machine-learning-operations-v1";
 
 type SeedTopic = {
   slug: string;
@@ -29,156 +29,176 @@ type SeedTopic = {
 
 const TOPICS: SeedTopic[] = [
   {
-    slug: "models-as-tools",
-    title: "Models as tools",
+    slug: "model-to-product",
+    title: "From model to product",
     weekNumber: 1,
     blurb:
-      "Understand the real model API—prompt in, tokens out—and the integration layer needed to turn probabilistic text into dependable software.",
-    lectureTitle: "Models as tools: what a generative model actually gives you",
-    body: `# Models as tools
+      "Move a trained model out of a notebook and into a reproducible, versioned service with dependable data, features, packaging, and deployment.",
+    lectureTitle: "From model to product",
+    body: `# From model to product
 
-A generative-model API has a narrow contract: your application sends a prompt and receives generated tokens. It does not automatically remember earlier calls, verify facts, retry failures, or guarantee a schema. Messages usually carry **system**, **user**, and **assistant** roles; roles help organize instructions and history, but your application must send the relevant history on every request.
+A working notebook proves that a model can run in one environment on one snapshot of data. A working product must repeat that result with new data, under real traffic, after people and dependencies change. **MLOps** closes this gap by treating data, code, models, and deployment as one operated system.
 
-The **context window** is a per-request token budget, not long-term memory. Input instructions, examples, retrieved documents, conversation history, and output all compete for that budget. **Temperature** and **top-p** adjust sampling, while **stop sequences** can end generation; none makes an answer true.
+The first dependency is the **data pipeline**: where training examples come from, how they are cleaned and labeled, and what happens when a source changes. Teams must version **code, data, and model artifacts** together so a prediction can be traced back to the exact materials that produced it. Reproducibility means the same versioned inputs and environment can recreate the result months later.
 
-Software needs more than prose. **Structured output** constrains a response to a schema, and **tool calling** lets a model request that your code perform an action. Your code still validates arguments, authorizes and executes the action, and returns results. **Streaming** improves perceived responsiveness but does not reduce total generation work. Latency and token-based pricing must be estimated from expected input and output volume.
+Production inputs can differ from training inputs. This **training-serving skew** often appears when a column is calculated differently online, a category is encoded differently, or a feature arrives late. Shared feature definitions and a **feature store** can reduce duplicated calculations and keep training and serving aligned.
 
-A chat-window demo often breaks in production because the chat product supplied state, retries, and presentation around the model. A reliable integration layer must supply those capabilities, plus validation, error handling, and observability.`,
-    bodyMedium: `# Models as tools: the API surface
+Deployment may mean scheduled batch scoring, a real-time endpoint, or a model embedded inside an application. Each form needs packaging, dependency control, validation, and rollback. A fraud model that scored perfectly in testing can still fail immediately if a production database column means something different from the training column; the operational system, not the notebook score, determines whether the model works.`,
+    bodyMedium: `# From model to product
 
-## Prompt in, tokens out
+## A notebook is an experiment, not a service
 
-The model service accepts messages and generates tokens. That is the dependable boundary. A fluent answer is not a database record, verified decision, or durable conversation. The application owns everything around generation.
+A notebook usually depends on a particular machine, manually prepared data, hidden state, and an informal sequence of cells. A production service must accept defined inputs, return predictions consistently, handle failures, meet latency and cost targets, and be deployable again by someone other than the original author. The gap is not just software packaging; it is the loss of all the assumptions that made the experiment work.
 
-## Roles, context, and controls
+## Data pipelines are part of the model
 
-A **system** message establishes standing behavior, a **user** message supplies the current request, and **assistant** messages represent prior model turns or examples. Role separation helps, but it is not a security boundary: untrusted text can still attempt to override instructions.
+Training data comes from operational databases, event streams, files, labels, and joins. Sources change: fields are renamed, units shift, timestamps arrive late, and labels are corrected. A robust pipeline validates schemas, records lineage, checks missingness and ranges, and fails visibly instead of silently training on changed meaning.
 
-Models are stateless between API calls. To continue a conversation, the integration resends selected history. All resent history, instructions, examples, retrieved passages, and expected output occupy the finite **context window**. Treat it as a budget: trim, summarize, or retrieve selectively rather than assuming the model remembers.
+## Version code, data, and model together
 
-**Temperature** broadens or narrows sampling; **top-p** limits sampling to a cumulative-probability set; **stop sequences** halt output at chosen boundaries. These are generation controls, not truth or safety controls. Changing several at once also makes behavior harder to evaluate.
+A model file alone cannot explain a prediction. The team also needs the code revision, training-data snapshot or query, feature definitions, configuration, dependencies, and evaluation results. A model registry can connect these artifacts to an approved release. **Reproducibility** means a future team can rebuild or closely recreate the model from those recorded inputs, rather than hoping an old notebook still runs.
 
-## From text to software
+## Prevent training-serving skew
 
-Free-form prose is fragile input to downstream code. **Structured output** requests data matching a declared schema. The integration must still parse and validate it. **Function/tool calling** is a request from the model to invoke a named capability with arguments—not execution itself. Your loop receives the request, validates and authorizes it, runs trusted code, appends the result, and asks the model what to do next.
+Training-serving skew occurs when the model sees one representation during training and another in production. For example, a fraud team may train on a field measured in dollars while the production service receives cents. Offline accuracy remains excellent while live predictions become useless. Shared transformation code, contract tests, feature validation, and comparison of offline and online feature distributions expose the mismatch.
 
-## Performance and economics
+## Package and deploy for the actual use
 
-**Streaming** sends partial tokens as they arrive, improving time-to-first-visible-text while the full response may take just as long. Latency also includes network time, model queueing, tool calls, and retries. Pricing is generally token-based: estimate input tokens plus capped output tokens, multiply by per-token rates, then by traffic and retry assumptions.
+**Batch scoring** is suitable when predictions can be computed on a schedule. A **real-time endpoint** supports interactive decisions but adds strict latency and availability requirements. An **embedded model** can reduce network latency but makes device compatibility and update distribution important. In every case, package dependencies, expose health and prediction contracts, record versions, and retain a safe rollback path.
 
-## Why demos fail
+## Why feature stores exist
 
-A support reply that works in a hosted chat can fail through an API because no history was resent, a malformed response broke the parser, or a transient error had no retry. Production therefore needs a state store, prompt assembly, schema validation, bounded retries, fallbacks, logging, and cost controls.`,
-    bodyLong: `# Models as tools: what a generative model actually gives you
+When teams repeatedly compute the same customer-age, account-risk, or activity features, definitions drift. A feature store centralizes reusable definitions and can serve consistent offline training values and online prediction values. It does not automatically fix bad data, but it reduces duplicated logic and makes ownership and freshness explicit.`,
+    bodyLong: `# From model to product
 
-## Start with the honest contract
+## The experiment-to-service gap
 
-A generative model is a probabilistic text component. An API request supplies messages; the response supplies generated tokens and metadata. The model does not inherently preserve conversation state, query your private systems, guarantee factuality, or ensure that its output can be consumed safely by code. Good architecture begins by refusing to attribute those integration capabilities to the model.
+A notebook answers a narrow question: can this algorithm learn something useful from this prepared dataset in this environment? A product must answer a larger one: can an organization deliver the prediction repeatedly, safely, and economically as data and software change? Production adds input contracts, concurrency, latency, availability, security, observability, deployment, and ownership. It also removes the researcher's ability to repair every run manually.
 
-## Messages and instruction hierarchy
+The first production design task is to write down the prediction contract. Define when a prediction is requested, which entity it concerns, which features are required, how missing values are handled, what the output means, how quickly it must arrive, and what the application does when scoring fails. This contract determines whether batch, real-time, or embedded deployment is appropriate.
 
-Chat APIs commonly expose **system**, **user**, and **assistant** roles. System content describes the application's intended behavior. User content carries a person's request and often untrusted material. Assistant content can replay earlier turns or provide demonstrations. Clear roles improve consistency, but prompt text remains data processed by a model rather than an enforceable permissions system. Authorization must live in code.
+## Data pipelines and lineage
 
-Every request is effectively fresh. A conversational feature must decide which earlier turns to resend. Blindly appending everything eventually overflows the **context window**, the finite token allowance shared by input and output. Instructions, examples, history, retrieved documents, and tool results all consume it. Budget explicitly: reserve output space, discard irrelevant turns, summarize cautiously, and retrieve only useful evidence. A context window is working space, not memory.
+Training data is produced, not found. Operational tables, event logs, human labels, third-party feeds, and feature calculations are combined into a training set. Every step can change meaning. A source team may rename a field, switch a unit, backfill history, alter a join key, or delay an event. If a pipeline silently accepts the change, a model can train successfully on the wrong problem.
 
-## The actual generation knobs
+Production pipelines therefore need schema checks, range and null checks, freshness expectations, label-quality checks, and lineage. Lineage links each model version to the source snapshots, queries, transformations, and approvals that created it. Failures should stop or quarantine a run rather than publishing an apparently valid artifact.
 
-**Temperature** changes how strongly generation favors the highest-probability tokens. Lower values tend to be steadier; higher values tend to diversify output. **Top-p** samples from the smallest token set whose cumulative probability reaches the chosen threshold. **Stop sequences** terminate generation when a boundary appears. These knobs influence variation and length; they do not verify facts, enforce business rules, or eliminate nondeterminism. For controlled experiments, change one setting at a time and record model and prompt versions.
+## Three linked version histories
 
-## Structured output and tools
+MLOps versions **code, data, and models** together. Code includes preprocessing, feature logic, training, evaluation, and serving. Data versioning may use immutable snapshots, table versions, timestamps, or reproducible queries. Model artifacts include learned parameters plus metadata such as metrics, training configuration, dependency versions, and intended input schema.
 
-Text becomes usable software data through an explicit output contract. A JSON schema can require fields, types, and allowed values. Still validate server-side because output can be incomplete, semantically wrong, or incompatible with business constraints.
+A registry gives each candidate a stable identity and lifecycle: trained, evaluated, approved, deployed, retired. Reproducibility does not require every nondeterministic training run to produce identical floating-point weights; it requires enough recorded information to rerun the process, explain differences, and reconstruct the release decision.
 
-Tool calling bridges language and capabilities. The model emits a proposed tool name and arguments. The application checks that the tool is allowed, validates arguments, applies user authorization and rate limits, performs the operation, records the result, and feeds that result back. This creates a loop: model request → trusted execution → tool result → model continuation. Put iteration limits and duplicate-action protections around the loop.
+## Training-serving skew
 
-## Streaming, latency, and cost
+The most dangerous failure can occur when the model is correct for the data it was trained on but receives different data in production. Common causes include duplicated transformation code, different default values, timezone differences, stale features, inconsistent category encoding, and fields whose names stayed constant while their business meaning changed.
 
-Streaming improves perceived latency by rendering tokens incrementally. It complicates moderation and schema handling because partial output may be invalid until complete. End-to-end latency includes prompt preparation, retrieval, model generation, tools, retries, and validation. Measure each span rather than blaming a single model call.
+Imagine a fraud model trained on the amount field from an analytics table where values are dollars. The live transaction service sends that field in cents. Offline testing remains excellent because the training and test split share the same interpretation. On launch, nearly every amount is one hundred times larger than expected. Input schema checks alone may not catch this because the type is still numeric. Contract tests, unit metadata, distribution comparisons, and shared feature transformations are needed.
 
-Token pricing turns prompt design into system economics. Estimate input from fixed instructions, examples, average history, and retrieved chunks; add the maximum or expected output; apply model rates; then multiply by requests, retries, and tool-loop iterations. A prompt edit that doubles repeated context can double a large part of the bill. Set output caps and usage budgets before launch.
+## Packaging and deployment choices
 
-## Production anatomy
+Batch scoring writes predictions on a schedule and is operationally simpler, but its answers can become stale. A real-time endpoint makes decisions at request time and must handle traffic spikes, timeouts, dependency failures, and strict latency budgets. An embedded model runs inside another application or device, reducing network dependence while complicating hardware compatibility, release distribution, and telemetry.
 
-Suppose a team prototypes a support helper in a chat window. The hosted interface remembers turns and gracefully displays prose. In production, separate API calls have no conversation state, an occasional non-JSON sentence crashes a parser, and a timeout leaves the user waiting. The missing piece is not simply a 'better prompt.' The integration must assemble state, separate trusted instructions from untrusted content, validate schemas, retry only safe operations with backoff, offer a fallback, and record latency, token use, failures, and model versions. The model supplies generation; the system supplies reliability.`,
+Whichever pattern is used, the artifact must be packaged with pinned dependencies and an explicit input/output contract. Deployment should record the model, code, feature, and configuration versions. Smoke tests should verify that the service can load the artifact and score representative inputs. A release should support shadowing, canaries, and rollback rather than replacing the previous model irreversibly.
+
+## Feature consistency and feature stores
+
+A feature store exists because independently recomputing common features produces inconsistent definitions and wasted work. It can centralize ownership, transformation logic, freshness, lineage, and access. The strongest systems support both offline retrieval for training and low-latency online retrieval for serving while preserving point-in-time correctness.
+
+A feature store is not a cure for weak governance. Teams still need to know whether a feature is legally and ethically appropriate, whether it leaks future information into training, and whether it will be available at prediction time. Its value is operational consistency: the same named feature should mean the same thing wherever the model uses it.
+
+## End-to-end production readiness
+
+Before release, a team should be able to answer: Which data and code produced this model? Can the build be repeated? Do online features match offline definitions? What input distributions are expected? Which deployment pattern meets the product need? How will the team detect a bad release and restore the prior version? A high offline score is evidence about a model candidate. A reproducible, observable, reversible delivery process is evidence that it can become a product.`,
   },
   {
-    slug: "building-with-generation",
-    title: "Building with generation",
+    slug: "keeping-it-running",
+    title: "Keeping it running",
     weekNumber: 1,
     blurb:
-      "Engineer prompts, retrieval, tools, evaluation, guardrails, and operations into a grounded generative feature that holds up after launch.",
-    lectureTitle: "Building with generation: wiring a model into a real system",
-    body: `# Building with generation
+      "Operate deployed models through prediction monitoring, drift detection, retraining decisions, controlled releases, cost and latency management, and auditable incident response.",
+    lectureTitle: "Keeping it running",
+    body: `# Keeping it running
 
-**Prompt engineering** is interface engineering: state instructions, include representative examples, and define an output contract. Then test the contract under realistic load instead of trusting a polished demo.
+A model service can be healthy while its predictions are becoming wrong. MLOps monitoring therefore goes beyond uptime and error rates to watch inputs, features, prediction distributions, confidence, latency, cost, and—when it finally arrives—outcome quality.
 
-**Retrieval-augmented generation (RAG)** grounds answers in your documents. The system chunks documents, creates embeddings, retrieves nearby chunks with vector search, and places the best passages in context. Retrieval can find the correct document but the wrong passage, so chunking and ranking matter.
+**Data drift** means the input distribution changed. **Concept drift** means the relationship between inputs and the desired outcome changed. Neither automatically proves the model is failing, but both are reasons to investigate. Because ground truth may arrive days or months later, teams also monitor leading indicators such as feature ranges, missingness, score distributions, business overrides, and disagreement with a shadow model.
 
-An **agent** repeats a controlled tool-use loop: the model proposes a call, code validates and executes it, and the result returns to the model. Limit iterations and permissions. Evaluate nondeterministic behavior with a representative **golden set**, repeat runs, regression tests, and carefully calibrated human or LLM judges.
+Retraining can be scheduled, triggered by evidence, or deliberately avoided when labels are weak or change risk is high. A candidate should not replace production automatically: compare it through offline evaluation, shadow deployment, canaries, or A/B tests, and preserve rollback.
 
-Production guardrails include schema and business-rule validation, bounded retries, fallbacks, prompt-injection defenses, PII handling, and cost/rate limits. Deployment also needs caching, observability, and model-version pinning. A shipped help-center assistant therefore retrieves approved passages, generates a cited answer, validates it, and either returns it or falls back safely.`,
-    bodyMedium: `# Building with generation
+Operations must balance quality with latency and cost. Incidents require an audit trail showing which code, data, feature, model, and configuration versions were deployed, when they changed, and who approved them. A recommendation system can decay for six weeks without any server failing; prediction monitoring and delayed-outcome evaluation are what reveal that it is gradually wrong.`,
+    bodyMedium: `# Keeping it running
 
-## Prompts are engineered interfaces
+## Monitor predictions, not only servers
 
-A robust prompt separates stable instructions, variable user data, examples, and an explicit output contract. Examples should cover common and difficult cases, not merely the happy path. Put rules that software can enforce—field types, permissions, maximum amounts—in code as well as prose. Test long inputs, conflicting instructions, empty retrieval, and malformed outputs.
+Traditional service metrics—uptime, CPU, memory, request failures—show whether the endpoint is available. They do not show whether predictions remain useful. Model monitoring adds input schema and freshness, feature distributions, prediction rates and score distributions, latency, cost, override rates, and later, outcome metrics such as precision or revenue impact.
 
-## Retrieval-augmented generation
+## Drift and delayed truth
 
-RAG connects generation to an owned knowledge source. Ingestion splits documents into **chunks**, computes **embeddings**, and stores vectors with source metadata. At request time, the question is embedded, **vector search** selects similar chunks, and those passages ground the prompt. Chunk boundaries can separate a rule from its exception; retrieving the right document is not enough if ranking selects the wrong passage. Tune chunk size and overlap, preserve metadata, and require citations that can be checked.
+**Data drift** occurs when live inputs differ from the training distribution. **Concept drift** occurs when the mapping from inputs to outcomes changes, such as fraudsters adopting new behavior. A drift alert is diagnostic evidence, not automatic proof of quality loss. Segment-level checks matter because a harmful change in one region or customer group can disappear inside an average.
 
-## Agents and tools
+Ground truth often arrives late. A loan default may take months; a recommendation may need days of engagement. Before labels arrive, monitor proxies: missing values, unseen categories, feature freshness, prediction confidence, score distributions, human overrides, and disagreement between current and shadow models. When labels arrive, join them to the original prediction and evaluate the exact version that made it.
 
-An agent is a loop around model tool requests. Code validates arguments, enforces permissions, executes a tool, and returns its result. The model may then answer or request another tool. Restrict the tool set, cap iterations, detect repeated calls, make side effects idempotent where possible, and require confirmation for consequential actions.
+## Decide when to retrain
 
-## Evaluation and guardrails
+Scheduled retraining is predictable but may waste resources or learn from noisy labels. Triggered retraining responds to drift or quality evidence but can automate a reaction to a broken data pipeline. Never retraining favors stability but accepts decay. The correct policy states what evidence opens a candidate run, which labels are mature enough, which tests the candidate must pass, and who approves release.
 
-A nondeterministic component needs a representative **golden set** of inputs and expected qualities, repeated trials, and regression checks for prompt or model changes. Exact matching works for strict fields; rubric-based human review or **LLM-as-judge** can assess open text, but judges must be calibrated against human decisions and protected from seeing untrusted instructions as commands.
+## Release without a blind replacement
 
-Guardrails form layers: input screening, prompt-injection isolation, retrieval controls, PII minimization, output/schema validation, bounded retries, fallback behavior, and rate/cost limits. A retry is useful for transient or repairable failures, not a license for an agent to loop forever.
+A **shadow deployment** receives live inputs without controlling decisions. A **canary** sends a small share of real decisions to the candidate. An **A/B test** compares user or business outcomes across randomized groups when experimentation is appropriate. Each needs predefined success and safety metrics, sample-size logic, segment checks, stop conditions, and rollback.
 
-## Deployment
+## Cost, latency, and incidents
 
-Cache only when freshness and personalization allow it. Log request IDs, prompt/model versions, retrieval sources, token use, latency, validation failures, and tool traces without leaking sensitive content. Pin model versions and roll changes out against eval gates.
+Accuracy is only one constraint. A larger model may improve a metric while missing the product's latency budget or multiplying compute cost. Monitor tail latency, throughput, hardware utilization, and cost per prediction alongside quality.
 
-A support assistant's path is: user question → access check → retrieve help-center chunks → build prompt → generate a cited structured answer → verify citations and policy constraints → return or escalate.`,
-    bodyLong: `# Building with generation: wiring a model into a real system
+Incident response starts with containment: stop the harmful release, roll back, or switch to a safe fallback. Then reconstruct the event from lineage and deployment records. The audit trail should answer who deployed what, when, from which data and code, under which approval, and which predictions were affected.`,
+    bodyLong: `# Keeping it running
 
-## Prompt engineering as engineering
+## The service can be up while the model is wrong
 
-Treat a prompt like a versioned program interface. Stable instructions define the task and boundaries; user content is clearly delimited as data; examples demonstrate edge cases; and the output contract states fields, types, allowed values, and what to do when evidence is missing. Avoid relying on vague requests such as 'be accurate.' If code can enforce a rule, enforce it there. Test prompts with realistic lengths, adversarial text, missing context, multilingual inputs, and simultaneous requests.
+A conventional dashboard can show green lights for an endpoint whose predictions have quietly lost value. MLOps observability therefore links system performance to model behavior. Infrastructure metrics include availability, errors, saturation, and latency. Data metrics include schema, freshness, missingness, ranges, categories, and feature distributions. Model metrics include score distributions, confidence or margin, prediction rates, calibration, segment performance, and eventual outcome quality. Business metrics show whether the prediction still improves the decision it was built to support.
 
-## Grounding with retrieval
+Monitoring needs a baseline and an owner. Compare live traffic with a relevant training or recent-production window, not with an arbitrary universal threshold. Record alerts by model and feature version. Route each alert to someone who can investigate both the pipeline and the model, because a shifted distribution may reflect a real-world change, a software bug, or a source-data outage.
 
-Retrieval-augmented generation supplies relevant private or current evidence at request time. During ingestion, documents are cleaned, split into **chunks**, embedded, and stored in a vector index with titles, permissions, dates, and source links. During a request, the system embeds the query, performs similarity or hybrid search, reranks candidates, and inserts selected passages into the model context.
+## Data drift, concept drift, and harmless change
 
-Chunking is an architectural choice. Tiny chunks lose surrounding conditions; huge chunks waste context and dilute the relevant sentence. Overlap can preserve continuity but duplicates evidence. Metadata filters prevent cross-tenant or obsolete material from being retrieved. A result can name the correct document yet quote the wrong passage, so evaluate retrieval separately from generation with recall and passage-relevance cases. Require abstention when evidence is absent and verify citations against the supplied text.
+Data drift means the statistical distribution of inputs changed. Concept drift means the relationship between inputs and the target changed. A new customer population can create data drift; changing fraud tactics can create concept drift. Sometimes a feature changes while predictive performance remains stable. Sometimes performance collapses without a dramatic global drift metric because the failure is concentrated in a small but important segment.
 
-## Tool use and agents
+For this reason, drift is a signal to investigate rather than a complete retraining policy. Examine individual features, joint behavior where practical, prediction distributions, slices, and downstream outcomes. Check whether the feature pipeline itself changed before concluding that the world changed.
 
-Tool calling makes a model a planner over trusted capabilities, not the executor. The integration publishes narrow tool schemas; the model proposes a call; code validates types and business rules, checks the user's authorization, executes the tool, records a result, and supplies that result for the next turn. This loop can combine search, account lookup, and ticket creation.
+## Ground truth arrives late
 
-Loops create risks: repeated calls, escalating cost, duplicate side effects, and prompt injection arriving through tool results. Limit steps and wall-clock time, deduplicate calls, use idempotency keys, sanitize results, expose least-privilege tools, and place human confirmation before irreversible actions. A looping agent usually needs control-flow protection, not merely friendlier wording.
+Many systems cannot measure correctness at prediction time. Chargebacks, medical outcomes, churn, and defaults mature slowly. The monitoring system must retain the prediction ID, timestamp, feature or data reference, model version, and decision context so later labels can be joined correctly.
 
-## Evaluating a nondeterministic component
+Leading indicators help during the delay. Watch schema failures, missingness, freshness, unknown categories, out-of-range values, score concentration, confidence shifts, override rates, downstream rejection, and disagreement with rules or shadow models. These indicators can reveal risk early, but they remain proxies. When ground truth arrives, calculate outcome metrics by model version and important segment, and revise the earlier diagnosis.
 
-Build a **golden set** representing common requests, edge cases, safety cases, and previously observed failures. Define measurable criteria before comparing systems: factual grounding, completeness, citation validity, schema success, latency, and cost. Run multiple samples because one pass hides variance. Use deterministic assertions for schemas and citations, human review for high-stakes nuance, and **LLM-as-judge** for scale only after calibrating its rubric and agreement with humans. Blind judges to system identity where possible, and never let text being judged rewrite the judging instructions.
+## Retraining is a governed decision
 
-Every prompt, retrieval, guardrail, and model update should run as a regression candidate against the set. Compare quality and operational metrics, not one attractive answer. A demo demonstrates possibility; repeated representative tests provide evidence of reliability.
+There are three common approaches. Scheduled retraining offers operational regularity but may produce unnecessary candidates. Triggered retraining responds to drift, new data, or degraded outcomes but can amplify a data-quality incident. Manual or rare retraining maximizes control but risks stale behavior.
 
-## Layered guardrails
+A sound policy separates training from deployment. A trigger may start a pipeline, but the resulting candidate must still pass data validation, reproducibility checks, offline quality and fairness gates, latency and cost tests, and comparison with the current champion. Labels must be mature enough for the intended target. Approval and rollback criteria must be explicit.
 
-Validation checks syntax, semantic constraints, citations, and business rules. Bounded retries can repair malformed JSON or transient service errors; retry prompts should include the specific failure and stop after a small limit. Fallbacks may use a simpler model, a deterministic workflow, cached approved copy, or human escalation.
+## Shadow, canary, A/B, and rollback
 
-Prompt injection is untrusted content attempting to redirect the model. Delimit retrieved and user text, tell the model to treat it as evidence rather than instructions, restrict tools independently in code, and validate the final action. Minimize **PII**, redact logs, apply retention policies, and avoid sending data the provider does not need. Rate limits, token caps, per-user quotas, and circuit breakers contain cost and abuse.
+A shadow model scores copied live traffic but does not affect users. This reveals latency, feature availability, and prediction differences safely, though it cannot measure the behavioral effect of changed decisions. A canary exposes a limited share of real traffic, containing harm while measuring real operations. An A/B test randomizes eligible units to estimate causal product impact, but it requires ethical and statistical justification.
 
-## Operating the feature
+Before any release, define the primary metric, guardrail metrics, segment checks, minimum evidence, maximum duration, and automatic stop conditions. Keep the previous model and its compatible serving path available. Rollback should restore not only the model artifact but also compatible code, feature definitions, and configuration.
 
-Caching can reduce latency and cost for stable, non-personalized requests, but keys must include relevant model, prompt, locale, and knowledge versions; stale policy answers can be worse than a miss. **Observability** should trace retrieval, generation, validation, tools, retries, latency, and tokens under a request ID while protecting sensitive text. **Model version pinning** prevents an upstream model change from silently altering production behavior. Release a new version through evals, canaries, and rollback criteria.
+## Cost and latency are model-quality constraints
 
-## End-to-end: a help-center support assistant
+A model that is slightly more accurate but too slow for the decision point is not better in practice. Measure median and tail latency, throughput, queueing, warm-up, feature-fetch time, and hardware utilization. Track cost per thousand predictions or per successful business outcome. Batch workloads can often trade freshness for efficiency; real-time systems must budget every dependency.
 
-A user asks whether a recent purchase is refundable. The service authenticates the user and filters knowledge by region and product. It embeds the question, retrieves policy chunks, and reranks the passage containing the applicable window and exception. Prompt assembly includes trusted instructions, the question as untrusted data, and only those passages. The model returns a structured answer with citations and an uncertainty field. Code validates the schema, checks that each claim is supported by cited text, and ensures the assistant did not promise an unauthorized action. If evidence is weak or validation still fails after a bounded repair, the system escalates. Traces record versions, passages, token cost, and latency. That integration—not generation alone—is the shipped feature.`,
+Optimization choices—smaller models, quantization, batching, caching, fewer features, or specialized hardware—can change accuracy and behavior. Treat them as new candidates and evaluate them under the same release process rather than as invisible infrastructure edits.
+
+## Incident response and auditability
+
+When harm is plausible, contain first: pause scoring, route to the previous version, fall back to a deterministic rule, or require human review. Preserve evidence. Identify the affected model, code, feature, data, and configuration versions; the deployment time; the population exposed; and the downstream decisions made.
+
+An audit trail should connect every prediction to a release and every release to approved artifacts and tests. After containment, determine whether the cause was source data, transformation, skew, model drift, serving code, configuration, or an operational dependency. Correct the system and add a test or monitor that would detect the same class of failure earlier.
+
+## A system that became gradually wrong
+
+Consider a recommendation system whose accuracy decays for six weeks. The endpoint stays available, latency is stable, and no exception appears. User interests shifted after a seasonal event, but the team watched only uptime. A strong response reconstructs prediction and outcome metrics by week and segment, checks input and concept drift, validates the feature pipeline, and compares the current model with a shadow candidate. Retraining begins only after label and pipeline quality are confirmed. The candidate is evaluated, canaried, and released with rollback thresholds. Nothing was 'broken' in the traditional server sense; operating the model required measuring whether it was still right.`,
   },
 ];
 
@@ -201,7 +221,7 @@ type SeedAssignment = {
 const ASSIGNMENTS: SeedAssignment[] = [
   {
     kind: "homework",
-    title: "Homework 1 — Models as tools",
+    title: "Homework 1 — From model to product",
     weekNumber: 1,
     isTimed: false,
     timeLimitMinutes: null,
@@ -209,29 +229,29 @@ const ASSIGNMENTS: SeedAssignment[] = [
       "Untimed practice covering Session 1. Explain each concrete case in 3–5 reasoned sentences. Definitions and one-word answers do not receive credit.",
     problems: [
       {
-        topicSlug: "models-as-tools",
+        topicSlug: "model-to-product",
         prompt:
-          "A travel app sends only the newest user message to a model API, although its chat-window prototype appeared to remember earlier preferences. Diagnose why production ignores the user's budget and explain what the integration should send without overflowing the context window. (3–5 sentences.)",
+          "Northstar Bank's fraud model scored well in a notebook, but the production service flags nearly every transaction after launch. The training table stored `amount` in dollars while the live service sends cents. Diagnose the failure and explain which controls should have caught it before release. (3–5 sentences.)",
         correctAnswer:
-          "API calls are stateless, so the model receives no earlier budget preference unless the application resends it. The hosted chat supplied history management that the raw API does not. The integration should assemble system instructions, the relevant preference, and selected recent turns while reserving context tokens for output. It can summarize or omit irrelevant history because the context window is a per-request budget, not memory.",
+          "This is training-serving skew: the same feature name has different units offline and online. The team should share or contract-test feature transformations, record unit metadata, validate expected ranges, and compare online feature distributions with training data before routing decisions to the model. The release should remain reversible so the previous model or a safe rule can be restored immediately.",
         explanation:
-          "Full credit diagnoses stateless calls, distinguishes a context budget from memory, and proposes selective history assembly.",
+          "Full credit identifies training-serving skew and connects shared feature definitions, semantic validation, distribution checks, and rollback to the observed unit mismatch.",
       },
       {
-        topicSlug: "models-as-tools",
+        topicSlug: "model-to-product",
         prompt:
-          "A billing service asks a model for an account ID and refund amount, then issues the refund from whatever prose arrives. Redesign the flow using structured output or tool calling and identify what must remain in application code. (3–5 sentences.)",
+          "Priya can rerun her churn notebook only on the original laptop because it depends on a local CSV, an unrecorded package version, and cells executed out of order. Design the minimum versioning and packaging record her team needs to reproduce the model six months later. (3–5 sentences.)",
         correctAnswer:
-          "The model should return a schema-constrained proposal or request a narrow refund tool rather than emit executable prose. Code must validate fields, authenticate the user, enforce policy and authorization, and confirm consequential action before execution. A tool call is only a request; trusted code performs it and returns the result. Invalid output should trigger a bounded repair or safe fallback, not a refund.",
+          "The team must version the training code and preprocessing, identify an immutable data snapshot or reproducible query, record configuration and random seeds, pin the execution environment and dependencies, and register the resulting model with its evaluation metadata. The training sequence should become an automated pipeline rather than hidden notebook state. These links make the release traceable and allow a future rerun to explain any differences.",
         explanation:
-          "Full credit separates model proposals from execution and covers validation, authorization, and bounded failure handling.",
-        hint: "Which responsibilities need deterministic enforcement by trusted code?",
+          "Full credit connects code, data, environment, configuration, and model artifacts instead of treating the saved model file as sufficient.",
+        hint: "What information exists only on Priya's laptop, and how would another person reconstruct it?",
       },
     ],
   },
   {
     kind: "homework",
-    title: "Homework 2 — Building with generation",
+    title: "Homework 2 — Keeping it running",
     weekNumber: 1,
     isTimed: false,
     timeLimitMinutes: null,
@@ -239,28 +259,28 @@ const ASSIGNMENTS: SeedAssignment[] = [
       "Untimed practice covering Session 2. Connect each observed failure to an architectural change in 3–5 reasoned sentences. Definitions and one-word answers do not receive credit.",
     problems: [
       {
-        topicSlug: "building-with-generation",
+        topicSlug: "keeping-it-running",
         prompt:
-          "A help-center assistant retrieves the correct returns-policy document but quotes a paragraph about exchanges instead of the nearby refund exception. Identify where the RAG pipeline is failing and propose changes that distinguish retrieval quality from generation quality. (3–5 sentences.)",
+          "Harbor Media's recommendation API has perfect uptime, but six-week-old engagement labels now show that recommendation quality has steadily declined. Explain why the existing monitoring missed the problem and specify what the team should monitor while future ground truth is still delayed. (3–5 sentences.)",
         correctAnswer:
-          "The system has document recall but poor passage selection, likely due to chunk boundaries or ranking. Adjust chunk size and overlap so exceptions stay with governing rules, preserve headings as metadata, and rerank candidates. A retrieval test set should measure whether the right passage appears independently of the answer, while generation tests require claims and citations supported by supplied chunks. Prompting cannot recover evidence that was never selected.",
+          "Uptime measures service availability, not prediction usefulness. The team should retain prediction IDs and model versions for later label joins, then monitor input and feature freshness, missingness, drift, score distributions, segment behavior, human overrides, and disagreement with a shadow model as leading indicators. Once engagement labels mature, it should calculate quality by release and segment to distinguish real concept drift from a pipeline problem.",
         explanation:
-          "Full credit diagnoses passage retrieval/chunking, proposes concrete retrieval improvements, and evaluates retrieval separately from generation.",
+          "Full credit distinguishes service health from model quality and combines leading indicators with versioned delayed-outcome evaluation.",
       },
       {
-        topicSlug: "building-with-generation",
+        topicSlug: "keeping-it-running",
         prompt:
-          "A calendar agent calls create_event with identical arguments six times after a timeout, producing duplicate meetings and a large bill. Explain why a prompt reminder is inadequate and design controls for the agent loop. (3–5 sentences.)",
+          "Mateo's team automatically retrains and deploys whenever a drift alert fires. A broken upstream feed shifts a feature distribution, triggering a new model trained on corrupted data. Redesign the policy so drift leads to investigation without turning a data incident into a release. (3–5 sentences.)",
         correctAnswer:
-          "Prompt wording cannot guarantee control over a probabilistic loop or duplicate side effects after an ambiguous timeout. The orchestrator should cap iterations and elapsed time, detect repeated calls, and use idempotency keys so a retry creates at most one event. It should validate and authorize arguments, retry only under a bounded policy, and fall back or request confirmation when the result is unknown. Tool, token, latency, and stop-reason traces make the failure diagnosable.",
+          "A drift alert should open an investigation or candidate-training run, not authorize deployment. The policy should first validate source freshness, schema, ranges, lineage, and label maturity, then train a versioned candidate and compare it with the current model on quality, segments, latency, and cost. The candidate should pass approval and shadow or canary gates with stop conditions and rollback available.",
         explanation:
-          "Full credit moves guarantees into the orchestrator and covers loop limits, idempotency, bounded retries/fallbacks, and observability.",
+          "Full credit separates drift detection, data validation, retraining, and deployment approval while preserving controlled rollout and rollback.",
       },
     ],
   },
   {
     kind: "test",
-    title: "Course Test — Generative AI Integration",
+    title: "Course Test — Machine Learning Operations",
     weekNumber: 1,
     isTimed: true,
     timeLimitMinutes: 15,
@@ -268,37 +288,37 @@ const ASSIGNMENTS: SeedAssignment[] = [
       "Timed. 15 minutes. Covers both sessions. Analyze each concrete engineering case in 4–6 sentences. Definitions and unsupported one-line recommendations do not receive credit. Pasting is disabled; keystrokes are screened for AI use.",
     problems: [
       {
-        topicSlug: "models-as-tools",
+        topicSlug: "model-to-product",
         prompt:
-          "A news-summary API sometimes emits commentary around JSON, feels slow, and costs twice the estimate after full article history is appended. Propose an integration plan addressing output reliability, perceived latency, context, and cost. (4–6 sentences.)",
+          "Atlas Logistics wants the same arrival-time model to score nightly warehouse records and answer real-time checkout requests. Design a deployment plan that distinguishes the two serving modes while keeping features and versions consistent. (4–6 sentences.)",
         correctAnswer:
-          "Use a structured-output schema, validate the completed response, and apply a bounded repair or fallback. Stream partial output or progress for perceived speed, while recognizing that final schema parsing may await completion. Select or summarize relevant material and reserve output tokens instead of appending all history. Estimate instructions, context, output caps, traffic, and retries against token rates, then monitor actual use. Pin prompt and model versions so quality, latency, and cost changes are attributable.",
+          "Use a scheduled batch job for warehouse records and a low-latency endpoint for checkout, but package both from the same approved model artifact and transformation code. Define shared feature contracts or feature-store definitions so offline and online values match, while allowing each path its own freshness and latency expectations. Record code, data, model, feature, and configuration versions for every run or request. Test representative inputs in both paths, monitor skew, and retain compatible rollback versions.",
         explanation:
-          "Full credit integrates schema validation, streaming tradeoffs, context budgeting, and token-cost estimation and monitoring.",
+          "Full credit chooses appropriate serving modes while preserving shared feature semantics, traceable versions, validation, monitoring, and rollback.",
       },
       {
-        topicSlug: "building-with-generation",
+        topicSlug: "keeping-it-running",
         prompt:
-          "A team ships a support prompt globally after five handpicked examples look better; complaints then rise for Spanish users and rare account cases. Design an evaluation process that would have produced stronger evidence before deployment. (4–6 sentences.)",
+          "A lender's new risk model improves overall accuracy but doubles p99 latency and performs worse for a small regional segment. Design a release decision that accounts for quality, segment risk, latency, and evidence strength. (4–6 sentences.)",
         correctAnswer:
-          "Five handpicked examples show possibility, not reliability. Build a versioned golden set stratified by language, common requests, rare states, safety cases, and prior failures, with grounding, completeness, schema, latency, and cost criteria. Run repeated trials because output varies, using deterministic checks and calibrated human or LLM judges for open text. Compare candidate and current versions blindly and require thresholds for important slices, not only an average. Canary pinned versions with monitoring and rollback criteria.",
+          "Do not approve the candidate from aggregate accuracy alone. Compare the candidate and current model on a versioned evaluation set with regional slices, define acceptable quality and p99 latency thresholds before release, and estimate whether the slower response still fits the decision point. Use shadow traffic to validate features and performance, then a limited canary only if safety and segment gates pass. Monitor guardrails and roll back if either regional quality or latency crosses its stop condition.",
         explanation:
-          "Full credit rejects demo-based generalization and proposes representative sliced golden sets, repeated testing, regression comparison, and controlled rollout.",
+          "Full credit rejects aggregate-only approval and connects slice evaluation, operational budgets, staged rollout, stop conditions, and rollback.",
       },
       {
-        topicSlug: "building-with-generation",
+        topicSlug: "keeping-it-running",
         prompt:
-          "A retrieved web page tells a support assistant to ignore policy and call an account tool with another customer's ID. Explain how this crosses the RAG and agent layers and specify layered defenses. (4–6 sentences.)",
+          "A hospital's readmission model shows a sharp input shift after a coding-system update, but outcome labels will not mature for 90 days. Explain how the team should investigate and contain risk without claiming that drift alone proves the model is inaccurate. (4–6 sentences.)",
         correctAnswer:
-          "The retrieved instruction is prompt injection: untrusted evidence is trying to become a command and exploit a tool. Restrict retrieval to trusted permission-filtered sources and delimit passages as data, but do not rely on prompting alone. Code must validate tool arguments, enforce user and tenant authorization, expose least-privilege tools, and confirm consequential actions. Add iteration and rate limits plus output/action validation, and log PII-safe retrieval and tool traces. Refuse or escalate when checks fail.",
+          "First verify whether the coding change altered feature meaning, mapping, missingness, or freshness rather than assuming concept drift. Compare affected and unaffected segments, inspect feature and score distributions, run contract tests, and score live cases with the prior or a shadow model for disagreement. Because labels are delayed, use these indicators as provisional evidence and increase human review or roll back if the change can affect decisions. Preserve prediction and version records so mature outcomes can later test the diagnosis.",
         explanation:
-          "Full credit traces injection from retrieval into tools and gives layered source, prompt, authorization, validation, privacy, and containment defenses.",
+          "Full credit treats drift as an investigation signal, checks the pipeline, uses provisional leading indicators, contains risk, and plans delayed-outcome validation.",
       },
     ],
   },
   {
     kind: "final",
-    title: "Final — Generative AI Integration",
+    title: "Final — Machine Learning Operations",
     weekNumber: 1,
     isTimed: true,
     timeLimitMinutes: 25,
@@ -306,22 +326,22 @@ const ASSIGNMENTS: SeedAssignment[] = [
       "Timed cumulative final. 25 minutes. Analyze each end-to-end case in 5–7 sentences connecting multiple course decisions. Definitions and unsupported labels do not receive credit. Pasting is disabled; keystrokes are screened for AI use.",
     problems: [
       {
-        topicSlug: "building-with-generation",
+        topicSlug: "model-to-product",
         prompt:
-          "A university is launching an assistant grounded in its official help center that may open support tickets. Trace a safe, testable request from question to final answer, connecting retrieval, generation, tool use, validation, evaluation, and operations. (5–7 sentences.)",
+          "A retailer is moving a demand-forecasting model from one analyst's notebook into a service used by purchasing teams. Trace a production-ready path from source data to deployed batch forecasts, connecting lineage, reproducibility, feature consistency, packaging, validation, and release controls. (5–7 sentences.)",
         correctAnswer:
-          "The service authenticates the student, embeds the question, permission-filters and reranks help-center chunks, and places the best passages in a bounded prompt. The model returns a structured cited answer and either abstains or proposes a narrow ticket tool call when evidence is insufficient. Code validates schema and citations, enforces authorization and PII rules, and validates arguments before idempotent execution with confirmation where needed. Bounded retries repair transient or formatting failures; persistent uncertainty escalates to a human. A representative golden set with repeated runs measures grounding, tool safety, latency, and cost before release. Pinned versions, safe caching, rate limits, and traces of retrieval, tokens, validation, and tools support canaries and rollback.",
+          "Automate extraction and feature preparation from versioned or reproducible source data with schema, freshness, and range checks plus recorded lineage. Version training and preprocessing code, configuration, dependencies, feature definitions, and the resulting model in a registry with evaluation results. Rebuild the model in a clean environment to test reproducibility and compare batch features with the definitions used during training. Package a pinned artifact and prediction contract, then run smoke tests and shadow forecasts against the current purchasing process. Release only after quality, segment, runtime, and cost gates pass, recording the deployed versions and retaining a compatible rollback or safe baseline forecast.",
         explanation:
-          "Full credit gives a coherent architecture connecting grounded retrieval, structured generation, controlled tools, guardrails, evaluation, and operations.",
+          "Full credit gives a coherent path from governed data and reproducible training through consistent serving, validation, traceable release, and rollback.",
       },
       {
-        topicSlug: "models-as-tools",
+        topicSlug: "keeping-it-running",
         prompt:
-          "After a prompt edit, an insurance assistant's monthly cost triples, answers slow down, and cached replies sometimes expose another customer's details. Diagnose likely causes and give a safe remediation and rollout plan. (5–7 sentences.)",
+          "After a seasonal promotion, a recommendation model's inputs shift, click-through falls, inference cost rises, and nobody can identify which model or feature code served the affected users. Diagnose the operational failures and give a safe recovery and improvement plan. (5–7 sentences.)",
         correctAnswer:
-          "The edit may repeat more instructions, examples, history, or output, increasing billed tokens and generation latency; retries or tool steps may amplify both. Compare token and latency traces by pinned version, cap output, and trim or retrieve context. Streaming improves perceived responsiveness but does not remove total work. Cross-customer leakage means the cache key omitted identity or authorization context, so disable and purge it immediately. Cache only non-personalized content or isolate by complete tenant, user, policy, locale, prompt, model, and knowledge versions with expiry. Run quality, privacy, latency, and cost regressions, then canary under budgets and rollback thresholds.",
+          "Contain the incident by restoring the last known-good release or a safe fallback and by preserving affected prediction records. Separate a likely seasonal data or concept shift from pipeline errors by checking feature freshness, distributions, score changes, segment outcomes, and delayed labels. The cost increase requires tracing feature fetches, model runtime, hardware use, traffic, and retries by version. The missing lineage is itself a control failure: every prediction must identify model, code, feature, data or training, and configuration versions. Validate any retrained candidate on current slices and operational budgets, then shadow or canary it with stop conditions and rollback. Add prediction-quality, cost, and lineage-completeness monitors so another gradual failure becomes visible earlier.",
         explanation:
-          "Full credit connects context and retries to cost and latency, treats streaming accurately, fixes cache isolation, and proposes versioned evaluation plus safe rollout.",
+          "Full credit integrates containment, drift and pipeline diagnosis, cost analysis, prediction-level lineage, governed retraining, staged release, and improved monitoring.",
       },
     ],
   },
@@ -332,24 +352,24 @@ type SeedPrimer = Omit<SeedTopic, "bodyMedium" | "bodyLong">;
 const REASONING_PRIMERS: SeedPrimer[] = [
   {
     slug: "reasoning-primer-subject",
-    title: "How to reason about integration cases",
+    title: "How to reason about MLOps cases",
     weekNumber: 1,
     blurb:
-      "Diagnostic primer: applying generative AI integration concepts to concrete system failures.",
-    lectureTitle: "Primer: How to reason about integration cases",
-    body: `# How to reason about integration cases
+      "Diagnostic primer: applying Machine Learning Operations concepts to concrete production failures.",
+    lectureTitle: "Primer: How to reason about MLOps cases",
+    body: `# How to reason about MLOps cases
 
-This primer prepares you for the **Generative AI Integration** diagnostic. It is ungraded, fresh on every attempt, and asks you to apply the two sessions rather than recite terms.
+This primer prepares you for the **Machine Learning Operations** diagnostic. It is ungraded, fresh on every attempt, and asks you to apply the two sessions rather than recite terms.
 
 ## It tests application, not memorization
 
-A question gives a short scene: a chatbot invents a refund policy, an agent repeats a tool call, retrieval finds the right document but wrong passage, or costs triple after a prompt edit. Name the concept that explains the failure and point to the scene detail that decides it.
+A question gives a short scene: a notebook cannot be reproduced, live features use different units, prediction quality decays while uptime stays green, or a drift alert triggers unsafe automatic deployment. Name the MLOps idea that explains the failure and point to the scene detail that decides it.
 
 ## What the questions reward
 
-- **Naming the right idea** — distinguish stateless API behavior, context pressure, output-contract failure, retrieval/chunking, unsafe tool loops, weak evaluation, guardrail gaps, and operational failures.
+- **Naming the right idea** — distinguish data-pipeline failure, weak lineage, training-serving skew, data or concept drift, delayed ground truth, unsafe retraining, and weak release controls.
 - **Using evidence from the scene** — point to the detail in the situation that supports your answer, rather than answering from a general impression.
-- **Avoiding the universal prompt fix** — decide whether the remedy belongs in prompting, retrieval, validation, authorization, loop control, evaluation, or deployment operations.
+- **Choosing the right operating layer** — decide whether the remedy belongs in data validation, feature consistency, reproducibility, monitoring, retraining governance, deployment, or incident response.
 
 ## How to do this activity well
 
@@ -368,19 +388,19 @@ Take it as often as you like; the questions are freshly generated every time, an
     lectureTitle: "Primer: Core reasoning skills",
     body: `# Core reasoning skills
 
-This short primer prepares you for the **General Reasoning** diagnostic — an ungraded, fresh-attempt check of five genuine reasoning skills. The skills remain domain-general, with AI-system examples showing how they guide engineering judgment.
+This short primer prepares you for the **General Reasoning** diagnostic — an ungraded, fresh-attempt check of five genuine reasoning skills. The skills remain domain-general, with MLOps examples showing how they guide engineering judgment.
 
 ## The five skills
 
-- **Analysis** separates what a system was given from what it produced. If a policy was absent from retrieved context, that matters differently from a model ignoring supplied policy.
-- **Inference** distinguishes what an output proves from what it merely suggests. One good answer shows capability on one input, not production reliability.
-- **Evaluation** asks whether evidence supports a decision. An eval missing rare and multilingual cases cannot justify a global launch even if its average is high.
-- **Deduction** identifies architectural guarantees. If code rejects every unauthorized tool call, that action is blocked regardless of what the model requests.
-- **Induction** generalizes cautiously from samples. A handful of demonstrations is weak evidence about varied real traffic; representative repeated tests support a stronger forecast.
+- **Analysis** separates model behavior from data and serving behavior. A score shift caused by a changed unit is different from a model that learned the wrong relationship.
+- **Inference** distinguishes what a signal proves from what it merely suggests. Data drift justifies investigation; by itself it does not prove accuracy declined.
+- **Evaluation** asks whether evidence supports a decision. An average that hides a failing region cannot justify a broad rollout.
+- **Deduction** identifies architectural guarantees. If every prediction records its deployed model version, an incident can be traced to a release.
+- **Induction** generalizes cautiously from samples. A successful shadow test supports limited confidence; representative outcomes over time support a stronger forecast.
 
 ## A recurring trap: things that move together
 
-Most wrong answers sound plausible but outrun the evidence. Keep apart what facts show, what architecture guarantees, what you assume, and what is only possible. A prompt edit preceding a cost increase suggests a lead to investigate; token traces are stronger evidence of the mechanism.
+Most wrong answers sound plausible but outrun the evidence. Keep apart what facts show, what architecture guarantees, what you assume, and what is only possible. A drift alert suggests a lead to investigate; versioned feature and outcome traces are stronger evidence of the mechanism.
 
 ## How to do this activity well
 
@@ -457,7 +477,7 @@ export async function seedIfEmpty(): Promise<void> {
   const markerTopic = await db
     .select({ id: topicsTable.id })
     .from(topicsTable)
-    .where(eq(topicsTable.slug, "models-as-tools"));
+    .where(eq(topicsTable.slug, "model-to-product"));
   // Read the stored content version. Tolerate the seed_meta table not yet
   // existing (e.g. a boot that races ahead of schema migration): treat that as
   // "no version recorded", which forces a reseed once the table is present.
@@ -498,7 +518,7 @@ export async function seedIfEmpty(): Promise<void> {
     const row = (existing.rows[0] ?? {}) as { n?: number };
     if ((row.n ?? 0) > 0) {
       logger.warn(
-        "Seed: stale course content detected — replacing with Generative AI Integration",
+        "Seed: stale course content detected — replacing with Machine Learning Operations",
       );
       await tx.execute(
         sql`TRUNCATE TABLE answers, attempts, practice_attempts, practice_problems, practice_sessions, problems, assignments, lectures, topics, diagnostic_responses, diagnostic_attempts, diagnostic_items, diagnostic_assessments RESTART IDENTITY CASCADE`,

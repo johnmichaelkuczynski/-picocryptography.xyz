@@ -1,18 +1,18 @@
-# YouTube — Generative AI Integration
+# YouTube — Machine Learning Operations
 
 ## Title
 
-Generative AI Integration — AI-Powered Course
+Machine Learning Operations — AI-Powered Course
 
 ---
 
 ## Description (paste into YouTube)
 
-**Generative AI Integration** is a rigorous, self-paced course on wiring generative models into real software systems. It is taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
+**Machine Learning Operations** is a rigorous, self-paced course on moving machine-learning models into production and operating them reliably. It is taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
 
-The one-day curriculum has two sessions. The first covers what a generative model API actually provides: prompts and token outputs, message roles, context-window budgets, sampling controls, structured output, function and tool calling, streaming, latency, pricing, and the state, retry, and schema responsibilities of an integration layer. The second covers production engineering: prompt contracts, retrieval-augmented generation, agents and tool-use loops, evaluation and regression testing, guardrails, prompt injection, PII, cost and rate limits, caching, observability, model version pinning, and a grounded support assistant traced end to end.
+The one-day curriculum has two sessions. The first moves from model experiment to product through data pipelines, linked code-data-model versioning, reproducibility, training-serving skew, packaging, batch and real-time deployment, and feature stores. The second covers prediction monitoring, data and concept drift, delayed ground truth, retraining, shadow and canary releases, A/B tests, rollback, cost, latency, incident response, lineage, and audit trails.
 
-The course also includes two diagnostic primers. Integration cases require identifying the concept and scene detail that explain a failure. General reasoning applies analysis, inference, evaluation, deduction, and induction to AI systems.
+The course also includes two diagnostic primers. MLOps cases require identifying the concept and scene detail that explain a failure. General reasoning applies analysis, inference, evaluation, deduction, and induction to production ML systems.
 
 In this video:
 
@@ -22,7 +22,7 @@ In this video:
 - Adaptive practice
 - AI-graded homework, a course test, and a final
 - Text-based and keystroke-pattern AI-authorship detection
-- Ungraded integration-case and general-reasoning diagnostics
+- Ungraded MLOps-case and general-reasoning diagnostics
 
 The course is designed for adult researchers, professionals, product teams, engineers, instructors, and academic-integrity researchers.
 
@@ -33,16 +33,16 @@ The course is designed for adult researchers, professionals, product teams, engi
 0:00 Course overview
 0:08 Curriculum and sessions
 0:20 AI tutor, lessons, and adaptive practice
-0:35 Generative AI Integration
+0:35 Machine Learning Operations
 
 ---
 
 ## Hashtags
 
-#GenerativeAI #AIIntegration #LLMEngineering #RAG #AIAgents #LLMEvaluation #AIeducation #EdTech
+#MLOps #MachineLearning #ModelDeployment #ModelMonitoring #DataDrift #AIeducation #EdTech
 
 ---
 
 ## Tags
 
-generative AI integration, LLM API, model API, structured output, function calling, tool calling, context windows, token pricing, retrieval augmented generation, RAG, embeddings, vector search, AI agents, tool use, prompt engineering, output contracts, LLM evaluation, regression testing, prompt injection, PII, AI guardrails, observability, model version pinning, AI tutor, adaptive learning, AI grading, academic integrity
+machine learning operations, MLOps, data pipelines, model registry, feature store, reproducibility, training serving skew, batch scoring, real-time model serving, model monitoring, data drift, concept drift, delayed ground truth, retraining, shadow deployment, canary release, A/B testing, rollback, incident response, AI tutor, adaptive learning, AI grading, academic integrity

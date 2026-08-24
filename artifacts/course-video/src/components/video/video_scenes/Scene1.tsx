@@ -36,7 +36,7 @@ export function Scene1() {
               transition={{ duration: 0.8 }}
               className="text-[4vw] font-display font-bold text-[#1A2B3D] leading-tight"
             >
-              Generative AI Integration.
+              Machine Learning Operations.
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}

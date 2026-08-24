@@ -173,9 +173,9 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
       correctAnswer: string;
       explanation: string;
     }>(
-      `You generate a single practice problem for the course Generative AI Integration. The problem MUST be on the topic "${topic.title}" and at difficulty "${difficultyLabel}" (${difficulty.toFixed(
+      `You generate a single practice problem for the course Machine Learning Operations. The problem MUST be on the topic "${topic.title}" and at difficulty "${difficultyLabel}" (${difficulty.toFixed(
         1,
-      )}/5). Test practical understanding of generative-model integration, not recall of any particular reading. The question MUST be fully self-contained: do NOT reference "the lecture", "the text", "the course", "the example", or "the case"; state every fact needed to reason about the situation.\n\nSTRICT QUESTION RULES (no exceptions):\n- Every question must present a SPECIFIC, realistic, NAMED deployment scenario (for example, Northstar Support's assistant invents a refund policy because its prompt has no retrieved policy passage; Priya's tool-using agent repeats the same inventory call after every tool result; Harbor Health's JSON extractor works in a chat demo but returns invalid fields under production traffic; Mateo's team sees token cost triple after adding long examples to every prompt). Ask the student to APPLY the topic's idea to THAT scenario by diagnosing the decisive detail and recommending or predicting an operational consequence.\n- NEVER ask for a definition, an abstract comparison, a term, or what something is "called"; NEVER ask the student to recite terminology.\n- NEVER write a question whose answer is a single word, a single term, or a bare "yes"/"no". Require a reasoned 2-4 sentence answer tied to the scenario.\n- The "correctAnswer" must be a 2-4 sentence model answer showing the operational reasoning for THIS scenario. The "explanation" briefly says what earns full credit.\n\nRespond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}. Avoid these recent prompts: ${JSON.stringify(
+      )}/5). Test practical understanding of production ML operations, not recall of any particular reading. The question MUST be fully self-contained: do NOT reference "the lecture", "the text", "the course", "the example", or "the case"; state every fact needed to reason about the situation.\n\nSTRICT QUESTION RULES (no exceptions):\n- Every question must present a SPECIFIC, realistic, NAMED production ML scenario (for example, Northstar Bank's live service receives cents while training used dollars; Priya cannot reproduce a notebook because data and dependencies were not versioned; Harbor Media's recommendations decay while uptime stays green; Mateo's drift alert deploys a model trained on a broken feed). Ask the student to APPLY the topic's idea to THAT scenario by diagnosing the decisive detail and recommending or predicting an operational consequence.\n- NEVER ask for a definition, an abstract comparison, a term, or what something is "called"; NEVER ask the student to recite terminology.\n- NEVER write a question whose answer is a single word, a single term, or a bare "yes"/"no". Require a reasoned 2-4 sentence answer tied to the scenario.\n- The "correctAnswer" must be a 2-4 sentence model answer showing the operational reasoning for THIS scenario. The "explanation" briefly says what earns full credit.\n\nRespond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}. Avoid these recent prompts: ${JSON.stringify(
         lastProblems.map((p) => p.prompt),
       )}.`,
       userRequest || `Generate a new ${difficultyLabel} problem on ${topic.title}.`,
@@ -185,9 +185,9 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
     }
   } catch {
     generated = {
-      prompt: `At Northstar Support, Maya's help-center assistant gives a plausible refund answer even though the integration supplied no retrieved policy passage. Apply "${topic.title}" to diagnose the decisive system detail and recommend what Maya should change. Justify your answer in 2-4 sentences.`,
+      prompt: `At Northstar Bank, Maya's production model behaves differently after a feature pipeline change. Apply "${topic.title}" to diagnose the decisive system detail and recommend what Maya should verify or change. Justify your answer in 2-4 sentences.`,
       correctAnswer:
-        `A strong answer applies "${topic.title}" to the missing grounded evidence in Northstar Support's integration, explains what the observed output does and does not establish, and recommends a concrete system change with a way to verify it. It reasons from the scenario rather than merely naming a concept.`,
+        `A strong answer applies "${topic.title}" to the production evidence, explains what the observed change does and does not establish, and recommends a concrete MLOps control with a way to verify it. It reasons from the scenario rather than merely naming a concept.`,
       explanation:
         "Full credit reasons about the specific situation and shows operational understanding; restating a definition does not earn credit.",
     };
@@ -278,7 +278,7 @@ router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<voi
     try {
       tutorTip = (
         await chatJson<{ tip: string }>(
-          "You are a kind, concise Generative AI Integration tutor. Given a problem, the correct answer, and the student's wrong attempt, give ONE focused next-step tip (2 sentences max). Respond as strict JSON: {\"tip\": string}.",
+          "You are a kind, concise Machine Learning Operations tutor. Given a problem, the correct answer, and the student's wrong attempt, give ONE focused next-step tip (2 sentences max). Respond as strict JSON: {\"tip\": string}.",
           JSON.stringify({
             prompt: problem.prompt,
             correctAnswer: problem.correctAnswer,

@@ -52,7 +52,7 @@ export function Scene2() {
               <h3 className="font-display font-bold text-lg mb-4">Current Day</h3>
               <div className="bg-[#1A2B3D] text-white p-6 rounded-md mb-4">
                 <div className="text-xs font-mono mb-2 opacity-80">DAY 1</div>
-                <div className="text-xl font-display font-bold">Generative AI Integration</div>
+                <div className="text-xl font-display font-bold">Machine Learning Operations</div>
                 <div className="mt-6 flex justify-between items-end">
                   <div className="w-2/3">
                     <div className="h-2 bg-white/20 rounded-full overflow-hidden">

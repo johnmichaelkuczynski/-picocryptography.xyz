@@ -40,18 +40,18 @@ const features = [
   {
     icon: BarChart3,
     title: "One Intensive Day, 2 Topics",
-    body: "From the generative-model API surface through a production integration.",
+    body: "From a working model experiment through dependable production operations.",
   },
 ];
 
 const topics = [
   {
     session: "Morning session",
-    title: "Models as tools: what a generative model actually gives you",
+    title: "From model to product",
   },
   {
     session: "Afternoon session",
-    title: "Building with generation: wiring a model into a real system",
+    title: "Keeping it running",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function Landing() {
             <Search className="w-4 h-4" />
           </div>
           <span className="font-serif font-semibold text-lg tracking-tight">
-            Generative AI Integration
+            Machine Learning Operations
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export default function Landing() {
         <div className="flex-1 min-w-0">
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-8">
-            A one-day intensive course on integrating generative AI into real systems.
+            A one-day intensive course on moving machine-learning models into production and keeping them reliable.
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <CourseEntryButton
@@ -174,7 +174,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        Generative AI Integration
+        Machine Learning Operations
       </footer>
     </div>
   );
