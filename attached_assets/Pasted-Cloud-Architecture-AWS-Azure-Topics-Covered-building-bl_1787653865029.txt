@@ -1,0 +1,12 @@
+Cloud Architecture (AWS/Azure)
+
+Topics Covered
+
+building-blocks — The building blocks
+designing-for-real-use — Designing for real use
+reasoning-primer-subject — How to reason about cloud-architecture cases
+reasoning-primer-general — Core reasoning skills
+
+building-blocks: The building blocks. Sub-topics: Renting instead of owning — what actually changes when the hardware is someone else's; The four primitives — compute, storage, network, identity — and how every service is a variation on them; Compute on a ladder: virtual machines, containers, serverless functions, and what each one costs you in control; Storage is not one thing — object, block, and file, and picking wrong is expensive; Databases as a service — managed relational, key-value, and when "managed" stops meaning "someone else's problem"; Regions, availability zones, and why geography is an architecture decision; Networking basics — the virtual private network, subnets, and the security group as a gate; Identity and access — the principle of least privilege, and why most breaches are permissions, not code. In the real world: the same application built three ways on the same provider, and why the cheapest version is the hardest to change.
+
+designing-for-real-use: Designing for real use. Sub-topics: Scaling up versus scaling out, and why the second one wins; Load balancing and statelessness — the discipline that makes horizontal scaling possible; Designing for failure — everything breaks, so what happens next; Redundancy, backup, and the difference between "recovered" and "recovered fast enough"; The cost model — pay-per-use as a design constraint, not an invoice; Managed services versus self-hosted, and the lock-in question; Infrastructure as code — the architecture as a file you can review; Observability — logs, metrics, and traces; Security posture — encryption, secrets, and the shared responsibility model that determines whose fault it is. In the real world: a launch that survived a traffic spike because it was stateless, and a competitor's that didn't. The two primers mirror the originals — one giving students a concrete deployment scenario and asking which architectural idea decides it, the other covering the same five general skills (analysis, inference, evaluation, deduction, induction).

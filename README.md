@@ -1,10 +1,10 @@
-# 🚀 Machine Learning Operations
+# 🚀 Cloud Architecture (AWS/Azure)
 
 <div align="center">
 
-### From a promising model experiment to a dependable product.
+### From cloud building blocks to dependable systems.
 
-<strong>A rigorous, self-paced, AI-powered MLOps course for researchers, professionals, and teams who need to ship machine learning responsibly — and keep it working after launch.</strong>
+<strong>A rigorous, self-paced, AI-powered cloud architecture course for researchers, professionals, and teams designing reliable, secure systems with AWS and Azure.</strong>
 
 <br />
 <br />
@@ -18,31 +18,31 @@
 
 <br />
 
-![Machine Learning Operations course preview](screenshots/machine-learning-operations-home.jpg)
+![Cloud Architecture (AWS/Azure) course preview](screenshots/cloud-architecture-home.jpg)
 
-> **The hard part of ML is not only training a model.**
-> It is connecting data, code, features, artifacts, deployment, monitoring, releases, and human decisions into one system you can trust.
+> **The hard part of cloud architecture is not only choosing a service.**
+> It is connecting compute, storage, network, identity, resilience, security, cost, and human decisions into one system you can trust.
 
 ---
 
 ## ✨ Why this course?
 
-Machine Learning Operations is a **one-day web course taught, tutored, drilled, and graded by AI**. It turns the messy path from notebook to production into a structured learning experience with concrete cases, adaptive practice, grounded tutoring, and built-in academic-integrity screening.
+Cloud Architecture (AWS/Azure) is a **one-day web course taught, tutored, drilled, and graded by AI**. It turns cloud design decisions into a structured learning experience with concrete cases, adaptive practice, grounded tutoring, and built-in academic-integrity screening.
 
-No vague “just deploy it” advice. No definition-only quizzes. Every assessment asks the learner to reason from evidence and make an operational decision.
+No vague “just use the cloud” advice. No definition-only quizzes. Every assessment asks the learner to reason from evidence and make an architectural decision.
 
 ## 🧭 The learning journey
 
 | Session | What you will work through | The question it answers |
 | --- | --- | --- |
-| 🟦 **From model to product** | Data pipelines, lineage, linked code/data/model versions, reproducibility, training-serving skew, feature consistency, packaging, batch scoring, real-time serving, and rollback-ready deployment. | **Can this model leave the notebook safely?** |
-| 🟪 **Keeping it running** | Prediction monitoring, data drift, concept drift, delayed labels, retraining decisions, shadow and canary releases, A/B tests, latency, cost, incidents, and audit trails. | **How do we know it is still working?** |
+| 🟦 **The building blocks** | Renting instead of owning; compute, storage, network, and identity; virtual machines, containers, serverless functions, databases, regions, availability zones, virtual networks, subnets, and least privilege. | **Which cloud primitives does this system need, and why?** |
+| 🟪 **Designing for real use** | Scaling, load balancing, statelessness, failure design, redundancy, backup, cost, managed services, infrastructure as code, observability, encryption, secrets, and shared responsibility. | **Will this architecture remain reliable, secure, and practical under real conditions?** |
 
 ### The reasoning primers
 
 Two ungraded primers make the course more than a checklist:
 
-- 🧪 **How to reason about MLOps cases** — diagnose irreproducible experiments, feature skew, delayed ground truth, unsafe retraining, and silent quality decay.
+- 🧪 **How to reason about cloud-architecture cases** — identify the architectural idea that decides a concrete deployment scenario.
 - 🧠 **Core reasoning skills** — practice analysis, inference, evaluation, deduction, and induction in a domain-neutral format.
 
 ---
@@ -102,7 +102,7 @@ Every submission is checked by both a static text detector and diachronic keystr
 
 ## 📦 What is included
 
-- **One intensive day** organized around two core sessions
+- **One intensive day** organized around four core topics
 - **Three lecture depths**: Short, Medium, and Long
 - **Section-scoped AI tutoring** with streamed responses
 - **Adaptive topic practice** with persistent difficulty
@@ -116,8 +116,8 @@ Every submission is checked by both a static text detector and diachronic keystr
 
 | Audience | Takeaway |
 | --- | --- |
-| 🔬 **Researchers and professionals entering MLOps** | A foundational but substantial introduction compressed into one focused day. |
-| 🛠️ **Product and engineering teams** | A shared language for reproducibility, deployment, monitoring, releases, and incidents. |
+| 🔬 **Researchers and professionals entering cloud architecture** | A foundational but substantial introduction compressed into one focused day. |
+| 🛠️ **Product and engineering teams** | A shared language for cloud primitives, resilience, security, cost, and operational design. |
 | 🎓 **Instructors and curriculum designers** | A working example of AI-taught, AI-graded coursework with integrity controls. |
 | 🔎 **Academic-integrity researchers** | A live demonstration of layered authorship screening in an educational product. |
 
@@ -145,13 +145,13 @@ The course and API require the environment variables documented in the deploymen
 
 ## 🌈 The promise
 
-> **Learn the system, not just the model.**
+> **Learn the architecture, not just the service.**
 
-Machine Learning Operations gives learners a practical mental model for the full lifecycle: **data → features → model → service → signals → decision → release**.
+Cloud Architecture (AWS/Azure) gives learners a practical mental model for system design: **compute → storage → network → identity → resilience → observability → security → cost**.
 
 <div align="center">
 
-### Ready to move ML from “it works on my machine” to “we can operate this”?
+### Ready to move from “it runs” to “this architecture can support real use”?
 
 **Start with the course. Build the habit of asking what the evidence actually proves.**
 

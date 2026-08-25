@@ -13,6 +13,8 @@ After delegating a video-js build to the DESIGN subagent, these breakages recur 
 
 - **tsconfig missing DOM lib**: the newer video-js scaffold `tsconfig.json` omits `"lib": ["esnext","dom","dom.iterable"]`, so typecheck fails with `Cannot find name 'window'/'document'` and framer-motion Variant type errors. Fix: add that `lib` line (matches the older working sibling artifact).
 
+- **Manual production builds need artifact env**: running a video package build outside its managed workflow requires both `PORT` and `BASE_PATH`; the workflow supplies them automatically.
+
 **Why:** the DESIGN subagent's output is not verified by it, and the scaffold version drifts; these three issues appeared together on a fresh build.
 
-**How to apply:** after the subagent returns, restart the workflow and read logs; expect these and fix before running the scene-selector/audio post-build steps. Then run `pnpm --filter @workspace/<slug> run typecheck` to catch the tsconfig one (dev server alone won't surface it).
+**How to apply:** after the subagent returns, restart the workflow and read logs; expect these and fix before running the scene-selector/audio post-build steps. For a manual build, set the workflow-equivalent `PORT` and `BASE_PATH`. Then run `pnpm --filter @workspace/<slug> run typecheck` to catch the tsconfig one (dev server alone won't surface it).

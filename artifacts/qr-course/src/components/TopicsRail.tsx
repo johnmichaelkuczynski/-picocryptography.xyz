@@ -1,46 +1,18 @@
-import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 
 const base = import.meta.env.BASE_URL;
 export const pdfUrl = `${base}api/course/download-pdf`;
 export const txtUrl = `${base}api/course/download-txt`;
 
-/** Strip numbering like "1.1 " from a lecture/topic title. */
-function plainTitle(title: string): string {
-  return title.replace(/^\s*\d+(\.\d+)*\s*[-–—:.]?\s*/, "").trim();
-}
-
-type OverviewWeek = { lectures?: Array<{ title: string }> };
-type Overview = { weeks?: OverviewWeek[] };
-
 const COURSE_TOPIC_TITLES = [
-  "From model to product",
-  "Keeping it running",
+  "The building blocks",
+  "Designing for real use",
+  "How to reason about cloud-architecture cases",
+  "Core reasoning skills",
 ];
 
 export function useCourseTopicTitles(): string[] {
-  const [titles, setTitles] = useState<string[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${base}api/course/overview`, { credentials: "include" })
-      .then((r) => (r.ok ? (r.json() as Promise<Overview>) : null))
-      .then((data) => {
-        if (cancelled || !data?.weeks) return;
-        const list = data.weeks.flatMap(
-          (w) => w.lectures?.map((l) => plainTitle(l.title)) ?? [],
-        );
-        setTitles(
-          list.map(
-            (title, index) => COURSE_TOPIC_TITLES[index] ?? plainTitle(title),
-          ),
-        );
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  return titles;
+  return COURSE_TOPIC_TITLES;
 }
 
 /**
@@ -81,7 +53,7 @@ export default function TopicsRail() {
           data-testid="rail-download-pdf"
         >
           <Download className="w-3.5 h-3.5" />
-          Download Course (PDF)
+          Download Cloud Architecture (PDF)
         </a>
         <a
           href={txtUrl}
@@ -89,7 +61,7 @@ export default function TopicsRail() {
           data-testid="rail-download-txt"
         >
           <Download className="w-3.5 h-3.5" />
-          Download Course (TXT)
+          Download Cloud Architecture (TXT)
         </a>
         <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
           Every lecture (short version) plus practice homework and exam

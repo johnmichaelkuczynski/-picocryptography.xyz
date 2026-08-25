@@ -29,7 +29,7 @@ export function Sidebar() {
             <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground">
               <Search className="w-4 h-4" />
             </div>
-            <span className="font-serif font-semibold text-lg tracking-tight">Machine Learning Operations</span>
+            <span className="font-serif font-semibold text-lg tracking-tight">Cloud Architecture (AWS/Azure)</span>
           </div>
         </Link>
       </div>
@@ -55,7 +55,7 @@ export function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-border text-xs text-muted-foreground text-center">
-        Machine Learning Operations
+        Cloud Architecture (AWS/Azure)
       </div>
     </div>
   );

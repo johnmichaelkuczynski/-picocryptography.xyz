@@ -4,8 +4,8 @@ import { AppShell } from '../AppShell';
 
 export function Scene5() {
   const [phase, setPhase] = useState(0);
-  const question = "Why doesn't the model remember our previous conversation in production?";
-  const answer = "Because the API is stateless. The model doesn't remember previous calls; your integration layer must pass the entire conversation history in every new request.";
+  const question = "Why should we use managed database services instead of hosting our own?";
+  const answer = "Because of the shared responsibility model. A managed database handles backups, patching, and failover, so you focus on the schema rather than the infrastructure.";
   const [typedQ, setTypedQ] = useState("");
   const [typedA, setTypedA] = useState("");
 

@@ -3,8 +3,8 @@
 //
 // Two instruments, each offered at FOUR time-points (phases) so a student can
 // gauge themselves before, during, and after the course:
-//   - subject  — Machine Learning Operations reasoning. Realistic short cases
-//     about production ML systems; the best-supported answer
+//   - subject  — Cloud Architecture reasoning. Realistic short cases about
+//     cloud systems; the best-supported answer
 //     is keyed first.
 //   - general  — General Reasoning. Genuine reasoning items spanning analysis,
 //     inference, evaluation, deduction, and induction (NOT a "docility"/agree-
@@ -88,25 +88,25 @@ const SUBJECT_SPECS: Record<Phase, GenSpec> = {
     level:
       "Intro level: answerable by a thoughtful newcomer before lessons. Do not require technical vocabulary; reward brief plain-language reasoning from details in the scene.",
     topicFocus:
-      "Basic boundaries between a model experiment and a production ML system: real data pipelines change, a model file alone is not reproducible, live inputs must match training meaning, and a service can stay online while prediction quality declines. Use simple cases that reward practical judgment without requiring jargon.",
+      "Basic cloud boundaries: renting infrastructure changes who operates the hardware but not the customer's responsibility for configuration; compute, storage, network, and identity solve different problems; storage types are not interchangeable; public exposure and broad permissions create risk. Use simple cases that reward practical judgment without requiring jargon.",
   },
   third: {
     level:
-      "Early course level: covers Session 1 fundamentals through context and generation controls. Keep cases brief and one-sentence-friendly.",
+      "Early course level: covers Session 1 fundamentals. Keep cases brief and one-sentence-friendly.",
     topicFocus:
-      "Session 1 fundamentals: the notebook-to-service gap; data sources and pipeline validation; linked versioning of code, data, configuration, and model artifacts; reproducibility; and training-serving skew caused by inconsistent feature meaning.",
+      "Session 1 fundamentals: renting rather than owning; compute, storage, network, and identity primitives; virtual machines, containers, and serverless functions; object, block, and file storage; managed relational and key-value databases; regions and availability zones; VPCs or virtual networks, subnets, security groups, IAM, and least privilege.",
   },
   twothirds: {
     level:
       "Mid-course level: covers all of Session 1 and early Session 2. Use short cases requiring one clear diagnostic step.",
     topicFocus:
-      "All Session 1 concepts, including batch, real-time, and embedded packaging, model registries, feature consistency, and feature stores; plus early Session 2 monitoring beyond uptime, data versus concept drift, delayed ground truth, and leading indicators.",
+      "All Session 1 concepts, including compute and storage selection, managed databases, geography, networking, and identity; plus early Session 2 concepts: scaling up versus out, load balancing, statelessness, designing for failure, redundancy, backups, RTO, and RPO.",
   },
   after: {
     level:
       "End-of-course level: covers both sessions. Use concise integrative cases, still answerable in one sentence.",
     topicFocus:
-      "The full course: reproducible pipelines and linked versions; training-serving skew; deployment patterns and feature stores; prediction and outcome monitoring; data and concept drift; delayed labels; governed retraining; shadow, canary, A/B, and rollback releases; cost and latency; incident response, lineage, and audit trails.",
+      "The full course: compute, storage, network, and identity choices; regions and availability zones; horizontal scaling and statelessness; failure design, redundancy, backups, RTO, and RPO; cloud cost; managed services versus self-hosting and lock-in; infrastructure as code; logs, metrics, and traces; encryption, secrets, least privilege, and shared responsibility.",
   },
 };
 
@@ -152,7 +152,7 @@ const FORMAT_LABEL: Record<DiagFormat, string> = {
 function instructionsFor(instrument: Instrument, format: DiagFormat): string {
   const subject =
     instrument === "subject"
-      ? "Answer each Machine Learning Operations case — these reward careful reasoning from the scene, not memorized definitions"
+      ? "Answer each Cloud Architecture case — these reward careful reasoning from the scene, not memorized definitions"
       : "Answer each reasoning question — these measure how you think, not what you recall";
   const body =
     format === "mcq"
@@ -164,86 +164,86 @@ function instructionsFor(instrument: Instrument, format: DiagFormat): string {
 }
 
 // ===========================================================================
-// SUBJECT — Machine Learning Operations blueprint cases (best answer keyed FIRST)
+// SUBJECT — Cloud Architecture blueprint cases (best answer keyed FIRST)
 // ===========================================================================
 
 const SUBJECT_BEFORE: DiagItem[] = [
   {
     prompt:
-      "A model works in one analyst's notebook but nobody else can recreate it because the data file and package versions are unknown; what should the team do first?",
+      "A small company moves its application to the cloud and assumes the provider now controls who can read its data; what is the best correction?",
     options: [
-      "Record and version the code, data source, configuration, environment, and resulting model together",
-      "Copy only the final model file to a shared folder",
-      "Keep using the original laptop as the production server",
-      "Rename the notebook so its purpose is clearer",
+      "The provider operates the underlying infrastructure, while the customer still configures identities, access, data protection, and the application",
+      "The provider automatically makes every customer permission safe",
+      "Moving to the cloud removes the need to manage credentials",
+      "Only application code matters after migration",
     ],
     modelAnswer:
-      "The experiment is not reproducible until its code, data, configuration, dependencies, and model artifact are linked and versioned.",
+      "Cloud changes the ownership boundary, but the customer still owns access configuration, application security, and data protection under shared responsibility.",
   },
   {
     prompt:
-      "A fraud model tested well, but live scores fail after production sends transaction amounts in cents while training used dollars; what is the best diagnosis?",
+      "A media company stores millions of complete video files on expensive disks attached to one virtual machine; which change best fits the access pattern?",
     options: [
-      "Training-serving skew changed the meaning of an input feature",
-      "The model needs a more colorful dashboard",
-      "Fraud models cannot be deployed in real time",
-      "The test set was necessarily too large",
+      "Move the durable videos to object storage and let compute instances access them independently",
+      "Buy a larger attached disk and keep the same single-machine dependency",
+      "Put every video inside a relational database row",
+      "Rename the disk so it is easier to identify",
     ],
     modelAnswer:
-      "The offline and online systems supplied the same named feature in different units, which is training-serving skew.",
+      "Whole durable files fit object storage, which separates data durability and scale from one replaceable compute instance.",
   },
   {
     prompt:
-      "A recommendation endpoint has perfect uptime, but customer engagement has fallen for weeks; which response best addresses the immediate blind spot?",
+      "A payroll service's cloud role can read every bucket and secret even though it uses one database and one export bucket; which response best reduces the risk?",
     options: [
-      "Monitor prediction behavior and eventual outcomes in addition to server health",
-      "Assume uptime proves recommendation quality",
-      "Increase server memory without examining predictions",
-      "Stop recording which model version made each prediction",
+      "Grant only the specific database and bucket actions the workload requires",
+      "Keep administrator access because the application is inside the cloud account",
+      "Make the role public so access failures are less likely",
+      "Use a longer role name without changing its permissions",
     ],
     modelAnswer:
-      "Availability metrics cannot reveal gradual quality decay, so prediction and outcome monitoring must be added.",
+      "Least privilege limits the workload identity to required resources and actions, reducing the blast radius of misuse or compromise.",
   },
 ];
 
 const SUBJECT_THIRD: DiagItem[] = [
   {
     prompt:
-      "A training pipeline succeeds after an upstream team silently changes a category code, but the new model behaves differently; what should be investigated first?",
+      "A team chooses serverless functions for a continuously running video encoder that often needs two hours and custom operating-system packages; what should be investigated first?",
     options: [
-      "Data lineage, schema and value checks, and the meaning of the changed source field",
-      "Only whether the model file has a newer timestamp",
-      "Whether the dashboard uses the same font",
-      "Whether batch scoring can be renamed real-time scoring",
+      "Whether the function's duration, runtime, and packaging limits conflict with the workload, and whether containers or VMs fit better",
+      "Whether the function can be given a more descriptive name",
+      "Whether object storage should be renamed block storage",
+      "Whether all compute options have identical control and limits",
     ],
     modelAnswer:
-      "A successful run can still consume changed meaning, so the source change and its lineage and validation controls should be examined.",
+      "The workload needs long execution and custom runtime control, so the team should compare the serverless constraints with container or VM compute.",
     skillArea: "analysis",
   },
   {
     prompt:
-      "A team saves the model artifact but not the training-data snapshot or preprocessing revision; what follows?",
+      "An application and its database are both placed in one availability zone even though the design diagram lists two zones; what follows?",
     options: [
-      "The release cannot be reliably reconstructed or explained from the model file alone",
-      "The artifact contains every data transformation automatically",
-      "A model registry makes source data unnecessary",
-      "Reproducibility depends only on the model filename",
+      "A failure of that zone can still remove both application and data service despite the diagram",
+      "Naming a second zone automatically creates redundancy",
+      "A second region is guaranteed without extra configuration",
+      "The database becomes public only because it is in one zone",
     ],
     modelAnswer:
-      "Reproducibility requires linked versions of data, code, configuration, environment, and model artifacts.",
+      "Resilience depends on where the actual resources and dependencies run, not on the number of zones shown in a diagram.",
     skillArea: "inference",
   },
   {
     prompt:
-      "An online feature is recomputed by three services with slightly different definitions; which architectural change best reduces this risk?",
+      "A public web server needs to read one private bucket, but the team plans to embed an account-wide access key in its source code; which change is best?",
     options: [
-      "Centralize governed feature definitions and reuse them for training and serving",
-      "Let every service keep its own undocumented calculation",
-      "Version only the user interface",
-      "Remove feature freshness checks",
+      "Use a workload identity with short-lived, bucket-specific permissions and keep secrets out of source code",
+      "Commit the key in an encrypted-looking filename",
+      "Make every bucket public so the key is unnecessary",
+      "Give the server permanent administrator credentials",
     ],
     modelAnswer:
-      "Shared governed feature definitions reduce duplicated logic and training-serving inconsistency.",
+      "A workload identity with least privilege avoids a long-lived embedded secret and restricts the server to the bucket it actually needs.",
     skillArea: "evaluation",
   },
 ];
@@ -251,41 +251,41 @@ const SUBJECT_THIRD: DiagItem[] = [
 const SUBJECT_TWOTHIRDS: DiagItem[] = [
   {
     prompt:
-      "A model's input distribution changes after a new customer segment arrives, but labeled accuracy has not yet changed; which conclusion is best?",
+      "A load-balanced shopping site stores carts in each web server's local memory; after scaling out, customers sometimes lose carts; which conclusion is best?",
     options: [
-      "Data drift has occurred and should be investigated, but it does not alone prove quality loss",
-      "Concept drift is proven and immediate deployment is required",
-      "The model is guaranteed to remain accurate",
-      "Uptime metrics can determine whether the new segment is predicted correctly",
+      "The web tier is not truly stateless, so cart state should move to a shared data service",
+      "The load balancer must always send every user to the largest server",
+      "Horizontal scaling guarantees local state will be synchronized",
+      "A larger server name will preserve carts",
     ],
     modelAnswer:
-      "The changed input distribution is data drift; outcome evidence and pipeline checks are still needed to determine its effect.",
+      "Local session state makes instances non-interchangeable; shared durable state is required for reliable horizontal scaling.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A real-time model meets accuracy targets but its p99 latency exceeds the checkout budget; which conclusion is strongest?",
+      "A database backup job reports success every night, but the business promises one-hour recovery and nobody has attempted a restore; which conclusion is strongest?",
     options: [
-      "It is not production-ready for that decision path despite its accuracy",
-      "Accuracy automatically compensates for any latency",
-      "The latency matters only during training",
-      "Renaming the endpoint will meet the budget",
+      "The recovery promise is unproven until a restore is completed and timed against the one-hour target",
+      "A successful backup job guarantees every restore will finish within one hour",
+      "Redundant web servers make database restores unnecessary",
+      "The backup filename determines the recovery time",
     ],
     modelAnswer:
-      "Operational requirements are part of model quality, so a candidate that misses the decision-time latency budget is not ready.",
+      "Backup creation proves a copy exists, not that the team can restore consistent data within the stated RTO.",
     skillArea: "inference",
   },
   {
     prompt:
-      "Outcome labels arrive 60 days after prediction; what must the serving system retain now so later evaluation is valid?",
+      "A service needs no more than ten minutes of data loss after a failure; what must its recovery design demonstrate?",
     options: [
-      "Prediction identity, timestamp, model and feature versions, and enough context to join the mature label",
-      "Only the latest aggregate accuracy number",
-      "Only the server's uptime percentage",
-      "No records, because delayed labels cannot be used",
+      "Backups or replication and restore procedures can recover to a point no more than ten minutes old",
+      "The application server can reboot within ten minutes",
+      "The provider advertises high durability for a different service",
+      "The team can recreate the network diagram from memory",
     ],
     modelAnswer:
-      "Versioned prediction records are needed to join delayed outcomes to the exact release that produced them.",
+      "The ten-minute requirement is an RPO and must be supported by the data-protection interval and verified recovery procedure.",
     skillArea: "analysis",
   },
 ];
@@ -293,41 +293,41 @@ const SUBJECT_TWOTHIRDS: DiagItem[] = [
 const SUBJECT_AFTER: DiagItem[] = [
   {
     prompt:
-      "A drift alert automatically retrains and deploys a model built from a broken feed; which fix is most reliable?",
+      "A team manually creates production networks and identities in the console, and nobody can reproduce or review the changes after an incident; which fix is most reliable?",
     options: [
-      "Separate alerting, data validation, candidate training, approval, staged release, and rollback",
-      "Raise the drift threshold until alerts disappear",
-      "Deploy every candidate faster",
-      "Treat a completed training job as proof of data quality",
+      "Define the infrastructure as versioned code with reviewed plans, controlled application, and recorded state",
+      "Ask one administrator to remember every click",
+      "Permit emergency console changes without reconciliation",
+      "Record only the final resource names in a document",
     ],
     modelAnswer:
-      "A drift signal should start investigation, not bypass data checks and controlled release gates.",
+      "Infrastructure as code makes the environment reproducible, reviewable, and auditable instead of depending on undocumented console actions.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A candidate wins on average accuracy but loses badly for one important region; what evidence was missing from the release decision?",
+      "A product launch survives on two stateless web instances, but every request still depends on one database in one zone; what evidence is missing from the team's high-availability claim?",
     options: [
-      "Representative slice-level evaluation and predefined regional guardrails",
-      "A larger overall average with the region still hidden",
-      "A guarantee that all segments follow the mean",
-      "A shorter model name",
+      "A tested failure path showing the data tier remains available or recovers within the required objective when that zone fails",
+      "A screenshot showing two web-server icons",
+      "A larger web-server instance in the same zone",
+      "A guarantee that load balancing duplicates the database",
     ],
     modelAnswer:
-      "Aggregate performance can hide concentrated harm, so important segments need explicit evidence and release thresholds.",
+      "Redundant compute does not remove the single-zone database dependency; the availability claim needs a tested data-tier failure and recovery path.",
     skillArea: "inference",
   },
   {
     prompt:
-      "During an incident, nobody can determine which model, feature code, or data snapshot produced the affected predictions; what control is missing?",
+      "During an incident, the team has application logs but cannot tell whether time is spent in the web tier, queue, or database; what control is missing?",
     options: [
-      "Prediction-level lineage linked to immutable release and training metadata",
-      "A brighter alert color",
-      "A policy to overwrite older model records",
-      "A rule that incidents need no deployment history",
+      "Correlated metrics and distributed traces that show latency and request flow across services",
+      "More unstructured log lines without request identifiers",
+      "A policy to delete old telemetry during incidents",
+      "A brighter dashboard background",
     ],
     modelAnswer:
-      "An audit trail must connect affected predictions to the exact model, code, feature, data, and configuration versions.",
+      "Metrics reveal where latency changes and traces connect one request's path across services, filling the gap left by isolated logs.",
     skillArea: "evaluation",
   },
 ];
@@ -440,7 +440,7 @@ const BASE_CONTENT: BaseContent[] = PHASE_ORDER.flatMap((phase) => {
     {
       instrument: "subject" as const,
       phase,
-      baseTitle: `Machine Learning Operations Check — ${PHASE_LABEL[phase]}`,
+      baseTitle: `Cloud Architecture Check — ${PHASE_LABEL[phase]}`,
       items: subjectItems[phase],
     },
     {

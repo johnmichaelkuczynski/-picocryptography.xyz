@@ -25,7 +25,7 @@ export function Scene4() {
           {/* Left Column: Lecture */}
           <div className="flex-[3] flex flex-col border-r border-[#E2E8F0] bg-white h-full relative">
             <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between">
-              <div className="text-sm font-medium text-[#718096]">From model to product</div>
+              <div className="text-sm font-medium text-[#718096]">The building blocks</div>
               <div className="flex items-center bg-[#EFECE6] rounded-md p-1">
                 <div className={`px-3 py-1 text-xs font-medium rounded ${phase === 0 ? 'bg-white shadow text-[#1A2B3D]' : 'text-[#718096]'}`}>Short</div>
                 <div className={`px-3 py-1 text-xs font-medium rounded ${phase === 1 ? 'bg-white shadow text-[#1A2B3D]' : 'text-[#718096]'}`}>Medium</div>
@@ -33,7 +33,7 @@ export function Scene4() {
               </div>
             </div>
             <div className="flex-1 p-10 overflow-hidden relative">
-              <motion.h1 className="text-3xl font-display font-bold text-[#1A2B3D] mb-6">A notebook is not a service</motion.h1>
+              <motion.h1 className="text-3xl font-display font-bold text-[#1A2B3D] mb-6">Renting instead of owning</motion.h1>
               
               <AnimatePresence mode="popLayout">
                 {phase === 0 ? (
@@ -44,8 +44,8 @@ export function Scene4() {
                     exit={{ opacity: 0, y: -10 }}
                     className="text-lg text-[#4A5568] leading-relaxed space-y-4"
                   >
-                    <p>Production requires versioned code, data, features, and model artifacts.</p>
-                    <p>There is no conversation state, no memory, and no magic. Context windows are a budget, not a memory.</p>
+                    <p>The cloud changes how we think about hardware. We are renting compute, storage, and networking.</p>
+                    <p>Instead of buying servers, you provision primitives. Instead of cables, you configure security groups.</p>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -54,12 +54,12 @@ export function Scene4() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-lg text-[#4A5568] leading-relaxed space-y-4"
                   >
-                    <p>Production requires versioned code, data, features, and model artifacts.</p>
-                    <p>There is no conversation state, no memory, and no magic. Context windows are a budget, not a memory.</p>
-                    <p>Think of the context window as a fixed constraint. If a feature works in a chat UI, it can easily break in production without an integration layer.</p>
+                    <p>The cloud changes how we think about hardware. We are renting compute, storage, and networking.</p>
+                    <p>Instead of buying servers, you provision primitives. Instead of cables, you configure security groups.</p>
+                    <p>Think of the cloud as an API for a data center. If you lift and shift exactly what you had on-premise, you get all the cost with none of the scale.</p>
                     <div className="bg-[#FDFCFB] p-4 border border-[#E2E8F0] rounded-md font-mono text-sm mt-4 text-[#1A2B3D]">
-                      model: "fraud-score-v12"<br/>
-                      response: "Here are the entities..."
+                      resource: "aws_ec2_instance"<br/>
+                      instance_type: "t3.micro"
                     </div>
                   </motion.div>
                 )}

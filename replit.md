@@ -1,19 +1,21 @@
-# Machine Learning Operations
+# Cloud Architecture (AWS/Azure)
 
-**A rigorous, one-day introduction to moving machine-learning models into production and operating them reliably for adult researchers and professionals.**
+**A rigorous, one-day introduction to designing reliable, secure cloud architectures with AWS and Azure for adult researchers and professionals.**
 
 ---
 
 ## Overview
 
-Machine Learning Operations is a self-paced, single-user web course taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
+Cloud Architecture (AWS/Azure) is a self-paced, single-user web course taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
 
-The curriculum has **one intensive day with two sessions**:
+The curriculum has **one intensive day with four topics**:
 
-1. **From model to product.** The notebook-to-service gap; data pipelines; linked code, data, and model versions; reproducibility; training-serving skew; batch, real-time, and embedded deployment; model packaging; and feature stores.
-2. **Keeping it running.** Prediction monitoring beyond uptime; data and concept drift; delayed ground truth; retraining policies; shadow, canary, A/B, and rollback releases; cost, latency, incidents, and audit trails.
+1. **The building blocks** — Renting instead of owning; compute, storage, network, and identity; virtual machines, containers, serverless functions, databases, regions, availability zones, virtual networks, subnets, and least-privilege access.
+2. **Designing for real use** — Scaling, load balancing, statelessness, failure design, redundancy, backup, cost, managed services, infrastructure as code, observability, encryption, secrets, and the shared responsibility model.
+3. **How to reason about cloud-architecture cases** — A concrete deployment scenario asks which architectural idea decides the outcome.
+4. **Core reasoning skills** — Analysis, inference, evaluation, deduction, and induction in a domain-neutral format.
 
-The subject reasoning primer uses concrete failures—an irreproducible notebook, training-serving skew, delayed labels, unsafe automatic retraining, or gradual quality decay—and asks for the concept and scene detail that explain each case. The general primer applies analysis, inference, evaluation, deduction, and induction to ML systems.
+The subject reasoning primer uses concrete deployment scenarios and asks for the architectural concept and scene detail that explain each case. The general primer applies analysis, inference, evaluation, deduction, and induction.
 
 The course is designed for **researchers and professionals entering the discipline, product and engineering teams, instructors evaluating AI-taught coursework, and researchers studying AI academic integrity**.
 
@@ -21,7 +23,7 @@ The course is designed for **researchers and professionals entering the discipli
 
 ## What It Does
 
-- **One-Day Intensive Curriculum** — Two sessions with lessons, two homework sets, a timed course test, and a cumulative final exam.
+- **One-Day Intensive Curriculum** — Four topics with lessons, two homework sets, a timed course test, and a cumulative final exam.
 - **Three-Depth Lessons** — Every lesson is available at Short, Medium, or Long length while preserving its examples and learning objectives.
 - **Section-Scoped AI Tutor** — Answers stream token by token and remain grounded in the lecture section being read.
 - **Adaptive Topic Practice** — Generated scenario problems adjust difficulty after correct and incorrect answers.
@@ -53,9 +55,9 @@ The course is designed for **researchers and professionals entering the discipli
 
 - Convert the existing app in place when changing subjects. Preserve its routes, components, page structure, topic rail, download buttons, math keyboards, course mechanics, diagnostic controls, visual design, and functionality.
 - The audience is adults, typically researchers, professionals, PhD students, and professors entering a new discipline. Describe the course as foundational, substantial, and rigorous.
-- The app name must remain the literal title **Machine Learning Operations** everywhere relevant.
+- The app name must remain the literal title **Cloud Architecture (AWS/Azure)** everywhere relevant.
 - Use plain, descriptive copy. Do not add slogans, jokes, cute framing, or unnecessary claims.
-- The “Topics Covered in This Course” list remains a small vertical left-hand rail on the landing page and dashboard, without unit, week, or number markers, and with Download Course PDF and TXT buttons beneath it.
+- The “Topics Covered in This Course” list remains a small vertical left-hand rail on the landing page and dashboard, without unit, week, or number markers, and with Cloud Architecture PDF and TXT download buttons beneath it.
 - Math keyboards remain present on every freeform answer and tutor input, regardless of whether a prompt appears to require notation. Math-keyboard insertions count as genuine keystrokes rather than bulk insertions.
 - Every homework, test, final, practice, and diagnostic question must use a concrete scenario and require reasoned application rather than definition recitation or a one-word answer.
-- The YouTube title must remain exactly **Machine Learning Operations — AI-Powered Course**.
+- The YouTube title must remain exactly **Cloud Architecture (AWS/Azure) — AI-Powered Course**.

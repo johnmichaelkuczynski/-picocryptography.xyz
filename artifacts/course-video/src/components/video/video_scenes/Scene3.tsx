@@ -4,10 +4,10 @@ import { AppShell } from '../AppShell';
 
 export function Scene3() {
   const topics = [
-    "From model to product",
-    "Keeping it running",
-    "Subject reasoning: diagnosing integration cases",
-    "General reasoning: core reasoning skills"
+    "The building blocks",
+    "Designing for real use",
+    "How to reason about cloud-architecture cases",
+    "Core reasoning skills"
   ];
 
   return (
@@ -26,7 +26,7 @@ export function Scene3() {
             className="mb-8"
           >
             <div className="text-sm font-medium text-[#718096] mb-1">ONE-DAY INTENSIVE</div>
-            <h2 className="text-3xl font-display font-bold text-[#1A2B3D]">Machine Learning Operations</h2>
+            <h2 className="text-3xl font-display font-bold text-[#1A2B3D]">Cloud Architecture (AWS/Azure)</h2>
             <p className="text-[#4A5568] mt-2">2 course topics • 2 diagnostic primers</p>
           </motion.div>
 

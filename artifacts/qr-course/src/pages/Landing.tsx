@@ -39,19 +39,27 @@ const features = [
   },
   {
     icon: BarChart3,
-    title: "One Intensive Day, 2 Topics",
-    body: "From a working model experiment through dependable production operations.",
+    title: "One Intensive Day, 4 Topics",
+    body: "From cloud building blocks through resilient, secure architecture decisions.",
   },
 ];
 
 const topics = [
   {
-    session: "Morning session",
-    title: "From model to product",
+    session: "Topic",
+    title: "The building blocks",
   },
   {
-    session: "Afternoon session",
-    title: "Keeping it running",
+    session: "Topic",
+    title: "Designing for real use",
+  },
+  {
+    session: "Reasoning primer",
+    title: "How to reason about cloud-architecture cases",
+  },
+  {
+    session: "Reasoning primer",
+    title: "Core reasoning skills",
   },
 ];
 
@@ -82,7 +90,7 @@ export default function Landing() {
             <Search className="w-4 h-4" />
           </div>
           <span className="font-serif font-semibold text-lg tracking-tight">
-            Machine Learning Operations
+            Cloud Architecture (AWS/Azure)
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -101,7 +109,7 @@ export default function Landing() {
         <div className="flex-1 min-w-0">
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-8">
-            A one-day intensive course on moving machine-learning models into production and keeping them reliable.
+            A one-day intensive course on designing reliable, secure cloud architectures with AWS and Azure.
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <CourseEntryButton
@@ -115,7 +123,7 @@ export default function Landing() {
               data-testid="button-download-pdf"
             >
               <Download className="w-5 h-5" />
-              Download the course (PDF)
+              Download Cloud Architecture (PDF)
             </a>
             <a
               href={txtUrl}
@@ -123,7 +131,7 @@ export default function Landing() {
               data-testid="button-download-txt"
             >
               <Download className="w-5 h-5" />
-              TXT
+              Cloud Architecture (TXT)
             </a>
           </div>
         </section>
@@ -150,7 +158,7 @@ export default function Landing() {
             Topics Covered in This Course
           </h2>
           <p className="text-center text-sm text-muted-foreground mb-6">
-            One intensive day, two topics — every lecture readable free online, or{" "}
+            One intensive day, four topics — every lecture readable free online, or{" "}
             <a href={pdfUrl} className="underline hover:text-foreground" data-testid="link-download-pdf">
               download the course as a PDF
             </a>{" "}
@@ -174,7 +182,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        Machine Learning Operations
+        Cloud Architecture (AWS/Azure)
       </footer>
     </div>
   );

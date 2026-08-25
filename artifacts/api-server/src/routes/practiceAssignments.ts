@@ -99,13 +99,13 @@ router.post(
           explanation: string;
         }>;
       }>(
-        `You write a PRACTICE version of a Machine Learning Operations ${assignment.kind} titled "${assignment.title}". You are given the real assignment's problems as templates. Produce EXACTLY ${templates.length} NEW problems, one per template, in the same order. Each new problem must: (1) cover the SAME topic and test the SAME MLOps concept as its template, (2) use a clearly DIFFERENT, specific, realistic named production ML scenario (never copy the template), (3) require the student to analyze evidence and justify an operational decision in a multi-sentence answer, and (4) be fully self-contained — do NOT reference "the lecture", "the text", or "the course"; state all relevant facts from the scenario in the problem. NEVER ask for a definition, abstract comparison, terminology recall, a one-word answer, or bare yes/no. For each problem also write a multi-sentence model "correctAnswer" showing the case-specific reasoning and a short "explanation" of what earns full credit. Respond as strict JSON: {"problems": [{"prompt": string, "correctAnswer": string, "explanation": string}, ...]} with exactly ${templates.length} items.`,
+        `You write a PRACTICE version of a Cloud Architecture (AWS/Azure) ${assignment.kind} titled "${assignment.title}". You are given the real assignment's problems as templates. Produce EXACTLY ${templates.length} NEW problems, one per template, in the same order. Each new problem must: (1) cover the SAME topic and test the SAME cloud-architecture concept as its template, (2) use a clearly DIFFERENT, specific, realistic named cloud-system scenario (never copy the template), (3) require the student to analyze evidence and justify an architectural or operational decision in a multi-sentence answer, and (4) be fully self-contained — do NOT reference "the lecture", "the text", or "the course"; state all relevant facts from the scenario in the problem. NEVER ask for a definition, abstract comparison, terminology recall, a one-word answer, or bare yes/no. For each problem also write a multi-sentence model "correctAnswer" showing the case-specific reasoning and a short "explanation" of what earns full credit. Respond as strict JSON: {"problems": [{"prompt": string, "correctAnswer": string, "explanation": string}, ...]} with exactly ${templates.length} items.`,
         JSON.stringify({
           assignmentKind: assignment.kind,
           assignmentTitle: assignment.title,
           templates: templates.map((t, i) => ({
             number: i + 1,
-            topic: t.topicTitle ?? "machine learning operations",
+            topic: t.topicTitle ?? "cloud architecture",
             promptStyleExample: t.prompt,
             modelAnswerExample: t.correctAnswer,
           })),
