@@ -6,7 +6,6 @@ import {
   Target,
   ClipboardCheck,
   ShieldCheck,
-  Search,
   Download,
 } from "lucide-react";
 import TopicsRail, { pdfUrl, txtUrl } from "@/components/TopicsRail";
@@ -89,15 +88,25 @@ export default function Landing() {
           <a
             href="https://zhisystems.ai/"
             aria-label="Visit ZHI Systems"
-            className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground"
+            className="shrink-0 rounded-md ring-1 ring-border shadow-sm transition-transform hover:scale-105"
           >
-            <Search className="w-4 h-4" />
+            <img
+              src={`${import.meta.env.BASE_URL}zhi-logo.png`}
+              alt="ZHI Systems logo"
+              className="w-8 h-8 rounded-md object-cover"
+            />
           </a>
           <span className="font-serif font-semibold text-lg tracking-tight">
             Cloud Architecture (AWS/Azure)
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href="mailto:johnmichaelkuczynski@gmail.com"
+            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-border hover:bg-secondary transition-colors"
+          >
+            Contact Us
+          </a>
           <CourseEntryButton
             label="Enter the course"
             className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"

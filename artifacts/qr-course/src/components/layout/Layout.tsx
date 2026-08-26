@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, PenTool, BarChart3, Activity, RotateCcw, Sparkles, Scale, GraduationCap, ShieldCheck, Search } from "lucide-react";
+import { LayoutDashboard, PenTool, BarChart3, Activity, RotateCcw, Sparkles, Scale, GraduationCap, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminMode } from "@/lib/adminMode";
 
@@ -28,9 +28,13 @@ export function Sidebar() {
           <a
             href="https://zhisystems.ai/"
             aria-label="Visit ZHI Systems"
-            className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground"
+            className="shrink-0 rounded-md ring-1 ring-border shadow-sm transition-transform hover:scale-105"
           >
-              <Search className="w-4 h-4" />
+            <img
+              src={`${basePath}/zhi-logo.png`}
+              alt="ZHI Systems logo"
+              className="w-8 h-8 rounded-md object-cover"
+            />
           </a>
           <Link href="/dashboard">
             <span className="font-serif font-semibold text-lg tracking-tight">Cloud Architecture (AWS/Azure)</span>
@@ -58,8 +62,14 @@ export function Sidebar() {
         })}
       </div>
 
-      <div className="p-4 border-t border-border text-xs text-muted-foreground text-center">
-        Cloud Architecture (AWS/Azure)
+      <div className="p-4 border-t border-border text-xs text-muted-foreground text-center flex flex-col gap-2">
+        <a
+          href="mailto:johnmichaelkuczynski@gmail.com"
+          className="font-medium text-foreground hover:underline"
+        >
+          Contact Us
+        </a>
+        <span>Cloud Architecture (AWS/Azure)</span>
       </div>
     </div>
   );
