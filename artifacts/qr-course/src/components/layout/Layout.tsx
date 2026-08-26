@@ -24,14 +24,18 @@ export function Sidebar() {
   return (
     <div className="w-64 border-r bg-sidebar flex flex-col h-full h-screen sticky top-0">
       <div className="p-6 border-b border-border">
-        <Link href="/dashboard">
-          <div className="flex items-center gap-3 cursor-pointer">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground">
+        <div className="flex items-center gap-3">
+          <a
+            href="https://zhisystems.ai/"
+            aria-label="Visit ZHI Systems"
+            className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground"
+          >
               <Search className="w-4 h-4" />
-            </div>
+          </a>
+          <Link href="/dashboard">
             <span className="font-serif font-semibold text-lg tracking-tight">Cloud Architecture (AWS/Azure)</span>
-          </div>
-        </Link>
+          </Link>
+        </div>
       </div>
 
       <div className="flex-1 py-6 flex flex-col gap-2 px-4">

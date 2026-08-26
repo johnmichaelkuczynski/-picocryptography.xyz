@@ -86,9 +86,13 @@ export default function Landing() {
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
       <header className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground">
+          <a
+            href="https://zhisystems.ai/"
+            aria-label="Visit ZHI Systems"
+            className="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-primary-foreground"
+          >
             <Search className="w-4 h-4" />
-          </div>
+          </a>
           <span className="font-serif font-semibold text-lg tracking-tight">
             Cloud Architecture (AWS/Azure)
           </span>
