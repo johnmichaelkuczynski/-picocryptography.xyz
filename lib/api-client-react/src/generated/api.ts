@@ -38,6 +38,9 @@ import type {
   GraderLabResult,
   HealthStatus,
   Lecture,
+  LongAnswerDiagnosticGenerated,
+  LongAnswerDiagnosticInput,
+  LongAnswerDiagnosticResult,
   NextProblemInput,
   PracticeAnswerInput,
   PracticeAssignmentGrade,
@@ -150,6 +153,147 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
+
+export const getGenerateLongAnswerDiagnosticUrl = () => {
+
+
+
+
+  return `/api/diagnostics/long-answer/generate`
+}
+
+/**
+ * @summary Generate a substantial five-paragraph answer for a real course problem
+ */
+export const generateLongAnswerDiagnostic = async ( options?: RequestInit): Promise<LongAnswerDiagnosticGenerated> => {
+
+  return customFetch<LongAnswerDiagnosticGenerated>(getGenerateLongAnswerDiagnosticUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getGenerateLongAnswerDiagnosticMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateLongAnswerDiagnostic>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateLongAnswerDiagnostic>>, TError,void, TContext> => {
+
+const mutationKey = ['generateLongAnswerDiagnostic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateLongAnswerDiagnostic>>, void> = () => {
+
+
+          return  generateLongAnswerDiagnostic(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateLongAnswerDiagnosticMutationResult = NonNullable<Awaited<ReturnType<typeof generateLongAnswerDiagnostic>>>
+
+    export type GenerateLongAnswerDiagnosticMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate a substantial five-paragraph answer for a real course problem
+ */
+export const useGenerateLongAnswerDiagnostic = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateLongAnswerDiagnostic>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateLongAnswerDiagnostic>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getGenerateLongAnswerDiagnosticMutationOptions(options));
+    }
+
+export const getGradeLongAnswerDiagnosticUrl = () => {
+
+
+
+
+  return `/api/diagnostics/long-answer/grade`
+}
+
+/**
+ * @summary Persist, read back, and grade an exact long-answer HTTP payload
+ */
+export const gradeLongAnswerDiagnostic = async (longAnswerDiagnosticInput: LongAnswerDiagnosticInput, options?: RequestInit): Promise<LongAnswerDiagnosticResult> => {
+
+  return customFetch<LongAnswerDiagnosticResult>(getGradeLongAnswerDiagnosticUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      longAnswerDiagnosticInput,)
+  }
+);}
+
+
+
+
+export const getGradeLongAnswerDiagnosticMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gradeLongAnswerDiagnostic>>, TError,{data: BodyType<LongAnswerDiagnosticInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof gradeLongAnswerDiagnostic>>, TError,{data: BodyType<LongAnswerDiagnosticInput>}, TContext> => {
+
+const mutationKey = ['gradeLongAnswerDiagnostic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof gradeLongAnswerDiagnostic>>, {data: BodyType<LongAnswerDiagnosticInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  gradeLongAnswerDiagnostic(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GradeLongAnswerDiagnosticMutationResult = NonNullable<Awaited<ReturnType<typeof gradeLongAnswerDiagnostic>>>
+    export type GradeLongAnswerDiagnosticMutationBody = BodyType<LongAnswerDiagnosticInput>
+    export type GradeLongAnswerDiagnosticMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Persist, read back, and grade an exact long-answer HTTP payload
+ */
+export const useGradeLongAnswerDiagnostic = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gradeLongAnswerDiagnostic>>, TError,{data: BodyType<LongAnswerDiagnosticInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof gradeLongAnswerDiagnostic>>,
+        TError,
+        {data: BodyType<LongAnswerDiagnosticInput>},
+        TContext
+      > => {
+      return useMutation(getGradeLongAnswerDiagnosticMutationOptions(options));
+    }
 
 export const getGetCourseOverviewUrl = () => {
 

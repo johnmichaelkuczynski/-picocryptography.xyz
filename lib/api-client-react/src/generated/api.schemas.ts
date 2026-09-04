@@ -9,6 +9,41 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface LongAnswerDiagnosticGenerated {
+  problemId: number;
+  prompt: string;
+  answer: string;
+  characterCount: number;
+  paragraphCount: number;
+  hash: string;
+  generatedAt: string;
+}
+
+export interface LongAnswerDiagnosticInput {
+  problemId: number;
+  /** @minLength 1 */
+  answer: string;
+}
+
+export interface LongAnswerDiagnosticResult {
+  ok: boolean;
+  problemId: number;
+  prompt: string;
+  sentAnswer: string;
+  persistedAnswer: string;
+  sentCharacterCount: number;
+  persistedCharacterCount: number;
+  sentParagraphCount: number;
+  persistedParagraphCount: number;
+  sentHash: string;
+  persistedHash: string;
+  exactMatch: boolean;
+  gradedCorrect: boolean;
+  gradingExplanation: string;
+  cleanedUp: boolean;
+  gradedAt: string;
+}
+
 export interface Topic {
   id: number;
   slug: string;
@@ -195,6 +230,8 @@ export interface AnswerSaved {
 }
 
 export interface SubmitAttemptInput {
+  /** Complete final answer snapshot. The server persists this exact snapshot before grading. */
+  answers?: AnswerInput[];
   /** Admin mode — grade the attempt but skip AI/diachronic detection. */
   skipDetection?: boolean;
 }

@@ -1,6 +1,20 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { CheckCircle2, XCircle, Loader2, PlayCircle, Activity, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  PlayCircle,
+  Activity,
+  ShieldCheck,
+  FileCheck2,
+} from "lucide-react";
+import {
+  useGenerateLongAnswerDiagnostic,
+  useGradeLongAnswerDiagnostic,
+  type LongAnswerDiagnosticGenerated,
+  type LongAnswerDiagnosticResult,
+} from "@workspace/api-client-react";
 
 type Step = {
   name: string;
@@ -73,15 +87,27 @@ function ResultCard({ title, result }: { title: string; result: RunResult | null
 }
 
 export default function Diagnostics() {
+  const generateLongAnswer = useGenerateLongAnswerDiagnostic();
+  const gradeLongAnswer = useGradeLongAnswerDiagnostic();
   const [sysBusy, setSysBusy] = useState(false);
   const [synthBusy, setSynthBusy] = useState(false);
   const [qcBusy, setQcBusy] = useState(false);
+  const [liveBusy, setLiveBusy] = useState(false);
   const [sysResult, setSysResult] = useState<RunResult | null>(null);
   const [synthResult, setSynthResult] = useState<RunResult | null>(null);
   const [qcResult, setQcResult] = useState<RunResult | null>(null);
   const [sysError, setSysError] = useState<string | null>(null);
   const [synthError, setSynthError] = useState<string | null>(null);
   const [qcError, setQcError] = useState<string | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [liveStage, setLiveStage] = useState<
+    "idle" | "generating" | "writing" | "grading" | "complete"
+  >("idle");
+  const [liveGenerated, setLiveGenerated] =
+    useState<LongAnswerDiagnosticGenerated | null>(null);
+  const [liveDisplayedAnswer, setLiveDisplayedAnswer] = useState("");
+  const [liveResult, setLiveResult] =
+    useState<LongAnswerDiagnosticResult | null>(null);
 
   async function runSystem() {
     setSysBusy(true);
@@ -136,13 +162,68 @@ export default function Diagnostics() {
     }
   }
 
+  async function writeAnswerOnScreen(answer: string): Promise<void> {
+    await new Promise<void>((resolve) => {
+      let cursor = 0;
+      const chunkSize = Math.max(1, Math.ceil(answer.length / 120));
+      const timer = window.setInterval(() => {
+        cursor = Math.min(answer.length, cursor + chunkSize);
+        setLiveDisplayedAnswer(answer.slice(0, cursor));
+        if (cursor >= answer.length) {
+          window.clearInterval(timer);
+          resolve();
+        }
+      }, 25);
+    });
+  }
+
+  async function runLongAnswerDiagnostic() {
+    setLiveBusy(true);
+    setLiveError(null);
+    setLiveGenerated(null);
+    setLiveDisplayedAnswer("");
+    setLiveResult(null);
+    try {
+      setLiveStage("generating");
+      const generated = await generateLongAnswer.mutateAsync();
+      setLiveGenerated(generated);
+
+      setLiveStage("writing");
+      await writeAnswerOnScreen(generated.answer);
+
+      setLiveStage("grading");
+      const graded = await gradeLongAnswer.mutateAsync({
+        data: {
+          problemId: generated.problemId,
+          answer: generated.answer,
+        },
+      });
+      setLiveResult(graded);
+      setLiveStage("complete");
+    } catch (error) {
+      setLiveError(error instanceof Error ? error.message : String(error));
+      setLiveStage("idle");
+    } finally {
+      setLiveBusy(false);
+    }
+  }
+
+  const liveButtonLabel =
+    liveStage === "generating"
+      ? "Generating…"
+      : liveStage === "writing"
+        ? "Writing on screen…"
+        : liveStage === "grading"
+          ? "Persisting and grading…"
+          : "Run five-paragraph proof";
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto p-8 space-y-8">
         <div>
           <h1 className="font-serif text-3xl mb-1">Diagnostics</h1>
           <p className="text-muted-foreground">
-            Three self-tests to verify the course app is healthy end-to-end.
+            Four self-tests to verify the course app is healthy end-to-end.
           </p>
         </div>
 
@@ -229,6 +310,192 @@ export default function Diagnostics() {
             <div className="text-sm text-red-700 font-mono">{qcError}</div>
           )}
           <ResultCard title="Answer-key quality-control results" result={qcResult} />
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-xl flex items-center gap-2">
+                <FileCheck2 className="w-5 h-5" /> Diagnostic 4 — Five-paragraph
+                answer proof
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Generates a substantial five-paragraph answer for a real course
+                problem, visibly writes the complete text below, sends that exact
+                text through HTTP, persists and reads it back from the answers
+                table, then grades the persisted text with the real course grader.
+                The temporary attempt is deleted afterward.
+              </p>
+            </div>
+            <button
+              onClick={() => void runLongAnswerDiagnostic()}
+              disabled={liveBusy}
+              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium disabled:opacity-60"
+            >
+              {liveBusy ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <PlayCircle className="w-4 h-4" />
+              )}
+              {liveBusy ? liveButtonLabel : "Run five-paragraph proof"}
+            </button>
+          </div>
+
+          {liveError && (
+            <div
+              role="alert"
+              className="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-800"
+            >
+              <div className="font-semibold">Diagnostic failed visibly</div>
+              <div className="font-mono mt-1 break-words">{liveError}</div>
+            </div>
+          )}
+
+          {liveGenerated && (
+            <div className="border border-border rounded-lg bg-card overflow-hidden">
+              <div className="px-5 py-3 border-b border-border">
+                <div className="font-serif text-lg">Real seeded course problem</div>
+                <div className="text-sm mt-1">{liveGenerated.prompt}</div>
+              </div>
+              <div className="px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div className="font-medium text-sm">
+                    Exact generated and sent answer
+                  </div>
+                  <div className="text-xs text-muted-foreground tabular-nums">
+                    {liveDisplayedAnswer.length.toLocaleString()} /{" "}
+                    {liveGenerated.characterCount.toLocaleString()} characters ·{" "}
+                    {liveGenerated.paragraphCount} paragraphs
+                  </div>
+                </div>
+                <div className="min-h-48 whitespace-pre-wrap break-words rounded-md border bg-muted/30 p-4 text-sm leading-relaxed">
+                  {liveDisplayedAnswer}
+                  {liveStage === "writing" && (
+                    <span className="inline-block w-0.5 h-4 ml-0.5 align-middle bg-primary animate-pulse" />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {liveResult && (
+            <div
+              className={`border rounded-lg overflow-hidden ${
+                liveResult.ok
+                  ? "border-green-300 bg-green-50/40"
+                  : "border-red-300 bg-red-50/40"
+              }`}
+            >
+              <div className="px-5 py-3 border-b border-inherit flex flex-wrap items-center justify-between gap-2">
+                <div className="font-serif text-lg">Live proof results</div>
+                <div
+                  className={`inline-flex items-center gap-2 text-sm font-semibold ${
+                    liveResult.ok ? "text-green-800" : "text-red-800"
+                  }`}
+                >
+                  {liveResult.ok ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : (
+                    <XCircle className="w-5 h-5" />
+                  )}
+                  {liveResult.ok
+                    ? "Complete text persisted exactly"
+                    : "Persistence mismatch detected"}
+                </div>
+              </div>
+
+              <div className="p-5 space-y-5">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Sent characters
+                    </div>
+                    <div className="text-lg font-semibold tabular-nums">
+                      {liveResult.sentCharacterCount.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Persisted characters
+                    </div>
+                    <div className="text-lg font-semibold tabular-nums">
+                      {liveResult.persistedCharacterCount.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Sent paragraphs
+                    </div>
+                    <div className="text-lg font-semibold tabular-nums">
+                      {liveResult.sentParagraphCount}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-xs text-muted-foreground">
+                      Persisted paragraphs
+                    </div>
+                    <div className="text-lg font-semibold tabular-nums">
+                      {liveResult.persistedParagraphCount}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="font-medium mb-1">Sent SHA-256</div>
+                    <div className="font-mono break-all text-muted-foreground">
+                      {liveResult.sentHash}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="font-medium mb-1">Persisted SHA-256</div>
+                    <div className="font-mono break-all text-muted-foreground">
+                      {liveResult.persistedHash}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-3 text-sm">
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-muted-foreground">Exact equality</div>
+                    <div className="font-semibold">
+                      {liveResult.exactMatch ? "PASS — byte-for-byte match" : "FAIL"}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-muted-foreground">Real grader result</div>
+                    <div className="font-semibold">
+                      {liveResult.gradedCorrect ? "Correct" : "Incorrect"}
+                    </div>
+                  </div>
+                  <div className="rounded-md border bg-background p-3">
+                    <div className="text-muted-foreground">Temporary data cleanup</div>
+                    <div className="font-semibold">
+                      {liveResult.cleanedUp ? "PASS — deleted" : "FAIL"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-md border bg-background p-4">
+                  <div className="font-medium text-sm mb-1">
+                    Real grader explanation
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {liveResult.gradingExplanation}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="font-medium text-sm mb-2">
+                    Exact persisted database answer (read back before grading)
+                  </div>
+                  <div className="whitespace-pre-wrap break-words rounded-md border bg-background p-4 text-sm leading-relaxed">
+                    {liveResult.persistedAnswer}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </Layout>

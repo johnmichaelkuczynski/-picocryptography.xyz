@@ -24,6 +24,8 @@ tags:
     description: User performance analytics and reports
   - name: reasoning
     description: Embedded diagnostic reasoning assessments and the course gradebook
+  - name: diagnostics
+    description: Visible end-to-end health checks
 paths:
   /healthz:
     get:
@@ -37,6 +39,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /diagnostics/long-answer/generate:
+    post:
+      operationId: generateLongAnswerDiagnostic
+      tags: [diagnostics]
+      summary: Generate a substantial five-paragraph answer for a real course problem
+      responses:
+        "200":
+          description: Generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LongAnswerDiagnosticGenerated"
+
+  /diagnostics/long-answer/grade:
+    post:
+      operationId: gradeLongAnswerDiagnostic
+      tags: [diagnostics]
+      summary: Persist, read back, and grade an exact long-answer HTTP payload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LongAnswerDiagnosticInput"
+      responses:
+        "200":
+          description: Verified and graded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LongAnswerDiagnosticResult"
 
   /course/overview:
     get:
@@ -616,6 +650,62 @@ components:
         status: { type: string }
       required: [status]
 
+    LongAnswerDiagnosticGenerated:
+      type: object
+      required: [problemId, prompt, answer, characterCount, paragraphCount, hash, generatedAt]
+      properties:
+        problemId: { type: integer }
+        prompt: { type: string }
+        answer: { type: string }
+        characterCount: { type: integer }
+        paragraphCount: { type: integer }
+        hash: { type: string }
+        generatedAt: { type: string, format: date-time }
+
+    LongAnswerDiagnosticInput:
+      type: object
+      required: [problemId, answer]
+      properties:
+        problemId: { type: integer }
+        answer: { type: string, minLength: 1 }
+
+    LongAnswerDiagnosticResult:
+      type: object
+      required:
+        - ok
+        - problemId
+        - prompt
+        - sentAnswer
+        - persistedAnswer
+        - sentCharacterCount
+        - persistedCharacterCount
+        - sentParagraphCount
+        - persistedParagraphCount
+        - sentHash
+        - persistedHash
+        - exactMatch
+        - gradedCorrect
+        - gradingExplanation
+        - cleanedUp
+        - gradedAt
+      properties:
+        ok: { type: boolean }
+        problemId: { type: integer }
+        prompt: { type: string }
+        sentAnswer: { type: string }
+        persistedAnswer: { type: string }
+        sentCharacterCount: { type: integer }
+        persistedCharacterCount: { type: integer }
+        sentParagraphCount: { type: integer }
+        persistedParagraphCount: { type: integer }
+        sentHash: { type: string }
+        persistedHash: { type: string }
+        exactMatch: { type: boolean }
+        gradedCorrect: { type: boolean }
+        gradingExplanation: { type: string }
+        cleanedUp: { type: boolean }
+        gradedAt: { type: string, format: date-time }
+
     Topic:
       type: object
       required: [id, slug, title, weekNumber]
@@ -786,6 +876,11 @@ components:
     SubmitAttemptInput:
       type: object
       properties:
+        answers:
+          type: array
+          description: Complete final answer snapshot. The server persists this exact snapshot before grading.
+          items:
+            $ref: "#/components/schemas/AnswerInput"
         skipDetection:
           type: boolean
           default: false

@@ -14,6 +14,7 @@ import {
   SaveAnswerBody,
   StartAssignmentAttemptResponse,
   GetAttemptResponse,
+  SubmitAttemptBody,
   SubmitAttemptResponse,
 } from "@workspace/api-zod";
 import { gradeAnswer } from "../lib/grading";
@@ -21,9 +22,59 @@ import { detect } from "../lib/detection";
 
 const router: IRouter = Router();
 
+type AnswerSnapshot = {
+  problemId: number;
+  answer: string;
+  trace: {
+    keystrokeCount: number;
+    eraseCount: number;
+    bulkInsertCount?: number;
+    longestBulkInsertChars?: number;
+    rewriteSegments?: number;
+    durationMs: number;
+  };
+};
+
 function parseIdParam(raw: unknown): number {
   const s = Array.isArray(raw) ? raw[0] : (raw as string);
   return parseInt(s ?? "", 10);
+}
+
+async function upsertAnswerSnapshot(
+  attemptId: number,
+  snapshot: AnswerSnapshot,
+): Promise<void> {
+  const [existing] = await db
+    .select()
+    .from(answersTable)
+    .where(
+      and(
+        eq(answersTable.attemptId, attemptId),
+        eq(answersTable.problemId, snapshot.problemId),
+      ),
+    );
+
+  const values = {
+    attemptId,
+    problemId: snapshot.problemId,
+    answer: snapshot.answer,
+    keystrokeCount: snapshot.trace.keystrokeCount,
+    eraseCount: snapshot.trace.eraseCount,
+    bulkInsertCount: snapshot.trace.bulkInsertCount ?? 0,
+    longestBulkInsertChars: snapshot.trace.longestBulkInsertChars ?? 0,
+    rewriteSegments: snapshot.trace.rewriteSegments ?? 0,
+    durationMs: snapshot.trace.durationMs,
+    updatedAt: new Date(),
+  };
+
+  if (existing) {
+    await db
+      .update(answersTable)
+      .set(values)
+      .where(eq(answersTable.id, existing.id));
+  } else {
+    await db.insert(answersTable).values(values);
+  }
 }
 
 router.get("/assignments", async (_req, res) => {
@@ -218,28 +269,21 @@ router.put("/assignments/attempts/:attemptId/answer", async (req, res): Promise<
     return;
   }
 
-  const [existing] = await db
+  const [problem] = await db
     .select()
-    .from(answersTable)
-    .where(and(eq(answersTable.attemptId, id), eq(answersTable.problemId, problemId)));
-
-  const values = {
-    attemptId: id,
-    problemId,
-    answer,
-    keystrokeCount: trace.keystrokeCount,
-    eraseCount: trace.eraseCount,
-    bulkInsertCount: trace.bulkInsertCount ?? 0,
-    longestBulkInsertChars: trace.longestBulkInsertChars ?? 0,
-    rewriteSegments: trace.rewriteSegments ?? 0,
-    durationMs: trace.durationMs,
-    updatedAt: new Date(),
-  };
-  if (existing) {
-    await db.update(answersTable).set(values).where(eq(answersTable.id, existing.id));
-  } else {
-    await db.insert(answersTable).values(values);
+    .from(problemsTable)
+    .where(
+      and(
+        eq(problemsTable.id, problemId),
+        eq(problemsTable.assignmentId, attempt.assignmentId),
+      ),
+    );
+  if (!problem) {
+    res.status(400).json({ error: "problem does not belong to this attempt" });
+    return;
   }
+
+  await upsertAnswerSnapshot(id, { problemId, answer, trace });
   res.json({ ok: true });
 });
 
@@ -249,8 +293,12 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
     res.status(400).json({ error: "invalid id" });
     return;
   }
-  const skipDetection =
-    (req.body as { skipDetection?: boolean } | undefined)?.skipDetection === true;
+  const parsed = SubmitAttemptBody.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { answers: finalSnapshots, skipDetection } = parsed.data;
   const [attempt] = await db
     .select()
     .from(attemptsTable)
@@ -259,11 +307,52 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
     res.status(404).json({ error: "attempt not found" });
     return;
   }
+  if (attempt.status !== "in_progress") {
+    res.status(400).json({ error: "attempt already submitted" });
+    return;
+  }
+  if (attempt.deadlineAt && new Date() > attempt.deadlineAt) {
+    res.status(403).json({ error: "time limit exceeded" });
+    return;
+  }
   const problems = await db
     .select()
     .from(problemsTable)
     .where(eq(problemsTable.assignmentId, attempt.assignmentId))
     .orderBy(asc(problemsTable.position));
+
+  if (finalSnapshots) {
+    const validProblemIds = new Set(problems.map((problem) => problem.id));
+    const submittedProblemIds = new Set<number>();
+    for (const snapshot of finalSnapshots) {
+      if (!validProblemIds.has(snapshot.problemId)) {
+        res.status(400).json({
+          error: `problem ${snapshot.problemId} does not belong to this attempt`,
+        });
+        return;
+      }
+      if (submittedProblemIds.has(snapshot.problemId)) {
+        res.status(400).json({
+          error: `problem ${snapshot.problemId} appears more than once`,
+        });
+        return;
+      }
+      submittedProblemIds.add(snapshot.problemId);
+    }
+    if (submittedProblemIds.size !== validProblemIds.size) {
+      res.status(400).json({
+        error: "final answer snapshot must include every assignment problem",
+      });
+      return;
+    }
+
+    // This request is authoritative: persist the exact final strings carried by
+    // submit before loading any rows for grading.
+    for (const snapshot of finalSnapshots) {
+      await upsertAnswerSnapshot(id, snapshot);
+    }
+  }
+
   const answers = await db
     .select()
     .from(answersTable)

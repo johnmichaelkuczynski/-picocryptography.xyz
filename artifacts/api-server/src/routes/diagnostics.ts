@@ -1,5 +1,11 @@
 import { Router, type IRouter } from "express";
+import { createHash } from "node:crypto";
 import { asc, eq, sql } from "drizzle-orm";
+import {
+  GenerateLongAnswerDiagnosticResponse,
+  GradeLongAnswerDiagnosticBody,
+  GradeLongAnswerDiagnosticResponse,
+} from "@workspace/api-zod";
 import {
   db,
   topicsTable,
@@ -37,6 +43,180 @@ async function run(name: string, fn: () => Promise<string | void>): Promise<Step
     return { name, ok: false, ms: Date.now() - t0, error: err };
   }
 }
+
+function answerParagraphs(text: string): string[] {
+  return text
+    .trim()
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
+function answerHash(text: string): string {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+// ---------- Diagnostic 4: visible long-answer HTTP + persistence proof ----------
+router.post(
+  "/diagnostics/long-answer/generate",
+  async (_req, res): Promise<void> => {
+    const [problem] = await db
+      .select()
+      .from(problemsTable)
+      .orderBy(asc(problemsTable.id))
+      .limit(1);
+    if (!problem) {
+      res.status(404).json({ error: "no seeded course problem is available" });
+      return;
+    }
+
+    let answer = "";
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const generated = await chatText(
+        "You are a strong student in the Cloud Architecture (AWS/Azure) course. " +
+          "Write a correct, specific answer to the supplied real course problem. " +
+          "Use the supplied answer key as the conceptual anchor, then develop the reasoning with concrete architecture consequences. " +
+          "Return exactly five substantial prose paragraphs, each 60-100 words, separated by one blank line. " +
+          "Do not use headings, bullets, numbering, code fences, or any text before or after the five paragraphs.",
+        JSON.stringify({
+          problem: problem.prompt,
+          answerKey: problem.correctAnswer,
+        }),
+      );
+      const paragraphs = answerParagraphs(generated);
+      if (
+        paragraphs.length === 5 &&
+        paragraphs.every((paragraph) => paragraph.length >= 180)
+      ) {
+        answer = paragraphs.join("\n\n");
+        break;
+      }
+    }
+
+    if (!answer) {
+      res.status(502).json({
+        error:
+          "The generator did not return exactly five substantial paragraphs after two attempts.",
+      });
+      return;
+    }
+
+    res.json(
+      GenerateLongAnswerDiagnosticResponse.parse({
+        problemId: problem.id,
+        prompt: problem.prompt,
+        answer,
+        characterCount: answer.length,
+        paragraphCount: answerParagraphs(answer).length,
+        hash: answerHash(answer),
+        generatedAt: new Date().toISOString(),
+      }),
+    );
+  },
+);
+
+router.post(
+  "/diagnostics/long-answer/grade",
+  async (req, res): Promise<void> => {
+    const parsed = GradeLongAnswerDiagnosticBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+
+    const [problem] = await db
+      .select()
+      .from(problemsTable)
+      .where(eq(problemsTable.id, parsed.data.problemId));
+    if (!problem) {
+      res.status(404).json({ error: "course problem not found" });
+      return;
+    }
+
+    const [temporaryAttempt] = await db
+      .insert(attemptsTable)
+      .values({
+        assignmentId: problem.assignmentId,
+        status: "in_progress",
+      })
+      .returning();
+    if (!temporaryAttempt) {
+      res.status(500).json({ error: "could not create temporary attempt" });
+      return;
+    }
+
+    try {
+      const [stored] = await db
+        .insert(answersTable)
+        .values({
+          attemptId: temporaryAttempt.id,
+          problemId: problem.id,
+          answer: parsed.data.answer,
+          keystrokeCount: parsed.data.answer.length,
+          eraseCount: 0,
+          bulkInsertCount: 1,
+          longestBulkInsertChars: parsed.data.answer.length,
+          rewriteSegments: 0,
+          durationMs: 5_000,
+        })
+        .returning();
+      if (!stored) throw new Error("could not persist diagnostic answer");
+
+      const [persisted] = await db
+        .select()
+        .from(answersTable)
+        .where(eq(answersTable.id, stored.id));
+      if (!persisted) throw new Error("could not read diagnostic answer back");
+
+      const sentHash = answerHash(parsed.data.answer);
+      const persistedHash = answerHash(persisted.answer);
+      const exactMatch =
+        parsed.data.answer === persisted.answer && sentHash === persistedHash;
+      const graded = await gradeAnswer({
+        prompt: problem.prompt,
+        correctAnswer: problem.correctAnswer,
+        userAnswer: persisted.answer,
+      });
+
+      await db
+        .update(answersTable)
+        .set({ correct: graded.correct })
+        .where(eq(answersTable.id, persisted.id));
+
+      const deleted = await db
+        .delete(attemptsTable)
+        .where(eq(attemptsTable.id, temporaryAttempt.id))
+        .returning({ id: attemptsTable.id });
+      const cleanedUp = deleted.length === 1;
+
+      res.json(
+        GradeLongAnswerDiagnosticResponse.parse({
+          ok: exactMatch && cleanedUp,
+          problemId: problem.id,
+          prompt: problem.prompt,
+          sentAnswer: parsed.data.answer,
+          persistedAnswer: persisted.answer,
+          sentCharacterCount: parsed.data.answer.length,
+          persistedCharacterCount: persisted.answer.length,
+          sentParagraphCount: answerParagraphs(parsed.data.answer).length,
+          persistedParagraphCount: answerParagraphs(persisted.answer).length,
+          sentHash,
+          persistedHash,
+          exactMatch,
+          gradedCorrect: graded.correct,
+          gradingExplanation: graded.explanation,
+          cleanedUp,
+          gradedAt: new Date().toISOString(),
+        }),
+      );
+    } catch (error) {
+      await db
+        .delete(attemptsTable)
+        .where(eq(attemptsTable.id, temporaryAttempt.id));
+      throw error;
+    }
+  },
+);
 
 // ---------- Diagnostic 1: system checks ----------
 router.get("/diagnostics/system", async (_req, res) => {

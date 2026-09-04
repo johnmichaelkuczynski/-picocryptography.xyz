@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useParams, Link } from "wouter";
 import { 
@@ -25,7 +25,7 @@ export default function AssignmentRunner() {
   const submitAttempt = useSubmitAttempt();
   
   const [attemptId, setAttemptId] = useState<number | null>(null);
-  const { data: attempt, refetch: refetchAttempt } = useGetAttempt(attemptId || 0, {
+  const { data: attempt } = useGetAttempt(attemptId || 0, {
     query: { enabled: !!attemptId, queryKey: ['attempt', attemptId] }
   });
   
@@ -33,7 +33,24 @@ export default function AssignmentRunner() {
 
   const [currentProblemIdx, setCurrentProblemIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const answersRef = useRef<Record<number, string>>({});
+  const tracesRef = useRef<Record<number, KeystrokeTrace>>({});
   const [result, setResult] = useState<AttemptResult | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const emptyTrace = (): KeystrokeTrace => ({
+    keystrokeCount: 0,
+    eraseCount: 0,
+    bulkInsertCount: 0,
+    longestBulkInsertChars: 0,
+    rewriteSegments: 0,
+    durationMs: 0,
+  });
+
+  const errorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message;
+    return String(error);
+  };
 
   useEffect(() => {
     if (assignmentId && !attemptId && !startAttempt.isPending && !result) {
@@ -43,7 +60,13 @@ export default function AssignmentRunner() {
           const initialAnswers: Record<number, string> = {};
           data.answers.forEach(a => {
             initialAnswers[a.problemId] = a.answer;
+            tracesRef.current[a.problemId] = {
+              ...emptyTrace(),
+              keystrokeCount: a.keystrokeCount ?? 0,
+              eraseCount: a.eraseCount ?? 0,
+            };
           });
+          answersRef.current = initialAnswers;
           setAnswers(initialAnswers);
         }
       });
@@ -51,22 +74,60 @@ export default function AssignmentRunner() {
   }, [assignmentId, attemptId, startAttempt, result]);
 
   const handleAnswerChange = (problemId: number, val: string, trace: KeystrokeTrace) => {
+    answersRef.current[problemId] = val;
+    tracesRef.current[problemId] = trace;
     setAnswers(prev => ({ ...prev, [problemId]: val }));
-    if (attemptId) {
-      saveAnswer.mutate({
+    setActionError(null);
+  };
+
+  const saveProblem = async (problemId: number): Promise<boolean> => {
+    if (!attemptId) return false;
+    setActionError(null);
+    try {
+      await saveAnswer.mutateAsync({
         attemptId,
-        data: { problemId, answer: val, trace }
+        data: {
+          problemId,
+          answer: answersRef.current[problemId] ?? "",
+          trace: tracesRef.current[problemId] ?? emptyTrace(),
+        },
       });
+      return true;
+    } catch (error) {
+      setActionError(`Your answer could not be saved: ${errorMessage(error)}`);
+      return false;
     }
   };
 
-  const handleSubmit = () => {
-    if (!attemptId) return;
-    submitAttempt.mutate({ attemptId, data: { skipDetection: isAdminMode() } }, {
-      onSuccess: (data) => {
-        setResult(data);
-      }
-    });
+  const handleNavigate = async (nextIndex: number) => {
+    const currentProblem = assignment?.problems[currentProblemIdx];
+    if (!currentProblem) return;
+    const saved = await saveProblem(currentProblem.id);
+    if (saved) setCurrentProblemIdx(nextIndex);
+  };
+
+  const handleSubmit = async () => {
+    if (!attemptId || !assignment) return;
+    setActionError(null);
+    const finalAnswers = assignment.problems.map((problem) => ({
+      problemId: problem.id,
+      answer: answersRef.current[problem.id] ?? "",
+      trace: tracesRef.current[problem.id] ?? emptyTrace(),
+    }));
+    try {
+      const data = await submitAttempt.mutateAsync({
+        attemptId,
+        data: {
+          answers: finalAnswers,
+          skipDetection: isAdminMode(),
+        },
+      });
+      setResult(data);
+    } catch (error) {
+      setActionError(
+        `Your complete assignment could not be submitted: ${errorMessage(error)}`,
+      );
+    }
   };
 
   if (isLoadingAssignment || !assignment) {
@@ -100,7 +161,9 @@ export default function AssignmentRunner() {
                 <h3 className="font-medium mb-2">Problem {idx + 1}</h3>
                 <div className="mb-4">
                   <span className="text-sm font-semibold">Your Answer:</span>
-                  <div className="font-mono mt-1">{pr.userAnswer || "No answer"}</div>
+                  <div className="font-mono mt-1 whitespace-pre-wrap break-words">
+                    {pr.userAnswer || "No answer"}
+                  </div>
                 </div>
                 {!pr.correct && pr.correctAnswer && (
                   <div className="mb-4 text-primary">
@@ -166,31 +229,47 @@ export default function AssignmentRunner() {
             
             <div className="flex flex-col gap-4">
               <AnswerInput 
+                key={currentProblem.id}
                 value={answers[currentProblem.id] || ""}
                 onChange={(val, trace) => handleAnswerChange(currentProblem.id, val, trace)}
+                initialTrace={tracesRef.current[currentProblem.id]}
               />
             </div>
+
+            {actionError && (
+              <div
+                role="alert"
+                className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                {actionError}
+              </div>
+            )}
 
             <div className="flex justify-between mt-8 pt-4 border-t">
               <Button 
                 variant="outline" 
-                onClick={() => setCurrentProblemIdx(p => Math.max(0, p - 1))}
-                disabled={currentProblemIdx === 0}
+                onClick={() => void handleNavigate(Math.max(0, currentProblemIdx - 1))}
+                disabled={currentProblemIdx === 0 || saveAnswer.isPending || submitAttempt.isPending}
               >
-                Previous
+                {saveAnswer.isPending ? "Saving..." : "Previous"}
               </Button>
               
               {currentProblemIdx < assignment.problems.length - 1 ? (
                 <Button 
-                  onClick={() => setCurrentProblemIdx(p => Math.min(assignment.problems.length - 1, p + 1))}
+                  onClick={() =>
+                    void handleNavigate(
+                      Math.min(assignment.problems.length - 1, currentProblemIdx + 1),
+                    )
+                  }
+                  disabled={saveAnswer.isPending || submitAttempt.isPending}
                 >
-                  Next
+                  {saveAnswer.isPending ? "Saving..." : "Next"}
                 </Button>
               ) : (
                 <Button 
-                  onClick={handleSubmit}
+                  onClick={() => void handleSubmit()}
                   className="bg-chart-2 hover:bg-chart-2/90 text-white"
-                  disabled={submitAttempt.isPending}
+                  disabled={saveAnswer.isPending || submitAttempt.isPending}
                 >
                   {submitAttempt.isPending ? "Submitting..." : "Submit Assignment"}
                 </Button>

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import { KeystrokeTrace } from "@workspace/api-client-react";
 import { useAdminMode } from "@/lib/adminMode";
 import { MathKeyboard, insertAtTextareaCursor } from "@/components/MathKeyboard";
@@ -10,36 +10,41 @@ interface AnswerInputProps {
   disabled?: boolean;
   /** Use a shorter textarea for brief answers (a sentence or two). */
   compact?: boolean;
-  /** Allow pasting (used where there is no authorship detection, e.g. diagnostics). */
+  /** Kept for compatibility; pasting is now allowed in every answer field. */
   allowPaste?: boolean;
+  initialTrace?: KeystrokeTrace;
 }
 
-export function AnswerInput({ value, onChange, placeholder, disabled, compact, allowPaste }: AnswerInputProps) {
+export function AnswerInput({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  compact,
+  initialTrace,
+}: AnswerInputProps) {
   const [adminMode] = useAdminMode();
-  const [sessionValue, setSessionValue] = useState(value);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const traceRef = useRef<KeystrokeTrace>({
-    keystrokeCount: 0,
-    eraseCount: 0,
-    bulkInsertCount: 0,
-    longestBulkInsertChars: 0,
-    rewriteSegments: 0,
-    durationMs: 0,
+    keystrokeCount: initialTrace?.keystrokeCount ?? 0,
+    eraseCount: initialTrace?.eraseCount ?? 0,
+    bulkInsertCount: initialTrace?.bulkInsertCount ?? 0,
+    longestBulkInsertChars: initialTrace?.longestBulkInsertChars ?? 0,
+    rewriteSegments: initialTrace?.rewriteSegments ?? 0,
+    durationMs: initialTrace?.durationMs ?? 0,
   });
 
   const sessionStartRef = useRef<number>(Date.now());
+  const priorDurationRef = useRef<number>(initialTrace?.durationMs ?? 0);
   const lastKeyWasEraseRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    setSessionValue(value);
-  }, [value]);
 
   const emitChange = useCallback(
     (newVal: string) => {
       const trace = {
         ...traceRef.current,
-        durationMs: Date.now() - sessionStartRef.current,
+        durationMs:
+          priorDurationRef.current + (Date.now() - sessionStartRef.current),
       };
       onChange(newVal, trace);
     },
@@ -48,7 +53,7 @@ export function AnswerInput({ value, onChange, placeholder, disabled, compact, a
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newVal = e.target.value;
-    const diff = newVal.length - sessionValue.length;
+    const diff = newVal.length - value.length;
 
     if (diff > 5) {
       traceRef.current.bulkInsertCount = (traceRef.current.bulkInsertCount || 0) + 1;
@@ -57,7 +62,6 @@ export function AnswerInput({ value, onChange, placeholder, disabled, compact, a
       }
     }
 
-    setSessionValue(newVal);
     emitChange(newVal);
   };
 
@@ -76,14 +80,6 @@ export function AnswerInput({ value, onChange, placeholder, disabled, compact, a
     }
   };
 
-  const pasteAllowed = adminMode || allowPaste;
-  const handlePaste = (e: React.ClipboardEvent) => {
-    if (!pasteAllowed) e.preventDefault();
-  };
-  const handleDrop = (e: React.DragEvent) => {
-    if (!pasteAllowed) e.preventDefault();
-  };
-
   // Inserting a symbol from the math keyboard counts as genuine typing, so it
   // updates the keystroke trace as keystrokes (not a bulk insert) to avoid
   // false-flagging legitimate symbol entry by the authorship detector.
@@ -93,7 +89,6 @@ export function AnswerInput({ value, onChange, placeholder, disabled, compact, a
     const { value: newVal, cursor } = insertAtTextareaCursor(el, text, cursorBack);
     traceRef.current.keystrokeCount += text.length;
     lastKeyWasEraseRef.current = false;
-    setSessionValue(newVal);
     emitChange(newVal);
     requestAnimationFrame(() => {
       el.focus();
@@ -105,11 +100,9 @@ export function AnswerInput({ value, onChange, placeholder, disabled, compact, a
     <div className="flex flex-col gap-2 w-full">
       <textarea
         ref={textareaRef}
-        value={sessionValue}
+        value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
-        onDrop={handleDrop}
         placeholder={placeholder || "Type your answer here..."}
         disabled={disabled}
         className={`w-full ${
@@ -117,12 +110,12 @@ export function AnswerInput({ value, onChange, placeholder, disabled, compact, a
         } bg-card border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary leading-relaxed resize-y`}
       />
       {!disabled && <MathKeyboard onInsert={handleMathInsert} />}
-      {!pasteAllowed && (
+      {!disabled && !adminMode && (
         <span className="text-xs text-muted-foreground px-1">
-          Pasting is disabled.
+          Pasting is allowed. Large insertions are recorded where authorship analysis applies.
         </span>
       )}
-      {pasteAllowed && adminMode && (
+      {!disabled && adminMode && (
         <span className="text-xs text-muted-foreground px-1">
           Administrator mode — pasting enabled.
         </span>

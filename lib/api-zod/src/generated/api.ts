@@ -17,6 +17,51 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Generate a substantial five-paragraph answer for a real course problem
+ */
+export const GenerateLongAnswerDiagnosticResponse = zod.object({
+  "problemId": zod.number(),
+  "prompt": zod.string(),
+  "answer": zod.string(),
+  "characterCount": zod.number(),
+  "paragraphCount": zod.number(),
+  "hash": zod.string(),
+  "generatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Persist, read back, and grade an exact long-answer HTTP payload
+ */
+
+
+
+export const GradeLongAnswerDiagnosticBody = zod.object({
+  "problemId": zod.number(),
+  "answer": zod.string().min(1)
+})
+
+export const GradeLongAnswerDiagnosticResponse = zod.object({
+  "ok": zod.boolean(),
+  "problemId": zod.number(),
+  "prompt": zod.string(),
+  "sentAnswer": zod.string(),
+  "persistedAnswer": zod.string(),
+  "sentCharacterCount": zod.number(),
+  "persistedCharacterCount": zod.number(),
+  "sentParagraphCount": zod.number(),
+  "persistedParagraphCount": zod.number(),
+  "sentHash": zod.string(),
+  "persistedHash": zod.string(),
+  "exactMatch": zod.boolean(),
+  "gradedCorrect": zod.boolean(),
+  "gradingExplanation": zod.string(),
+  "cleanedUp": zod.boolean(),
+  "gradedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Course-level overview with weeks, assignments, and progress
  */
 export const GetCourseOverviewResponse = zod.object({
@@ -332,9 +377,24 @@ export const SubmitAttemptParams = zod.object({
   "attemptId": zod.coerce.number()
 })
 
+export const submitAttemptBodyAnswersItemTraceBulkInsertCountDefault = 0;
+export const submitAttemptBodyAnswersItemTraceLongestBulkInsertCharsDefault = 0;
+export const submitAttemptBodyAnswersItemTraceRewriteSegmentsDefault = 0;
 export const submitAttemptBodySkipDetectionDefault = false;
 
 export const SubmitAttemptBody = zod.object({
+  "answers": zod.array(zod.object({
+  "problemId": zod.number(),
+  "answer": zod.string(),
+  "trace": zod.object({
+  "keystrokeCount": zod.number(),
+  "eraseCount": zod.number(),
+  "bulkInsertCount": zod.number().default(submitAttemptBodyAnswersItemTraceBulkInsertCountDefault),
+  "longestBulkInsertChars": zod.number().default(submitAttemptBodyAnswersItemTraceLongestBulkInsertCharsDefault),
+  "rewriteSegments": zod.number().default(submitAttemptBodyAnswersItemTraceRewriteSegmentsDefault),
+  "durationMs": zod.number()
+})
+})).optional().describe('Complete final answer snapshot. The server persists this exact snapshot before grading.'),
   "skipDetection": zod.boolean().default(submitAttemptBodySkipDetectionDefault).describe('Admin mode — grade the attempt but skip AI\/diachronic detection.')
 })
 
