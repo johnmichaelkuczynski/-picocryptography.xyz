@@ -8,6 +8,13 @@ import { Progress } from "@/components/ui/progress";
 import { ReasoningCallout } from "@/components/ReasoningCallout";
 import TopicsRail from "@/components/TopicsRail";
 
+const HOUR_CONTENT = [
+  { title: "EVERY CODE EVER BROKEN WAS BROKEN BECAUSE PEOPLE REPEAT THEMSELVES", summary: "Letter counts, stock phrases, weather reports: Enigma fell to habit, not to genius." },
+  { title: "PERFECT SECRECY EXISTS, IS PROVABLE, AND IS WORTHLESS", summary: "Why the unbreakable cipher went unused, and why security is priced, not guaranteed." },
+  { title: "TWO STRANGERS CAN AGREE ON A SECRET WHILE EVERYONE LISTENS", summary: "The one genuinely astonishing idea in the field, and the reason there is an internet." },
+  { title: "NOBODY BREAKS THE MATH — THINGS FALL APART AT THE SEAMS", summary: "Keys, people, sloppy code, and governments: where every real-world break has come from." }
+];
+
 export default function Dashboard() {
   const { data: overview, isLoading: isLoadingOverview } = useGetCourseOverview();
   const { data: activity, isLoading: isLoadingActivity } = useGetRecentActivity();
@@ -21,9 +28,9 @@ export default function Dashboard() {
       <div className="p-8 max-w-6xl mx-auto w-full flex flex-col gap-8 min-w-0">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary mb-2">
-            {overview ? "Cloud Architecture (AWS/Azure)" : <Skeleton className="h-9 w-64" />}
+            {overview ? "Cryptography: Secrets, Locks, and Digital Trust" : <Skeleton className="h-9 w-64" />}
           </h1>
-          <p className="text-muted-foreground">Welcome to your Cloud Architecture (AWS/Azure) course workspace.</p>
+          <p className="text-muted-foreground">Welcome to your Cryptography course workspace.</p>
         </div>
 
         <ReasoningCallout phase="before" />
@@ -63,14 +70,16 @@ export default function Dashboard() {
             {isLoadingOverview ? (
               Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
             ) : (
-              overview?.weeks.map(week => (
+              overview?.weeks.map(week => {
+                const content = HOUR_CONTENT[week.weekNumber - 1] || { title: week.title, summary: week.summary };
+                return (
                 <Link key={week.weekNumber} href={`/weeks/${week.weekNumber}`}>
-                  <Card className="hover:border-primary/50 transition-colors cursor-pointer cursor-pointer hover:shadow-sm">
+                  <Card className="hover:border-primary/50 transition-colors cursor-pointer hover:shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-lg">Day {week.weekNumber}: {week.title}</CardTitle>
+                      <CardTitle className="text-lg">Hour {week.weekNumber}: {content.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground mb-4">{week.summary}</p>
+                      <p className="text-muted-foreground mb-4">{content.summary}</p>
                       <div className="flex gap-4 text-sm font-medium">
                         <span className="text-primary">{week.lectures.length} Lectures</span>
                         <span className="text-primary">{week.assignments.length} Assignments</span>
@@ -78,7 +87,8 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
                 </Link>
-              ))
+                );
+              })
             )}
           </div>
 

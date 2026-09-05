@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { createHash } from "node:crypto";
 import { and, asc, eq, sql } from "drizzle-orm";
 import {
   db,
@@ -17,10 +18,17 @@ import {
   SubmitAttemptBody,
   SubmitAttemptResponse,
 } from "@workspace/api-zod";
-import { gradeAnswer } from "../lib/grading";
+import { gradeAnswer, GradingUnavailableError } from "../lib/grading";
 import { detect } from "../lib/detection";
 
 const router: IRouter = Router();
+
+function persistenceEvidence(answer: string) {
+  return {
+    persistedLength: answer.length,
+    persistedHash: createHash("sha256").update(answer, "utf8").digest("hex"),
+  };
+}
 
 type AnswerSnapshot = {
   problemId: number;
@@ -64,6 +72,8 @@ async function upsertAnswerSnapshot(
     longestBulkInsertChars: snapshot.trace.longestBulkInsertChars ?? 0,
     rewriteSegments: snapshot.trace.rewriteSegments ?? 0,
     durationMs: snapshot.trace.durationMs,
+    correct: null,
+    scorePercent: null,
     updatedAt: new Date(),
   };
 
@@ -141,6 +151,8 @@ router.get("/assignments/:assignmentId", async (req, res): Promise<void> => {
       topicId: problemsTable.topicId,
       topicTitle: topicsTable.title,
       hint: problemsTable.hint,
+      type: problemsTable.type,
+      options: problemsTable.options,
     })
     .from(problemsTable)
     .leftJoin(topicsTable, eq(problemsTable.topicId, topicsTable.id))
@@ -182,6 +194,7 @@ async function loadAttempt(attemptId: number) {
       answer: x.answer,
       keystrokeCount: x.keystrokeCount,
       eraseCount: x.eraseCount,
+      ...persistenceEvidence(x.answer),
     })),
   };
 }
@@ -250,7 +263,7 @@ router.put("/assignments/attempts/:attemptId/answer", async (req, res): Promise<
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { problemId, answer, trace } = parsed.data;
+  const { problemId, answer, trace, gradeNow } = parsed.data;
 
   const [attempt] = await db
     .select()
@@ -284,7 +297,95 @@ router.put("/assignments/attempts/:attemptId/answer", async (req, res): Promise<
   }
 
   await upsertAnswerSnapshot(id, { problemId, answer, trace });
-  res.json({ ok: true });
+  const [persisted] = await db
+    .select({ answer: answersTable.answer })
+    .from(answersTable)
+    .where(and(eq(answersTable.attemptId, id), eq(answersTable.problemId, problemId)));
+  if (!persisted || persisted.answer !== answer) {
+    res.status(503).json({ error: "Answer persistence verification failed; retry save." });
+    return;
+  }
+  const evidence = persistenceEvidence(persisted.answer);
+  if (!gradeNow) {
+    res.json({
+      ok: true,
+      problemId,
+      ...evidence,
+      percentage: null,
+      correct: null,
+      feedback: null,
+    });
+    return;
+  }
+
+  let graded;
+  try {
+    graded = await gradeAnswer({
+      prompt: problem.prompt,
+      correctAnswer: problem.correctAnswer,
+      userAnswer: persisted.answer,
+      type: problem.type as "multiple_choice" | "freeform",
+    });
+  } catch (error) {
+    if (error instanceof GradingUnavailableError) {
+      res.status(503).json({
+        error: error.message,
+        retryable: true,
+        graded: false,
+        problemId,
+        ...evidence,
+      });
+      return;
+    }
+    throw error;
+  }
+
+  const feedback =
+    problem.type === "multiple_choice"
+      ? `${graded.explanation} ${problem.explanation}`
+      : graded.explanation || problem.explanation;
+  const updatedGrade = await db
+    .update(answersTable)
+    .set({
+      correct: graded.correct,
+      scorePercent: graded.percentage,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(answersTable.attemptId, id),
+        eq(answersTable.problemId, problemId),
+        eq(answersTable.answer, persisted.answer),
+      ),
+    )
+    .returning({ id: answersTable.id });
+  if (updatedGrade.length !== 1) {
+    const [current] = await db
+      .select({ answer: answersTable.answer })
+      .from(answersTable)
+      .where(
+        and(
+          eq(answersTable.attemptId, id),
+          eq(answersTable.problemId, problemId),
+        ),
+      );
+    res.status(409).json({
+      error: "A newer answer snapshot arrived while grading; retry grading the current answer.",
+      retryable: true,
+      graded: false,
+      problemId,
+      ...(current ? persistenceEvidence(current.answer) : evidence),
+    });
+    return;
+  }
+  res.json({
+    ok: true,
+    problemId,
+    ...evidence,
+    percentage: graded.percentage,
+    correct: graded.correct,
+    feedback,
+  });
 });
 
 router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise<void> => {
@@ -361,25 +462,31 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
 
   const perProblem = [];
   const detection = [];
-  let score = 0;
-  for (const p of problems) {
-    const a = byProblem.get(p.id);
-    const userAnswer = a?.answer ?? "";
-    const graded = await gradeAnswer({
-      prompt: p.prompt,
-      correctAnswer: p.correctAnswer,
-      userAnswer,
-    });
-    if (graded.correct) score += 1;
-    perProblem.push({
-      problemId: p.id,
-      correct: graded.correct,
-      userAnswer,
-      correctAnswer: p.correctAnswer,
-      explanation: graded.explanation || p.explanation,
-    });
+  let percentagePoints = 0;
+  try {
+    for (const p of problems) {
+      const a = byProblem.get(p.id);
+      const userAnswer = a?.answer ?? "";
+      const graded = await gradeAnswer({
+        prompt: p.prompt,
+        correctAnswer: p.correctAnswer,
+        userAnswer,
+        type: p.type as "multiple_choice" | "freeform",
+      });
+      percentagePoints += graded.percentage;
+      perProblem.push({
+        problemId: p.id,
+        correct: graded.correct,
+        percentage: graded.percentage,
+        userAnswer,
+        correctAnswer: p.correctAnswer,
+        explanation:
+          p.type === "multiple_choice"
+            ? `${graded.explanation} ${p.explanation}`
+            : graded.explanation || p.explanation,
+      });
 
-    if (a && userAnswer.trim().length > 0 && !skipDetection) {
+      if (a && userAnswer.trim().length > 0 && !skipDetection) {
       const det = await detect(userAnswer, {
         keystrokeCount: a.keystrokeCount,
         eraseCount: a.eraseCount,
@@ -393,6 +500,7 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
         .update(answersTable)
         .set({
           correct: graded.correct,
+          scorePercent: graded.percentage,
           aiScore: det.aiScore,
           aiFlagged: det.aiFlagged,
           diachronicScore: det.diachronicScore,
@@ -400,16 +508,24 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
           detectionRationale: det.rationale,
         })
         .where(eq(answersTable.id, a.id));
-    } else if (a) {
+      } else if (a) {
       await db
         .update(answersTable)
-        .set({ correct: graded.correct })
+        .set({ correct: graded.correct, scorePercent: graded.percentage })
         .where(eq(answersTable.id, a.id));
+      }
     }
+  } catch (error) {
+    if (error instanceof GradingUnavailableError) {
+      res.status(503).json({ error: error.message, retryable: true, graded: false });
+      return;
+    }
+    throw error;
   }
 
   const total = problems.length;
-  const percent = total === 0 ? 0 : (score / total) * 100;
+  const percent = total === 0 ? 0 : percentagePoints / total;
+  const score = perProblem.filter((result) => result.correct).length;
   await db
     .update(attemptsTable)
     .set({

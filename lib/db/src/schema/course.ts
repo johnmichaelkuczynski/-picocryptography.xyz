@@ -69,6 +69,8 @@ export const problemsTable = pgTable("problems", {
     .references(() => topicsTable.id),
   position: integer("position").notNull(),
   prompt: text("prompt").notNull(),
+  type: text("type").notNull().default("freeform"), // multiple_choice | freeform
+  options: jsonb("options").$type<string[] | null>(),
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation").notNull(),
   hint: text("hint"),
@@ -96,6 +98,7 @@ export const answersTable = pgTable("answers", {
     .references(() => problemsTable.id, { onDelete: "cascade" }),
   answer: text("answer").notNull().default(""),
   correct: boolean("correct"),
+  scorePercent: doublePrecision("score_percent"),
   keystrokeCount: integer("keystroke_count").notNull().default(0),
   eraseCount: integer("erase_count").notNull().default(0),
   bulkInsertCount: integer("bulk_insert_count").notNull().default(0),
@@ -133,6 +136,8 @@ export const practiceProblemsTable = pgTable("practice_problems", {
     .references(() => practiceSessionsTable.id, { onDelete: "cascade" }),
   topicId: integer("topic_id").notNull(),
   prompt: text("prompt").notNull(),
+  type: text("type").notNull().default("freeform"), // multiple_choice | freeform
+  options: jsonb("options").$type<string[] | null>(),
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation").notNull(),
   difficulty: doublePrecision("difficulty").notNull(),

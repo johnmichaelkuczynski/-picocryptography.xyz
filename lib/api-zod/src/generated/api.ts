@@ -62,6 +62,32 @@ export const GradeLongAnswerDiagnosticResponse = zod.object({
 
 
 /**
+ * @summary Generate, persist, read back, and grade a live student answer
+ */
+export const RunLiveAnswerDiagnosticResponse = zod.object({
+  "ok": zod.boolean(),
+  "problemId": zod.number(),
+  "attemptId": zod.number(),
+  "generatedAnswer": zod.string(),
+  "persistedAnswer": zod.string(),
+  "generatedLength": zod.number(),
+  "persistedLength": zod.number(),
+  "generatedHash": zod.string(),
+  "persistedHash": zod.string(),
+  "exactMatch": zod.boolean(),
+  "percentage": zod.number(),
+  "feedback": zod.string(),
+  "stages": zod.array(zod.object({
+  "name": zod.string(),
+  "ok": zod.boolean(),
+  "evidence": zod.string()
+})),
+  "cleanedUp": zod.boolean(),
+  "gradedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Course-level overview with weeks, assignments, and progress
  */
 export const GetCourseOverviewResponse = zod.object({
@@ -150,7 +176,13 @@ export const GetLectureResponse = zod.object({
   "customInstruction": zod.string().nullish().describe('The most recent instruction the student gave to produce bodyCustom. Null when there is no custom rewrite.'),
   "bodyShortExamples": zod.string().nullish().describe('The short version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the short length.'),
   "bodyMediumExamples": zod.string().nullish().describe('The medium version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the medium length.'),
-  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.')
+  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.'),
+  "relatedAssignments": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "href": zod.string(),
+  "kind": zod.enum(['homework', 'test', 'midterm', 'final'])
+})).describe('Read-only assignments containing questions on this lecture\'s topic.')
 })
 
 
@@ -183,7 +215,13 @@ export const RewriteLectureResponse = zod.object({
   "customInstruction": zod.string().nullish().describe('The most recent instruction the student gave to produce bodyCustom. Null when there is no custom rewrite.'),
   "bodyShortExamples": zod.string().nullish().describe('The short version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the short length.'),
   "bodyMediumExamples": zod.string().nullish().describe('The medium version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the medium length.'),
-  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.')
+  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.'),
+  "relatedAssignments": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "href": zod.string(),
+  "kind": zod.enum(['homework', 'test', 'midterm', 'final'])
+})).describe('Read-only assignments containing questions on this lecture\'s topic.')
 })
 
 
@@ -206,7 +244,13 @@ export const ClearLectureRewriteResponse = zod.object({
   "customInstruction": zod.string().nullish().describe('The most recent instruction the student gave to produce bodyCustom. Null when there is no custom rewrite.'),
   "bodyShortExamples": zod.string().nullish().describe('The short version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the short length.'),
   "bodyMediumExamples": zod.string().nullish().describe('The medium version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the medium length.'),
-  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.')
+  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.'),
+  "relatedAssignments": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "href": zod.string(),
+  "kind": zod.enum(['homework', 'test', 'midterm', 'final'])
+})).describe('Read-only assignments containing questions on this lecture\'s topic.')
 })
 
 
@@ -234,7 +278,13 @@ export const GenerateLectureExamplesResponse = zod.object({
   "customInstruction": zod.string().nullish().describe('The most recent instruction the student gave to produce bodyCustom. Null when there is no custom rewrite.'),
   "bodyShortExamples": zod.string().nullish().describe('The short version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the short length.'),
   "bodyMediumExamples": zod.string().nullish().describe('The medium version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the medium length.'),
-  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.')
+  "bodyLongExamples": zod.string().nullish().describe('The long version augmented with at least one vivid illustration per point. Null until the reader toggles examples on for the long length.'),
+  "relatedAssignments": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "href": zod.string(),
+  "kind": zod.enum(['homework', 'test', 'midterm', 'final'])
+})).describe('Read-only assignments containing questions on this lecture\'s topic.')
 })
 
 
@@ -290,7 +340,9 @@ export const GetAssignmentResponse = zod.object({
   "prompt": zod.string(),
   "topicId": zod.number(),
   "topicTitle": zod.string().nullish(),
-  "hint": zod.string().nullish()
+  "hint": zod.string().nullish(),
+  "type": zod.enum(['multiple_choice', 'freeform']),
+  "options": zod.array(zod.string()).nullish()
 }))
 })
 
@@ -313,7 +365,9 @@ export const StartAssignmentAttemptResponse = zod.object({
   "problemId": zod.number(),
   "answer": zod.string(),
   "keystrokeCount": zod.number().nullish(),
-  "eraseCount": zod.number().nullish()
+  "eraseCount": zod.number().nullish(),
+  "persistedLength": zod.number(),
+  "persistedHash": zod.string()
 }))
 })
 
@@ -336,7 +390,9 @@ export const GetAttemptResponse = zod.object({
   "problemId": zod.number(),
   "answer": zod.string(),
   "keystrokeCount": zod.number().nullish(),
-  "eraseCount": zod.number().nullish()
+  "eraseCount": zod.number().nullish(),
+  "persistedLength": zod.number(),
+  "persistedHash": zod.string()
 }))
 })
 
@@ -348,6 +404,7 @@ export const SaveAnswerParams = zod.object({
   "attemptId": zod.coerce.number()
 })
 
+export const saveAnswerBodyGradeNowDefault = false;
 export const saveAnswerBodyTraceBulkInsertCountDefault = 0;
 export const saveAnswerBodyTraceLongestBulkInsertCharsDefault = 0;
 export const saveAnswerBodyTraceRewriteSegmentsDefault = 0;
@@ -355,6 +412,7 @@ export const saveAnswerBodyTraceRewriteSegmentsDefault = 0;
 export const SaveAnswerBody = zod.object({
   "problemId": zod.number(),
   "answer": zod.string(),
+  "gradeNow": zod.boolean().default(saveAnswerBodyGradeNowDefault).describe('When true, grade this persisted answer immediately without submitting the attempt.'),
   "trace": zod.object({
   "keystrokeCount": zod.number(),
   "eraseCount": zod.number(),
@@ -366,7 +424,13 @@ export const SaveAnswerBody = zod.object({
 })
 
 export const SaveAnswerResponse = zod.object({
-  "ok": zod.boolean()
+  "ok": zod.boolean(),
+  "problemId": zod.number(),
+  "persistedLength": zod.number(),
+  "persistedHash": zod.string(),
+  "percentage": zod.number().nullish(),
+  "correct": zod.boolean().nullish(),
+  "feedback": zod.string().nullish()
 })
 
 
@@ -377,6 +441,7 @@ export const SubmitAttemptParams = zod.object({
   "attemptId": zod.coerce.number()
 })
 
+export const submitAttemptBodyAnswersItemGradeNowDefault = false;
 export const submitAttemptBodyAnswersItemTraceBulkInsertCountDefault = 0;
 export const submitAttemptBodyAnswersItemTraceLongestBulkInsertCharsDefault = 0;
 export const submitAttemptBodyAnswersItemTraceRewriteSegmentsDefault = 0;
@@ -386,6 +451,7 @@ export const SubmitAttemptBody = zod.object({
   "answers": zod.array(zod.object({
   "problemId": zod.number(),
   "answer": zod.string(),
+  "gradeNow": zod.boolean().default(submitAttemptBodyAnswersItemGradeNowDefault).describe('When true, grade this persisted answer immediately without submitting the attempt.'),
   "trace": zod.object({
   "keystrokeCount": zod.number(),
   "eraseCount": zod.number(),
@@ -394,7 +460,7 @@ export const SubmitAttemptBody = zod.object({
   "rewriteSegments": zod.number().default(submitAttemptBodyAnswersItemTraceRewriteSegmentsDefault),
   "durationMs": zod.number()
 })
-})).optional().describe('Complete final answer snapshot. The server persists this exact snapshot before grading.'),
+})).describe('Complete final answer snapshot. The server persists this exact snapshot before grading.'),
   "skipDetection": zod.boolean().default(submitAttemptBodySkipDetectionDefault).describe('Admin mode — grade the attempt but skip AI\/diachronic detection.')
 })
 
@@ -406,6 +472,7 @@ export const SubmitAttemptResponse = zod.object({
   "perProblem": zod.array(zod.object({
   "problemId": zod.number(),
   "correct": zod.boolean(),
+  "percentage": zod.number(),
   "userAnswer": zod.string().optional(),
   "correctAnswer": zod.string().optional(),
   "explanation": zod.string()
@@ -462,7 +529,9 @@ export const GeneratePracticeAssignmentResponse = zod.object({
   "id": zod.number(),
   "prompt": zod.string(),
   "topicId": zod.number(),
-  "topicTitle": zod.string().nullish()
+  "topicTitle": zod.string().nullish(),
+  "type": zod.enum(['multiple_choice', 'freeform']),
+  "options": zod.array(zod.string()).nullish()
 }))
 })
 
@@ -501,6 +570,7 @@ export const GradePracticeAssignmentResponse = zod.object({
   "problemId": zod.number(),
   "prompt": zod.string(),
   "correct": zod.boolean(),
+  "percentage": zod.number(),
   "userAnswer": zod.string().optional(),
   "correctAnswer": zod.string(),
   "feedback": zod.string()
@@ -548,7 +618,9 @@ export const NextPracticeProblemResponse = zod.object({
   "prompt": zod.string(),
   "topicId": zod.number(),
   "topicTitle": zod.string().optional(),
-  "difficulty": zod.number()
+  "difficulty": zod.number(),
+  "type": zod.enum(['multiple_choice', 'freeform']),
+  "options": zod.array(zod.string()).nullish()
 })
 
 
@@ -579,6 +651,7 @@ export const GradePracticeAnswerBody = zod.object({
 export const GradePracticeAnswerResponse = zod.object({
   "problemId": zod.number(),
   "correct": zod.boolean(),
+  "percentage": zod.number(),
   "correctAnswer": zod.string().optional(),
   "explanation": zod.string(),
   "newDifficulty": zod.number(),

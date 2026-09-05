@@ -32,7 +32,7 @@ export default function LectureView() {
   const { data: lecture, isLoading } = useGetLecture(lectureId);
   const { data: week } = useGetWeek(lecture?.weekNumber ?? 1);
 
-  // Adjacent lectures within the day, so the reader can move straight to the
+  // Adjacent lectures within the hour, so the reader can move straight to the
   // next/previous lecture without going back to the dashboard.
   const { prevLecture, nextLecture } = useMemo(() => {
     const list = week?.lectures ?? [];
@@ -244,7 +244,7 @@ export default function LectureView() {
         <Link href={lecture ? `/weeks/${lecture.weekNumber}` : "/"}>
           <Button variant="ghost" className="-ml-2 text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Day {lecture?.weekNumber ?? ""}
+            Back to Hour {lecture?.weekNumber ?? ""}
           </Button>
         </Link>
       </div>
@@ -268,7 +268,7 @@ export default function LectureView() {
                 </h1>
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Day {lecture.weekNumber}
+                    Hour {lecture.weekNumber}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="inline-flex rounded-md border border-border overflow-hidden text-xs">
@@ -560,6 +560,27 @@ export default function LectureView() {
                     </Link>
                   )}
                 </nav>
+              )}
+
+              {lecture.relatedAssignments && lecture.relatedAssignments.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-border">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+                    Related Assignments
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {lecture.relatedAssignments.map(assignment => (
+                      <Link key={assignment.id} href={`/assignments/${assignment.id}`}>
+                        <div className="group w-full text-left rounded-lg border border-border bg-card hover:border-primary/50 transition-colors p-4 flex items-center justify-between gap-3 cursor-pointer">
+                          <div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{assignment.kind}</div>
+                            <div className="font-medium">{assignment.title}</div>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0" />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               )}
             </article>
           ) : (

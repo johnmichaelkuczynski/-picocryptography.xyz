@@ -13,4 +13,6 @@ export interface SavedAnswer {
   keystrokeCount?: number | null;
   /** @nullable */
   eraseCount?: number | null;
+  persistedLength: number;
+  persistedHash: string;
 }

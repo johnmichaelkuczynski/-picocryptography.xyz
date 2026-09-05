@@ -15,7 +15,7 @@ import {
   GradePracticeAssignmentResponse,
 } from "@workspace/api-zod";
 import { chatJson } from "../lib/ai";
-import { gradePracticeEssay } from "../lib/grading";
+import { gradePracticeEssay, GradingUnavailableError } from "../lib/grading";
 
 const router: IRouter = Router();
 
@@ -27,14 +27,17 @@ function parseIdParam(raw: unknown): number {
 function isValidReasoningProblem(problem: {
   prompt: string;
   correctAnswer: string;
+  type?: string;
+  options?: string[] | null;
 }): boolean {
   const prompt = problem.prompt.trim();
   const answer = problem.correctAnswer.trim();
   const sentenceCount = answer.split(/[.!?]+(?:\s|$)/).filter(Boolean).length;
   return (
-    prompt.length >= 80 &&
-    answer.length >= 100 &&
-    sentenceCount >= 2 &&
+    ((problem.type === "multiple_choice" &&
+      problem.options?.length === 4 &&
+      problem.options.includes(problem.correctAnswer)) ||
+      (prompt.length >= 30 && answer.length >= 20 && sentenceCount >= 1)) &&
     !/\b(define|what (?:is|are) .+ called|what does .+ mean|difference between)\b/i.test(
       prompt,
     )
@@ -90,6 +93,8 @@ router.post(
       prompt: string;
       correctAnswer: string;
       explanation: string;
+      type: "multiple_choice" | "freeform";
+      options: string[] | null;
     }> = [];
     try {
       const out = await chatJson<{
@@ -97,15 +102,17 @@ router.post(
           prompt: string;
           correctAnswer: string;
           explanation: string;
+          type: "multiple_choice" | "freeform";
+          options: string[] | null;
         }>;
       }>(
-        `You write a PRACTICE version of a Cloud Architecture (AWS/Azure) ${assignment.kind} titled "${assignment.title}". You are given the real assignment's problems as templates. Produce EXACTLY ${templates.length} NEW problems, one per template, in the same order. Each new problem must: (1) cover the SAME topic and test the SAME cloud-architecture concept as its template, (2) use a clearly DIFFERENT, specific, realistic named cloud-system scenario (never copy the template), (3) require the student to analyze evidence and justify an architectural or operational decision in a multi-sentence answer, and (4) be fully self-contained — do NOT reference "the lecture", "the text", or "the course"; state all relevant facts from the scenario in the problem. NEVER ask for a definition, abstract comparison, terminology recall, a one-word answer, or bare yes/no. For each problem also write a multi-sentence model "correctAnswer" showing the case-specific reasoning and a short "explanation" of what earns full credit. Respond as strict JSON: {"problems": [{"prompt": string, "correctAnswer": string, "explanation": string}, ...]} with exactly ${templates.length} items.`,
+        `Write exactly ${templates.length} new self-contained scenario questions for this cryptography ${assignment.kind}. Use approximately 50% multiple choice (alternate by position), each with exactly four concise options and correctAnswer exactly equal to one option. Other questions must be short freeform: at least 60% answerable in one sentence, most remaining in two, rarely three; never demand sentence counts. Keep prompts and answers short. Respond as strict JSON: {"problems":[{"prompt":string,"correctAnswer":string,"explanation":string,"type":"multiple_choice"|"freeform","options":string[4]|null}]}.`,
         JSON.stringify({
           assignmentKind: assignment.kind,
           assignmentTitle: assignment.title,
           templates: templates.map((t, i) => ({
             number: i + 1,
-            topic: t.topicTitle ?? "cloud architecture",
+            topic: t.topicTitle ?? "cryptography",
             promptStyleExample: t.prompt,
             modelAnswerExample: t.correctAnswer,
           })),
@@ -116,32 +123,32 @@ router.post(
       generated = [];
     }
 
-    // Fall back to the grounded source item if generation failed/short.
+    const validGenerated =
+      generated.length === templates.length &&
+      generated.every(
+        (problem, index) =>
+          isValidReasoningProblem(problem) &&
+          problem.type === (index % 2 === 0 ? "multiple_choice" : "freeform"),
+      );
+    if (!validGenerated) {
+      res.status(502).json({
+        error: "Practice generation did not produce the required balanced short-answer set. Please retry.",
+        retryable: true,
+      });
+      return;
+    }
+
     const finalProblems = templates.map((t, i) => {
-      const g = generated[i];
-      if (
-        g &&
-        typeof g.prompt === "string" &&
-        g.prompt.trim() &&
-        typeof g.correctAnswer === "string" &&
-        g.correctAnswer.trim() &&
-        isValidReasoningProblem(g)
-      ) {
-        return {
-          topicId: t.topicId,
-          prompt: g.prompt.trim(),
-          correctAnswer: g.correctAnswer.trim(),
-          explanation:
-            (g.explanation ?? "").trim() ||
-            "Explain your reasoning using the core concept this problem targets.",
-        };
-      }
+      const g = generated[i]!;
       return {
         topicId: t.topicId,
-        prompt: t.prompt,
-        correctAnswer: t.correctAnswer,
+        prompt: g.prompt.trim(),
+        correctAnswer: g.correctAnswer.trim(),
+        type: g.type,
+        options: g.options,
         explanation:
-          "Apply the relevant integration concept to the specific facts in the scenario and justify the operational conclusion in multiple sentences.",
+          (g.explanation ?? "").trim() ||
+          "Apply the relevant cryptographic concept to the scenario.",
       };
     });
 
@@ -169,6 +176,8 @@ router.post(
           sessionId: session.id,
           topicId: p.topicId,
           prompt: p.prompt,
+          type: p.type,
+          options: p.options,
           correctAnswer: p.correctAnswer,
           explanation: p.explanation,
           difficulty: 2.5,
@@ -192,6 +201,8 @@ router.post(
           prompt: p.prompt,
           topicId: p.topicId,
           topicTitle: topicTitleById.get(p.topicId) ?? null,
+          type: p.type as "multiple_choice" | "freeform",
+          options: p.options,
         })),
       }),
     );
@@ -240,14 +251,17 @@ router.post(
       parsed.data.answers.map((a) => [a.problemId, a]),
     );
 
-    const results = await Promise.all(
-      problems.map(async (problem) => {
+    let results;
+    try {
+      results = await Promise.all(
+        problems.map(async (problem) => {
         const submitted = answerByProblem.get(problem.id);
         const answer = submitted?.answer ?? "";
         const graded = await gradePracticeEssay({
           prompt: problem.prompt,
           correctAnswer: problem.correctAnswer,
           userAnswer: answer,
+          type: problem.type as "multiple_choice" | "freeform",
         });
 
         await db.insert(practiceAttemptsTable).values({
@@ -264,12 +278,20 @@ router.post(
           problemId: problem.id,
           prompt: problem.prompt,
           correct: graded.correct,
+          percentage: graded.percentage,
           userAnswer: answer,
           correctAnswer: problem.correctAnswer,
           feedback: graded.feedback,
         };
-      }),
-    );
+        }),
+      );
+    } catch (error) {
+      if (error instanceof GradingUnavailableError) {
+        res.status(503).json({ error: error.message, retryable: true, graded: false });
+        return;
+      }
+      throw error;
+    }
 
     const total = results.length;
     const score = results.filter((r) => r.correct).length;

@@ -9,6 +9,7 @@
 export interface ProblemResult {
   problemId: number;
   correct: boolean;
+  percentage: number;
   userAnswer?: string;
   correctAnswer?: string;
   explanation: string;

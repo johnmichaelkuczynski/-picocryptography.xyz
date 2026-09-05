@@ -5,6 +5,7 @@ import {
   GenerateLongAnswerDiagnosticResponse,
   GradeLongAnswerDiagnosticBody,
   GradeLongAnswerDiagnosticResponse,
+  RunLiveAnswerDiagnosticResponse,
 } from "@workspace/api-zod";
 import {
   db,
@@ -21,7 +22,7 @@ import {
 } from "@workspace/db";
 import { chatText, chatJson, FAST_MODEL } from "../lib/ai";
 import { detect, gptzeroAiScore } from "../lib/detection";
-import { gradeAnswer } from "../lib/grading";
+import { gradeAnswer, GradingUnavailableError } from "../lib/grading";
 
 const router: IRouter = Router();
 
@@ -56,6 +57,122 @@ function answerHash(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
 
+router.post("/diagnostics/live-answer", async (_req, res): Promise<void> => {
+  const [freeformProblem] = await db
+    .select()
+    .from(problemsTable)
+    .where(eq(problemsTable.type, "freeform"))
+    .orderBy(asc(problemsTable.id))
+    .limit(1);
+  const [fallbackProblem] = freeformProblem
+    ? [undefined]
+    : await db.select().from(problemsTable).orderBy(asc(problemsTable.id)).limit(1);
+  const problem = freeformProblem ?? fallbackProblem;
+  if (!problem) {
+    res.status(404).json({ error: "no seeded course problem is available" });
+    return;
+  }
+  const stages: Array<{ name: string; ok: boolean; evidence: string }> = [];
+  const generatedAnswer =
+    problem.type === "multiple_choice"
+      ? problem.correctAnswer
+      : await chatText(
+          "Act as a student answering a cryptography course question. Write a correct, concise one- or two-sentence answer grounded in the prompt and reference answer. Express the idea naturally in your own words rather than copying the reference mechanically. Return only the student answer.",
+          JSON.stringify({
+            prompt: problem.prompt,
+            referenceAnswer: problem.correctAnswer,
+          }),
+        );
+  const validGeneratedFormat =
+    generatedAnswer.length > 0 &&
+    (problem.type !== "multiple_choice" ||
+      (Array.isArray(problem.options) &&
+        problem.options.includes(generatedAnswer)));
+  stages.push({
+    name: "generate",
+    ok: validGeneratedFormat,
+    evidence:
+      problem.type === "multiple_choice"
+        ? `selected exact valid option: ${generatedAnswer}`
+        : `${generatedAnswer.length} characters generated live as a concise freeform answer`,
+  });
+
+  const [attempt] = await db.insert(attemptsTable).values({
+    assignmentId: problem.assignmentId,
+    status: "in_progress",
+  }).returning();
+  if (!attempt) {
+    res.status(500).json({ error: "could not create diagnostic attempt" });
+    return;
+  }
+  try {
+    const [stored] = await db.insert(answersTable).values({
+      attemptId: attempt.id,
+      problemId: problem.id,
+      answer: generatedAnswer,
+      keystrokeCount: generatedAnswer.length,
+      eraseCount: 0,
+      bulkInsertCount: 1,
+      longestBulkInsertChars: generatedAnswer.length,
+      rewriteSegments: 0,
+      durationMs: 1000,
+    }).returning();
+    if (!stored) throw new Error("answer persistence failed");
+    stages.push({ name: "persist", ok: true, evidence: `answer row ${stored.id} written through attempts/answers` });
+
+    const [readBack] = await db.select().from(answersTable).where(eq(answersTable.id, stored.id));
+    if (!readBack) throw new Error("answer read-back failed");
+    const generatedHash = answerHash(generatedAnswer);
+    const persistedHash = answerHash(readBack.answer);
+    const exactMatch = generatedAnswer === readBack.answer &&
+      generatedAnswer.length === readBack.answer.length &&
+      generatedHash === persistedHash;
+    stages.push({ name: "read-back", ok: exactMatch, evidence: `length ${readBack.answer.length}; sha256 ${persistedHash}` });
+
+    const graded = await gradeAnswer({
+      prompt: problem.prompt,
+      correctAnswer: problem.correctAnswer,
+      userAnswer: readBack.answer,
+      type: problem.type as "multiple_choice" | "freeform",
+    });
+    const gradingPassed = graded.correct && graded.percentage > 0;
+    stages.push({
+      name: "grade",
+      ok: gradingPassed,
+      evidence: `${graded.percentage}% — ${graded.explanation}`,
+    });
+    await db.update(answersTable).set({ correct: graded.correct }).where(eq(answersTable.id, stored.id));
+    const deleted = await db.delete(attemptsTable).where(eq(attemptsTable.id, attempt.id)).returning({ id: attemptsTable.id });
+    const cleanedUp = deleted.length === 1;
+
+    res.json(RunLiveAnswerDiagnosticResponse.parse({
+      ok: validGeneratedFormat && exactMatch && gradingPassed && cleanedUp,
+      problemId: problem.id,
+      attemptId: attempt.id,
+      generatedAnswer,
+      persistedAnswer: readBack.answer,
+      generatedLength: generatedAnswer.length,
+      persistedLength: readBack.answer.length,
+      generatedHash,
+      persistedHash,
+      exactMatch,
+      percentage: graded.percentage,
+      feedback: graded.explanation,
+      stages,
+      cleanedUp,
+      gradedAt: new Date().toISOString(),
+    }));
+  } catch (error) {
+    await db.delete(attemptsTable).where(eq(attemptsTable.id, attempt.id));
+    res.status(503).json({
+      error: error instanceof Error ? error.message : String(error),
+      retryable: true,
+      graded: false,
+      stages,
+    });
+  }
+});
+
 // ---------- Diagnostic 4: visible long-answer HTTP + persistence proof ----------
 router.post(
   "/diagnostics/long-answer/generate",
@@ -73,9 +190,9 @@ router.post(
     let answer = "";
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const generated = await chatText(
-        "You are a strong student in the Cloud Architecture (AWS/Azure) course. " +
+        "You are a strong student in the Cryptography: Secrets, Locks, and Digital Trust course. " +
           "Write a correct, specific answer to the supplied real course problem. " +
-          "Use the supplied answer key as the conceptual anchor, then develop the reasoning with concrete architecture consequences. " +
+          "Use the supplied answer key as the conceptual anchor, then develop the reasoning with concrete security consequences. " +
           "Return exactly five substantial prose paragraphs, each 60-100 words, separated by one blank line. " +
           "Do not use headings, bullets, numbering, code fences, or any text before or after the five paragraphs.",
         JSON.stringify({
@@ -213,6 +330,14 @@ router.post(
       await db
         .delete(attemptsTable)
         .where(eq(attemptsTable.id, temporaryAttempt.id));
+      if (error instanceof GradingUnavailableError) {
+        res.status(503).json({
+          error: error.message,
+          retryable: true,
+          graded: false,
+        });
+        return;
+      }
       throw error;
     }
   },
@@ -296,7 +421,7 @@ router.get("/diagnostics/system", async (_req, res) => {
       if (!process.env.GPTZERO_API_KEY)
         throw new Error("GPTZERO_API_KEY is not set");
       const score = await gptzeroAiScore(
-        "In conclusion, the multifaceted tapestry of cloud architecture is paramount to navigating the labyrinthine landscape of compute, storage, networking, identity, resilience, recovery, observability, and shared responsibility.",
+        "In conclusion, the multifaceted tapestry of cryptographic assurance is paramount to navigating the labyrinthine landscape of confidentiality, integrity, authentication, randomness, key custody, implementation leakage, and quantum resilience.",
       );
       if (score == null)
         throw new Error("GPTZero returned no score (key invalid or API down)");
@@ -514,7 +639,7 @@ router.post("/diagnostics/synthetic-run", async (_req, res) => {
           correctAnswer: string;
           explanation: string;
         }>(
-          `You generate a single Cloud Architecture (AWS/Azure) practice problem on "${topic.title}" at easy difficulty. Use a specific realistic named cloud-system scenario and require a reasoned 2-4 sentence answer that applies the topic to decisive facts. Never ask for definitions, abstract comparisons, terminology recall, one-word answers, or bare yes/no. Respond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}.`,
+          `You generate a single cryptography practice problem on "${topic.title}" at easy difficulty. Use a specific realistic named security scenario and require a reasoned 2-4 sentence answer that applies the topic to decisive facts. Never ask for definitions, abstract comparisons, terminology recall, one-word answers, or bare yes/no. Respond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}.`,
           `New problem on ${topic.title}.`,
         );
         const [stored] = await db
@@ -563,7 +688,7 @@ router.post("/diagnostics/synthetic-run", async (_req, res) => {
   steps.push(
     await run("AI detection scan (pasted-style text should flag)", async () => {
       const r = await detect(
-        "In conclusion, the multifaceted tapestry of cloud architecture is paramount to navigating the labyrinthine landscape of compute, storage, networking, identity, resilience, recovery, observability, and shared responsibility.",
+        "In conclusion, the multifaceted tapestry of cryptographic assurance is paramount to navigating the labyrinthine landscape of confidentiality, integrity, authentication, randomness, key custody, implementation leakage, and quantum resilience.",
         {
           keystrokeCount: 8,
           eraseCount: 0,
@@ -730,7 +855,7 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
           // The course is grounded in a specific source text, whose framework and
           // terminology can differ from mainstream treatments. The check judges
           // keys against what the course actually teaches — not generic textbook
-            // cloud architecture. Homework is scoped to its own topic's lecture, but
+            // cryptography. Homework is scoped to its own topic's lecture, but
           // cumulative assessments (test/midterm/final) draw on examples from
           // across the whole unit, so they are grounded in every lecture in the
           // unit; otherwise a correct key citing a sibling topic's example
@@ -748,7 +873,7 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
           // course's own lecture material, blind to the seeded key, so the
           // verdict can't just rubber-stamp the key.
           const derived = await chatText(
-            "You are a strong Cloud Architecture (AWS/Azure) student answering a scenario-based problem. " +
+            "You are a strong cryptography student answering a scenario-based problem. " +
               `Base your answer on ${sourceLabel} provided, using its framework and terminology rather than outside theories. ` +
               "Answer the prompt directly with concise, multi-sentence reasoning tied to the scenario. " +
               "Do not restate the prompt or add commentary.\n\n=== COURSE LECTURE MATERIAL ===\n" +
@@ -764,7 +889,7 @@ router.post("/diagnostics/quality-control", async (_req, res) => {
             confidence: number;
             rationale: string;
           }>(
-            "You are an academic quality-control reviewer for the course Cloud Architecture (AWS/Azure). " +
+            "You are an academic quality-control reviewer for the course Cryptography: Secrets, Locks, and Digital Trust. " +
               `You are given ${sourceLabel} the problem is drawn from, a problem prompt, the SHORT answer key the course grades students against, and an independently derived answer produced without seeing the key. ` +
               "Judge the key ONLY against what the provided course material teaches — its definitions, framework, terminology, and examples — not against outside or mainstream treatments that the course does not use. " +
               "When the provided material contains multiple lectures, an example or term taught in ANY of them counts as taught by the course; do not flag a key merely because the example appears in a different lecture than the one most associated with the prompt. " +
@@ -871,7 +996,7 @@ router.post("/diagnostics/expand-lectures", async (req, res) => {
       : "Noticeably more explanation: clarify each concept, motivate each design choice, and add a short 'why this works' note where useful.";
 
   const sys =
-    `You are a Cloud Architecture (AWS/Azure) lecturer producing the ${level.toUpperCase()} version of a lecture. ` +
+    `You are a cryptography lecturer producing the ${level.toUpperCase()} version of a lecture. ` +
     "You are given the SHORT version of the lecture. Rewrite it as a longer teaching version. RULES, no exceptions:\n" +
     "1. KEEP every heading and every concept from the SHORT version, in the same order, with the same names. You may add new sub-sections only when needed to introduce additional examples — but no new top-level topics.\n" +
     `2. ${moreExplanation}\n` +

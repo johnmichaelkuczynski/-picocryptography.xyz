@@ -1,14 +1,23 @@
-# Generative AI Integration — App Blueprint
+# Cryptography: Secrets, Locks, and Digital Trust — App Blueprint
 
-A complete architectural blueprint for the Generative AI Integration one-day intensive course. This document is the single reference for what the app does, how it is wired, and the contracts between pieces. For day-to-day commands and gotchas see `replit.md`.
+A complete architectural blueprint for the Cryptography: Secrets, Locks, and Digital Trust 4-hour course. This document is the single reference for what the app does, how it is wired, and the contracts between pieces. For day-to-day commands and gotchas see `replit.md`.
 
 ---
 
 ## 1. Product summary
 
-Generative AI Integration is a self-paced, single-user, no-login web course covering two sessions. **Models as tools** explains the model API surface: prompts and tokens, message roles, context-window budgets, sampling controls, structured output, tool calling, streaming, latency, pricing, and the responsibilities of an integration layer. **Building with generation** covers prompt contracts, retrieval-augmented generation, agents and tool-use loops, evaluation, guardrails, and deployment through an end-to-end grounded support assistant. Students read AI-rewritten lecture notes at three lengths, ask an AI tutor scoped to the section they are reading, drill on adaptive practice problems, and submit homework, a course test, and a final that are AI-graded and AI-detection-screened.
+Cryptography: Secrets, Locks, and Digital Trust is a self-paced, single-user, no-login web course covering four hours of instruction:
 
-Two diagnostic primers accompany the sessions. The subject primer asks students to identify the concept and deciding evidence in concrete integration failures rather than defaulting to a better-prompt explanation. The general primer applies analysis, inference, evaluation, deduction, and induction to AI systems, with particular attention to what outputs prove, what architecture guarantees, and why a demonstration does not establish reliability.
+1. **HOUR 1 EVERY CODE EVER BROKEN WAS BROKEN BECAUSE PEOPLE REPEAT THEMSELVES** — Letter counts, stock phrases, weather reports: Enigma fell to habit, not to genius.
+2. **HOUR 2 PERFECT SECRECY EXISTS, IS PROVABLE, AND IS WORTHLESS** — Why the unbreakable cipher went unused, and why security is priced, not guaranteed.
+3. **HOUR 3 TWO STRANGERS CAN AGREE ON A SECRET WHILE EVERYONE LISTENS** — The one genuinely astonishing idea in the field, and the reason there is an internet.
+4. **HOUR 4 NOBODY BREAKS THE MATH — THINGS FALL APART AT THE SEAMS** — Keys, people, sloppy code, and governments: where every real-world break has come from.
+
+Hour 1 distinguishes decipherment from cryptanalysis through Linear B. Alice Kober tabulated repeated sign groups, triplets, and changing inflected endings, then built a consonant/vowel relation grid without assigning sound values. Michael Ventris tested likely Cretan place-name cribs, including Knossos and Amnisos, and propagated values through the grid. Linear B was an orphaned script recovered from internal repetition and geographical clues, not deliberate concealment; Hours 2–4 concern systems intentionally designed to conceal information from an adversary.
+
+Students read AI-rewritten lecture notes at three lengths, ask an AI tutor scoped to the section they are reading, drill on adaptive practice problems, and submit homework, a course test, and a final that are AI-graded and AI-detection-screened. Roughly half the coursework is multiple choice, and most freeform answers are one or two sentences. Every question receives an immediate numeric percentage grade, and each answer is persisted as exact text before grading.
+
+Two diagnostic primers accompany the sessions. The subject primer asks students to identify the concept and deciding evidence in concrete cryptography failures. The general primer applies analysis, inference, evaluation, deduction, and induction to cryptography systems, with particular attention to what outputs prove, what architecture guarantees, and why a demonstration does not establish reliability.
 
 The product surface is two deployable artifacts in one pnpm monorepo:
 
@@ -65,7 +74,7 @@ Tag groups and what they own:
 | `assignments` | `GET /assignments`, `GET /assignments/{id}`, `POST /assignments/{id}/attempt`, `PUT /assignments/{id}/attempts/{aid}/answers/{pid}`, `POST /assignments/{id}/attempts/{aid}/submit` | Homework / test flow. Submit endpoint triggers AI grade + detection per answer. |
 | `analytics` | `GET /analytics/summary`, `GET /analytics/topics`, `GET /analytics/activity` | KPIs, topic mastery, recent activity. |
 | `detection` | `POST /detection/scan` | Run AI + diachronic detection on an arbitrary text + trace. Used directly by the diagnostics page. |
-| `diagnostics` | `GET /diagnostics/system`, `POST /diagnostics/synthetic-run`, `POST /diagnostics/quality-control`, `POST /diagnostics/expand-lectures`, `POST /diagnostics/reset` | Self-tests and seed maintenance. See §6. |
+| `diagnostics` | `GET /diagnostics/system`, `POST /diagnostics/live-answer`, `POST /diagnostics/synthetic-run`, `POST /diagnostics/quality-control`, `POST /diagnostics/expand-lectures`, `POST /diagnostics/reset` | Self-tests and seed maintenance. See §6. |
 
 The submit endpoint's response schema (`AttemptResult`) bundles `score / total / percent / perProblem[] / detection[]` so the UI can render the AI-grade + detection verdict in one round-trip.
 
@@ -170,7 +179,7 @@ This outcome is persisted on `answers` at submit time and surfaces in the assign
 
 ## 6. Diagnostics surface
 
-Three routes, one page. The page lives at `artifacts/qr-course/src/pages/Diagnostics.tsx` and is linked from the student app. **These are operator tools, not student-facing features.**
+The page lives at `artifacts/qr-course/src/pages/Diagnostics.tsx` and is linked from the student app. **These are operator tools, not student-facing features.**
 
 ### 6.1 `GET /api/diagnostics/system` — system self-test
 
@@ -189,7 +198,11 @@ Steps:
 
 If any step fails the page shows the red row and the raw error string from the server — that's the debugging surface.
 
-### 6.2 `POST /api/diagnostics/synthetic-run` — end-to-end synthetic student
+### 6.2 `POST /api/diagnostics/live-answer` — live answer evidence
+
+The live answer diagnostic generates a concise answer to a real seeded problem, sends and persists it through the live answer path, reads it back, verifies exact text using length and SHA-256 evidence, and grades the persisted text with the real course grader. It reports generated, sent, persisted, and grading evidence, including the immediate numeric percentage, then cleans up its temporary attempt.
+
+### 6.3 `POST /api/diagnostics/synthetic-run` — end-to-end synthetic student
 
 Simulates a real student session against the live DB and reports each leg pass/fail/timing. Useful when refactoring the practice loop or grading pipeline. Stages roughly:
 
@@ -199,15 +212,15 @@ Simulates a real student session against the live DB and reports each leg pass/f
 4. Create an assignment attempt, answer each problem, submit, and verify `AttemptResult` returns full `perProblem[]` + `detection[]`.
 5. Hit analytics endpoints and confirm the new attempt is reflected.
 
-### 6.3 `POST /api/diagnostics/quality-control` — OpenAI answer-key legitimacy check
+### 6.4 `POST /api/diagnostics/quality-control` — OpenAI answer-key legitimacy check
 
 Independently re-derives the answer to a sample of course problems and verifies each seeded answer key is legitimate. Returns `{ ok, generatedAt, steps[] }` like the other diagnostics. Stages:
 
-1. Collect every assignment problem joined to its assignment, grouped by day, and sample up to 12 with a guaranteed per-day quota so every day is covered even if its problem count is uneven.
+1. Collect every assignment problem joined to its assignment, grouped by hour, and sample up to 12 with a guaranteed per-hour quota so every hour is covered even if its problem count is uneven.
 2. For each sampled problem, run a **two-phase** check: (a) the LLM independently re-derives an answer from the prompt **alone**, blind to the seeded key, so the verdict can't just rubber-stamp the key; (b) a second LLM call judges whether the seeded key is legitimate given the prompt + the independent answer, using the grader's semantic-equivalence philosophy — accepting any correct on-topic short answer and flagging only genuinely defective keys (wrong, off-topic, self-contradictory, contradicted on substance, or ungradeable). Returns `{ legitimate, confidence, rationale }`; malformed verdicts are treated as failures, not passes.
 3. A legitimate key passes its step; a flagged key fails its step with the model's rationale. A final summary step reports the legitimate/flagged tally.
 
-### 6.4 Supporting routes (not in the diagnostics UI)
+### 6.5 Supporting routes
 
 - `POST /api/diagnostics/expand-lectures` — generates `body_medium` / `body_long` for lectures that are missing them. Idempotent.
 - `POST /api/diagnostics/reset` — wipes attempts / answers / practice for a clean demo. **Does not** drop course content.
@@ -221,7 +234,7 @@ React + Vite + Tailwind. Routes:
 | Route | Page | What it does |
 | --- | --- | --- |
 | `/` | `Dashboard` | Assignments progress + Course Schedule + Recent Activity |
-| `/weeks/:weekNumber` | `WeekView` | List of week's lectures and assignments |
+| `/weeks/:weekNumber` | `WeekView` | List of hour's lectures and assignments |
 | `/lectures/:lectureId` | `LectureView` | Lecture body + Short/Medium/Long toggle + right-rail tutor / practice |
 | `/practice/topic/:topicId` | `TopicPractice` | Adaptive single-topic drill |
 | `/assignments` | `Assignments` | All homework / tests / midterm / final |
@@ -269,11 +282,11 @@ A student submits Homework 1.1. The full path:
 1. Browser: `qr-course/src/pages/AssignmentRunner.tsx` calls the generated `useSubmitAttempt()` hook with `{ traces: { [problemId]: TraceInput } }`.
 2. Generated client: `POST /api/assignments/{id}/attempts/{aid}/submit`, validated against `SubmitAttemptBody` Zod schema.
 3. Express route (`routes/assignments.ts`):
-   - Loads `attempt` + `answers` + `problems` from Drizzle.
+   - Loads `attempt` + `answers` + `problems` from Drizzle. Each answer has already been exact-text persisted and verified on save.
    - For each answer: calls `gradeAnswer(problem, answer)` (OpenAI JSON mode, returns `{ correct, rationale }`) **and** `detect(answer.text, trace)` in parallel.
    - Writes `correct`, `aiScore`, `aiFlagged`, `diachronicScore`, `diachronicFlagged`, `detectionRationale` back onto each answer row.
    - Updates `attempts.status = "submitted"`, computes `scorePercent`.
-4. Returns `AttemptResult` validated against the generated Zod schema.
+4. Returns `AttemptResult` validated against the generated Zod schema; each question has an immediate numeric percentage grade.
 5. Browser: `AssignmentRunner` renders per-problem cards with the AI grade rationale + a detection chip (`Human-written response · confidence 94%` or `AI-detected · 91%`).
 
 Every layer in that chain (spec → server zod → server logic → client hook → client zod) is generated or validated from the same `openapi.yaml`. Don't introduce a parallel path.

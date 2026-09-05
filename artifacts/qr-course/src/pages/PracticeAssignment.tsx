@@ -14,6 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AnswerInput } from "@/components/AnswerInput";
 import { MathKeyboard, insertAtTextareaCursor } from "@/components/MathKeyboard";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -145,7 +147,7 @@ export default function PracticeAssignment() {
               Practice {set?.kind ?? "assignment"} · never graded
             </div>
             <h1 className="text-2xl font-serif font-bold text-primary leading-tight">
-              {set?.title ?? "Generating your practice set…"}
+              {set?.title ?? "Generating your practice set..."}
             </h1>
             <div className="mt-3 rounded-lg border border-chart-2/40 bg-chart-2/5 p-3 text-sm text-foreground">
               Drill this as many times as you want — every set is brand new.
@@ -197,7 +199,7 @@ export default function PracticeAssignment() {
                           ) : (
                             <XCircle className="w-4 h-4" />
                           )}
-                          {r.correct ? "On track" : "Needs work"}
+                          {r.correct ? "On track" : "Needs work"} - {r.percentage}%
                         </span>
                       )}
                     </div>
@@ -206,14 +208,34 @@ export default function PracticeAssignment() {
                       <MarkdownRenderer content={p.prompt} />
                     </div>
 
-                    <AnswerInput
-                      value={answers[p.id] ?? ""}
-                      onChange={(val, trace) => {
-                        setAnswers((prev) => ({ ...prev, [p.id]: val }));
-                        setTraces((prev) => ({ ...prev, [p.id]: trace }));
-                      }}
-                      disabled={!!results}
-                    />
+                    {p.type === 'multiple_choice' && p.options ? (
+                      <RadioGroup
+                        value={answers[p.id] || ""}
+                        onValueChange={(val) => {
+                          setAnswers((prev) => ({ ...prev, [p.id]: val }));
+                          setTraces((prev) => ({ ...prev, [p.id]: { keystrokeCount: 0, eraseCount: 0, durationMs: 0 } }));
+                        }}
+                        disabled={!!results}
+                        className="flex flex-col gap-3"
+                      >
+                        {p.options.map((opt, i) => (
+                          <div key={i} className="flex items-center space-x-2 border p-3 rounded hover:bg-secondary/50 transition-colors">
+                            <RadioGroupItem value={opt} id={`opt-${p.id}-${i}`} />
+                            <Label htmlFor={`opt-${p.id}-${i}`} className="flex-1 cursor-pointer">{opt}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    ) : (
+                      <AnswerInput
+                        value={answers[p.id] ?? ""}
+                        onChange={(val, trace) => {
+                          setAnswers((prev) => ({ ...prev, [p.id]: val }));
+                          setTraces((prev) => ({ ...prev, [p.id]: trace }));
+                        }}
+                        disabled={!!results}
+                        compact={true}
+                      />
+                    )}
 
                     {r && (
                       <div
@@ -268,9 +290,9 @@ export default function PracticeAssignment() {
                   <Button
                     onClick={submitForFeedback}
                     disabled={grader.isPending}
-                    className="bg-chart-2 hover:bg-chart-2/90 text-white"
+                    className="bg-primary hover:bg-primary/90 text-white"
                   >
-                    {grader.isPending ? "Getting feedback…" : "Submit for feedback"}
+                    {grader.isPending ? "Getting feedback..." : "Submit for feedback"}
                   </Button>
                 ) : (
                   <div className="flex items-center gap-3">
@@ -361,7 +383,7 @@ function TutorPane({
                 send();
               }
             }}
-            placeholder="Ask the tutor anything about these problems or your feedback… (Shift+Enter for newline)"
+            placeholder="Ask the tutor anything about these problems or your feedback... (Shift+Enter for newline)"
             rows={4}
             className="flex-1 bg-secondary border-none rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-y min-h-[96px] max-h-[280px]"
           />
@@ -404,7 +426,7 @@ function TutorPane({
         ))}
         {pending && (
           <div className="self-start px-3 py-2 rounded-lg bg-card border border-border text-sm animate-pulse text-muted-foreground">
-            Thinking…
+            Thinking...
           </div>
         )}
       </div>

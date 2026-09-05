@@ -9,6 +9,7 @@
 export interface PracticeGrade {
   problemId: number;
   correct: boolean;
+  percentage: number;
   correctAnswer?: string;
   explanation: string;
   newDifficulty: number;

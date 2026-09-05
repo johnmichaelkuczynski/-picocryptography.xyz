@@ -8,4 +8,13 @@
 
 export interface AnswerSaved {
   ok: boolean;
+  problemId: number;
+  persistedLength: number;
+  persistedHash: string;
+  /** @nullable */
+  percentage?: number | null;
+  /** @nullable */
+  correct?: boolean | null;
+  /** @nullable */
+  feedback?: string | null;
 }

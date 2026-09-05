@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ProblemType } from './problemType';
 
 export interface Problem {
   id: number;
@@ -15,4 +16,7 @@ export interface Problem {
   topicTitle?: string | null;
   /** @nullable */
   hint?: string | null;
+  type: ProblemType;
+  /** @nullable */
+  options?: string[] | null;
 }

@@ -5,6 +5,7 @@ import {
   topicsTable,
   lecturesTable,
   assignmentsTable,
+  problemsTable,
   attemptsTable,
 } from "@workspace/db";
 import {
@@ -19,11 +20,32 @@ import { chatText } from "../lib/ai";
 
 const router: IRouter = Router();
 
+async function withRelatedAssignments<T extends { topicId: number }>(lecture: T) {
+  const related = await db
+    .selectDistinct({
+      id: assignmentsTable.id,
+      title: assignmentsTable.title,
+      kind: assignmentsTable.kind,
+    })
+    .from(assignmentsTable)
+    .innerJoin(problemsTable, eq(problemsTable.assignmentId, assignmentsTable.id))
+    .where(eq(problemsTable.topicId, lecture.topicId))
+    .orderBy(asc(assignmentsTable.id));
+  return {
+    ...lecture,
+    relatedAssignments: related.map((assignment) => ({
+      ...assignment,
+      href: `/assignments/${assignment.id}`,
+      kind: assignment.kind as "homework" | "test" | "midterm" | "final",
+    })),
+  };
+}
+
 const WEEK_TITLES: Record<number, { title: string; summary: string }> = {
   1: {
-    title: "Cloud Architecture (AWS/Azure): A One-Day Intensive",
+    title: "Cryptography: Secrets, Locks, and Digital Trust",
     summary:
-      "One intensive day, two sessions. The first builds a provider-neutral foundation in compute, storage, networking, identity, regions, availability zones, and managed data services. The second applies those primitives to scaling, load balancing, failure, redundancy, backups, recovery objectives, cost, infrastructure as code, observability, security, and shared responsibility.",
+      "A four-hour course in eight lectures: codes and codebreaking; machine encryption and password storage; public key agreement and signatures; implementation failures, quantum risk, and backdoors.",
   },
 };
 
@@ -112,7 +134,7 @@ router.get("/course/overview", async (_req, res) => {
 
   res.json(
     GetCourseOverviewResponse.parse({
-      title: "Cloud Architecture (AWS/Azure)",
+      title: "Cryptography: Secrets, Locks, and Digital Trust",
       weeks,
       totals: { assignmentsCompleted, assignmentsTotal, practiceCount },
     }),
@@ -149,7 +171,7 @@ router.get("/course/lectures/:lectureId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "lecture not found" });
     return;
   }
-  res.json(GetLectureResponse.parse(lecture));
+  res.json(GetLectureResponse.parse(await withRelatedAssignments(lecture)));
 });
 
 function parseLectureId(req: { params: { lectureId?: string | string[] } }): number | null {
@@ -203,13 +225,13 @@ router.post(
     const sourceBody = (base && base.trim().length > 0 ? base : lecture.body).trim();
 
     const sys =
-      "You are a Cloud Architecture (AWS/Azure) lecturer revising your own lecture at a student's request. " +
+      "You are a cryptography lecturer revising your own lecture at a student's request. " +
       "You are given the CURRENT lecture and ONE instruction from the student about how to revise it. " +
       "Apply the instruction faithfully. ABSOLUTE RULES, no exceptions:\n" +
       "1. KEEP every concept, claim, and learning objective from the current lecture. Never drop material or change what the lecture teaches — only adjust how it is presented per the instruction.\n" +
       "2. Preserve the existing examples; you may add to or clarify them, but do not silently replace them with different ones unless the instruction explicitly asks you to.\n" +
       "3. Keep headings and section order intact. You may add sub-sections (e.g. extra examples) when the instruction calls for it.\n" +
-      "4. Stay accurate to the source material and to production cloud architecture across AWS and Azure. Do not invent fake facts, citations, or quotations.\n" +
+      "4. Stay accurate to the source material and established cryptographic practice. Do not invent fake facts, citations, or quotations.\n" +
       "5. Use clear Markdown. Preserve any code, JSON, or API examples accurately.\n" +
       "6. Return ONLY the rewritten Markdown lecture body — no preface, no commentary, no surrounding code fences.";
     const user =
@@ -239,7 +261,7 @@ router.post(
       .set({ bodyCustom: rewritten, customInstruction: instruction })
       .where(eq(lecturesTable.id, lectureId))
       .returning();
-    res.json(GetLectureResponse.parse(updated));
+    res.json(GetLectureResponse.parse(await withRelatedAssignments(updated)));
   },
 );
 
@@ -261,7 +283,7 @@ router.delete(
       res.status(404).json({ error: "lecture not found" });
       return;
     }
-    res.json(GetLectureResponse.parse(updated));
+    res.json(GetLectureResponse.parse(await withRelatedAssignments(updated)));
   },
 );
 
@@ -301,7 +323,7 @@ router.post(
 
     // Already generated for this length — return as-is so toggling is instant.
     if (lecture[examplesColumn] && lecture[examplesColumn]!.trim().length > 0) {
-      res.json(GetLectureResponse.parse(lecture));
+      res.json(GetLectureResponse.parse(await withRelatedAssignments(lecture)));
       return;
     }
 
@@ -314,12 +336,12 @@ router.post(
     const sourceBody = (base && base.trim().length > 0 ? base : lecture.body).trim();
 
     const sys =
-      "You are a Cloud Architecture (AWS/Azure) lecturer adding illustrations to your own lecture. " +
+      "You are a cryptography lecturer adding illustrations to your own lecture. " +
       "You are given the CURRENT lecture. Return the SAME lecture, unchanged in what it teaches, but with vivid illustrations added. ABSOLUTE RULES, no exceptions:\n" +
       "1. KEEP every concept, claim, heading, section, and learning objective exactly as they are, in the same order. Do not remove, reorder, or rewrite the existing explanation — only ADD to it.\n" +
       "2. For EVERY distinct point the lecture makes, add AT LEAST ONE concrete, vivid illustration that makes the point easy to picture: a short scenario, a real-to-life case sketch, an everyday analogy, or a worked example. Keep illustrations tasteful and age-appropriate — never graphic or sensational.\n" +
       "3. Set off each illustration so it reads as an example (e.g. a short *Example:* sentence or a brief italicized vignette) rather than blending into the original text.\n" +
-      "4. Stay accurate to the source material and to production cloud architecture across AWS and Azure. Do not invent fake facts, statistics, citations, or quotations; keep examples plausibly illustrative, not presented as documented cases.\n" +
+      "4. Stay accurate to the source material and established cryptographic practice. Do not invent fake facts, statistics, citations, or quotations; keep examples plausibly illustrative, not presented as documented cases.\n" +
       "5. Use clear Markdown. Preserve any code, JSON, or API examples accurately.\n" +
       "6. Return ONLY the augmented Markdown lecture body — no preface, no commentary, no surrounding code fences.";
     const user =
@@ -349,7 +371,7 @@ router.post(
       .set({ [examplesColumn]: augmented })
       .where(eq(lecturesTable.id, lectureId))
       .returning();
-    res.json(GetLectureResponse.parse(updated));
+    res.json(GetLectureResponse.parse(await withRelatedAssignments(updated)));
   },
 );
 
@@ -434,10 +456,10 @@ router.get("/course/download-txt", async (_req, res) => {
 
     const lines: string[] = [];
     const rule = "=".repeat(72);
-    lines.push("CLOUD ARCHITECTURE (AWS/AZURE)");
-    lines.push("From Model to Operated Product — Course Reader");
+    lines.push("CRYPTOGRAPHY: SECRETS, LOCKS, AND DIGITAL TRUST");
+    lines.push("Four-Hour Course Reader");
     lines.push(
-      "Both session lectures of the one-day intensive, with sample homework problems and exam questions.",
+      "All eight lectures, with sample homework problems and exam questions.",
     );
     lines.push(rule, "", "TOPICS COVERED", "");
     for (const t of topics) lines.push(`  ${t.slug}  ${t.title}`);
@@ -470,7 +492,7 @@ router.get("/course/download-txt", async (_req, res) => {
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="cloud-architecture-aws-azure-course.txt"',
+      'attachment; filename="cryptography-secrets-locks-digital-trust-course.txt"',
     );
     res.send(lines.join("\n"));
   } catch (err) {
@@ -489,25 +511,25 @@ router.get("/course/download-pdf", async (_req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="cloud-architecture-aws-azure-course.pdf"',
+      'attachment; filename="cryptography-secrets-locks-digital-trust-course.pdf"',
     );
 
     const doc = new PDFDocument({ margin: 54, bufferPages: true });
     doc.pipe(res);
 
     // Title page
-    doc.font("Times-Bold").fontSize(30).text("Cloud Architecture (AWS/Azure)", { align: "center" });
+    doc.font("Times-Bold").fontSize(30).text("Cryptography: Secrets, Locks, and Digital Trust", { align: "center" });
     doc.moveDown(0.5);
     doc
       .font("Times-Roman")
       .fontSize(14)
-      .text("From Model to Operated Product — Course Reader", { align: "center" });
+      .text("Four-Hour Course Reader", { align: "center" });
     doc.moveDown(0.3);
     doc
       .fontSize(11)
       .fillColor("#555555")
       .text(
-        "Both session lectures of the one-day intensive, with sample homework problems and exam questions.",
+        "All eight lectures, with sample homework problems and exam questions.",
         { align: "center" },
       );
     doc.fillColor("black");
@@ -566,7 +588,7 @@ router.get("/course/download-pdf", async (_req, res) => {
       .fontSize(10)
       .fillColor("#555555")
       .text(
-        "Answers, AI tutoring, adaptive practice, and graded assignments are available in the online Cloud Architecture (AWS/Azure) course.",
+        "Answers, AI tutoring, adaptive practice, and graded assignments are available in the online Cryptography: Secrets, Locks, and Digital Trust course.",
       );
 
     doc.end();

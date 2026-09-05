@@ -129,7 +129,7 @@ export default function AdminMode() {
                   <option value="">Select an assignment…</option>
                   {(assignments ?? []).map((a) => (
                     <option key={a.id} value={a.id}>
-                      Day {a.weekNumber} — {a.title}
+                      Hour {a.weekNumber} — {a.title}
                     </option>
                   ))}
                 </select>

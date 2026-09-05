@@ -9,10 +9,18 @@ import { ReasoningCallout } from "@/components/ReasoningCallout";
 
 const UNIT_PHASES = ["after"] as const;
 
+const HOUR_CONTENT = [
+  { title: "EVERY CODE EVER BROKEN WAS BROKEN BECAUSE PEOPLE REPEAT THEMSELVES", summary: "Letter counts, stock phrases, weather reports: Enigma fell to habit, not to genius." },
+  { title: "PERFECT SECRECY EXISTS, IS PROVABLE, AND IS WORTHLESS", summary: "Why the unbreakable cipher went unused, and why security is priced, not guaranteed." },
+  { title: "TWO STRANGERS CAN AGREE ON A SECRET WHILE EVERYONE LISTENS", summary: "The one genuinely astonishing idea in the field, and the reason there is an internet." },
+  { title: "NOBODY BREAKS THE MATH — THINGS FALL APART AT THE SEAMS", summary: "Keys, people, sloppy code, and governments: where every real-world break has come from." }
+];
+
 export default function WeekView() {
   const params = useParams();
   const weekNumber = Number(params.weekNumber);
   const { data: week, isLoading } = useGetWeek(weekNumber);
+  const content = HOUR_CONTENT[weekNumber - 1] || { title: week?.title, summary: week?.summary };
 
   return (
     <Layout>
@@ -24,8 +32,8 @@ export default function WeekView() {
           </div>
         ) : (
           <div>
-            <h1 className="text-3xl font-serif font-bold text-primary mb-2">Day {week?.weekNumber}: {week?.title}</h1>
-            <p className="text-lg text-muted-foreground">{week?.summary}</p>
+            <h1 className="text-3xl font-serif font-bold text-primary mb-2">Hour {week?.weekNumber}: {content.title}</h1>
+            <p className="text-lg text-muted-foreground">{content.summary}</p>
           </div>
         )}
 
@@ -34,7 +42,7 @@ export default function WeekView() {
           {isLoading ? (
             <Skeleton className="h-24 w-full" />
           ) : week?.lectures.length === 0 ? (
-            <div className="text-muted-foreground">No lectures for this day.</div>
+            <div className="text-muted-foreground">No lectures for this hour.</div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
               {week?.lectures.map(lecture => (
@@ -60,7 +68,7 @@ export default function WeekView() {
           {isLoading ? (
             <Skeleton className="h-32 w-full" />
           ) : week?.assignments.length === 0 ? (
-            <div className="text-muted-foreground">No assignments for this day.</div>
+            <div className="text-muted-foreground">No assignments for this hour.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {week?.assignments.map(item => (

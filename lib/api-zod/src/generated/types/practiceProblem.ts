@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { PracticeProblemType } from './practiceProblemType';
 
 export interface PracticeProblem {
   id: number;
@@ -12,4 +13,7 @@ export interface PracticeProblem {
   topicId: number;
   topicTitle?: string;
   difficulty: number;
+  type: PracticeProblemType;
+  /** @nullable */
+  options?: string[] | null;
 }

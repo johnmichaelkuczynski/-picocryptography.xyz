@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RelatedAssignment } from './relatedAssignment';
 
 export interface Lecture {
   id: number;
@@ -48,4 +49,6 @@ export interface Lecture {
      * @nullable
      */
   bodyLongExamples?: string | null;
+  /** Read-only assignments containing questions on this lecture's topic. */
+  relatedAssignments: RelatedAssignment[];
 }

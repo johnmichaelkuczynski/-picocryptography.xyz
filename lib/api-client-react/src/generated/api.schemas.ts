@@ -44,6 +44,30 @@ export interface LongAnswerDiagnosticResult {
   gradedAt: string;
 }
 
+export interface DiagnosticStage {
+  name: string;
+  ok: boolean;
+  evidence: string;
+}
+
+export interface LiveAnswerDiagnosticResult {
+  ok: boolean;
+  problemId: number;
+  attemptId: number;
+  generatedAnswer: string;
+  persistedAnswer: string;
+  generatedLength: number;
+  persistedLength: number;
+  generatedHash: string;
+  persistedHash: string;
+  exactMatch: boolean;
+  percentage: number;
+  feedback: string;
+  stages: DiagnosticStage[];
+  cleanedUp: boolean;
+  gradedAt: string;
+}
+
 export interface Topic {
   id: number;
   slug: string;
@@ -51,6 +75,23 @@ export interface Topic {
   weekNumber: number;
   /** @nullable */
   blurb?: string | null;
+}
+
+export type RelatedAssignmentKind = typeof RelatedAssignmentKind[keyof typeof RelatedAssignmentKind];
+
+
+export const RelatedAssignmentKind = {
+  homework: 'homework',
+  test: 'test',
+  midterm: 'midterm',
+  final: 'final',
+} as const;
+
+export interface RelatedAssignment {
+  id: number;
+  title: string;
+  href: string;
+  kind: RelatedAssignmentKind;
 }
 
 export interface Lecture {
@@ -95,6 +136,8 @@ export interface Lecture {
      * @nullable
      */
   bodyLongExamples?: string | null;
+  /** Read-only assignments containing questions on this lecture's topic. */
+  relatedAssignments: RelatedAssignment[];
 }
 
 export interface LectureRef {
@@ -157,6 +200,14 @@ export const AssignmentKind = {
   final: 'final',
 } as const;
 
+export type ProblemType = typeof ProblemType[keyof typeof ProblemType];
+
+
+export const ProblemType = {
+  multiple_choice: 'multiple_choice',
+  freeform: 'freeform',
+} as const;
+
 export interface Problem {
   id: number;
   position: number;
@@ -166,6 +217,9 @@ export interface Problem {
   topicTitle?: string | null;
   /** @nullable */
   hint?: string | null;
+  type: ProblemType;
+  /** @nullable */
+  options?: string[] | null;
 }
 
 export interface Assignment {
@@ -196,6 +250,8 @@ export interface SavedAnswer {
   keystrokeCount?: number | null;
   /** @nullable */
   eraseCount?: number | null;
+  persistedLength: number;
+  persistedHash: string;
 }
 
 export interface AttemptState {
@@ -222,16 +278,27 @@ export interface KeystrokeTrace {
 export interface AnswerInput {
   problemId: number;
   answer: string;
+  /** When true, grade this persisted answer immediately without submitting the attempt. */
+  gradeNow?: boolean;
   trace: KeystrokeTrace;
 }
 
 export interface AnswerSaved {
   ok: boolean;
+  problemId: number;
+  persistedLength: number;
+  persistedHash: string;
+  /** @nullable */
+  percentage?: number | null;
+  /** @nullable */
+  correct?: boolean | null;
+  /** @nullable */
+  feedback?: string | null;
 }
 
 export interface SubmitAttemptInput {
   /** Complete final answer snapshot. The server persists this exact snapshot before grading. */
-  answers?: AnswerInput[];
+  answers: AnswerInput[];
   /** Admin mode — grade the attempt but skip AI/diachronic detection. */
   skipDetection?: boolean;
 }
@@ -267,6 +334,7 @@ export interface GraderLabResult {
 export interface ProblemResult {
   problemId: number;
   correct: boolean;
+  percentage: number;
   userAnswer?: string;
   correctAnswer?: string;
   explanation: string;
@@ -328,12 +396,23 @@ export interface NextProblemInput {
   topicId?: number | null;
 }
 
+export type PracticeProblemType = typeof PracticeProblemType[keyof typeof PracticeProblemType];
+
+
+export const PracticeProblemType = {
+  multiple_choice: 'multiple_choice',
+  freeform: 'freeform',
+} as const;
+
 export interface PracticeProblem {
   id: number;
   prompt: string;
   topicId: number;
   topicTitle?: string;
   difficulty: number;
+  type: PracticeProblemType;
+  /** @nullable */
+  options?: string[] | null;
 }
 
 export interface PracticeAnswerInput {
@@ -345,6 +424,7 @@ export interface PracticeAnswerInput {
 export interface PracticeGrade {
   problemId: number;
   correct: boolean;
+  percentage: number;
   correctAnswer?: string;
   explanation: string;
   newDifficulty: number;
@@ -352,12 +432,23 @@ export interface PracticeGrade {
   tutorTip?: string | null;
 }
 
+export type PracticeAssignmentProblemType = typeof PracticeAssignmentProblemType[keyof typeof PracticeAssignmentProblemType];
+
+
+export const PracticeAssignmentProblemType = {
+  multiple_choice: 'multiple_choice',
+  freeform: 'freeform',
+} as const;
+
 export interface PracticeAssignmentProblem {
   id: number;
   prompt: string;
   topicId: number;
   /** @nullable */
   topicTitle?: string | null;
+  type: PracticeAssignmentProblemType;
+  /** @nullable */
+  options?: string[] | null;
 }
 
 export interface PracticeAssignmentSet {
@@ -384,6 +475,7 @@ export interface PracticeAssignmentResult {
   problemId: number;
   prompt: string;
   correct: boolean;
+  percentage: number;
   userAnswer?: string;
   correctAnswer: string;
   feedback: string;

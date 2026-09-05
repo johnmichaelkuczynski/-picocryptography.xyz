@@ -38,27 +38,27 @@ const features = [
   },
   {
     icon: BarChart3,
-    title: "One Intensive Day, 4 Topics",
-    body: "From cloud building blocks through resilient, secure architecture decisions.",
+    title: "A 4-Hour Course",
+    body: "From secret alphabets through quantum computers and digital trust.",
   },
 ];
 
 const topics = [
   {
-    session: "Topic",
-    title: "The building blocks",
+    session: "HOUR 1 EVERY CODE EVER BROKEN WAS BROKEN BECAUSE PEOPLE REPEAT THEMSELVES",
+    title: "Letter counts, stock phrases, weather reports: Enigma fell to habit, not to genius.",
   },
   {
-    session: "Topic",
-    title: "Designing for real use",
+    session: "HOUR 2 PERFECT SECRECY EXISTS, IS PROVABLE, AND IS WORTHLESS",
+    title: "Why the unbreakable cipher went unused, and why security is priced, not guaranteed.",
   },
   {
-    session: "Reasoning primer",
-    title: "How to reason about cloud-architecture cases",
+    session: "HOUR 3 TWO STRANGERS CAN AGREE ON A SECRET WHILE EVERYONE LISTENS",
+    title: "The one genuinely astonishing idea in the field, and the reason there is an internet.",
   },
   {
-    session: "Reasoning primer",
-    title: "Core reasoning skills",
+    session: "HOUR 4 NOBODY BREAKS THE MATH — THINGS FALL APART AT THE SEAMS",
+    title: "Keys, people, sloppy code, and governments: where every real-world break has come from.",
   },
 ];
 
@@ -97,12 +97,12 @@ export default function Landing() {
             />
           </a>
           <span className="font-serif font-semibold text-lg tracking-tight">
-            Cloud Architecture (AWS/Azure)
+            Cryptography: Secrets, Locks, and Digital Trust
           </span>
         </div>
         <div className="flex items-center gap-2">
           <a
-            href="mailto:johnmichaelkuczynski@gmail.com"
+            href="mailto:contact@zhisystems.ai"
             className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-border hover:bg-secondary transition-colors"
           >
             Contact Us
@@ -122,7 +122,7 @@ export default function Landing() {
         <div className="flex-1 min-w-0">
         <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-serif font-bold text-primary leading-tight mb-8">
-            A one-day intensive course on designing reliable, secure cloud architectures with AWS and Azure.
+            A rigorous but accessible 4-hour introduction to cryptography.
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <CourseEntryButton
@@ -136,7 +136,7 @@ export default function Landing() {
               data-testid="button-download-pdf"
             >
               <Download className="w-5 h-5" />
-              Download Cloud Architecture (PDF)
+              Download Course (PDF)
             </a>
             <a
               href={txtUrl}
@@ -144,7 +144,7 @@ export default function Landing() {
               data-testid="button-download-txt"
             >
               <Download className="w-5 h-5" />
-              Cloud Architecture (TXT)
+              Course (TXT)
             </a>
           </div>
         </section>
@@ -171,7 +171,7 @@ export default function Landing() {
             Topics Covered in This Course
           </h2>
           <p className="text-center text-sm text-muted-foreground mb-6">
-            One intensive day, four topics — every lecture readable free online, or{" "}
+            A 4-hour course — every lecture readable free online, or{" "}
             <a href={pdfUrl} className="underline hover:text-foreground" data-testid="link-download-pdf">
               download the course as a PDF
             </a>{" "}
@@ -195,7 +195,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        Cloud Architecture (AWS/Azure)
+        Cryptography: Secrets, Locks, and Digital Trust
       </footer>
     </div>
   );

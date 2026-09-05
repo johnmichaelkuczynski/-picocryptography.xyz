@@ -37,7 +37,7 @@ export function Sidebar() {
             />
           </a>
           <Link href="/dashboard">
-            <span className="font-serif font-semibold text-lg tracking-tight">Cloud Architecture (AWS/Azure)</span>
+            <span className="font-serif font-semibold text-lg tracking-tight">Cryptography</span>
           </Link>
         </div>
       </div>
@@ -64,12 +64,12 @@ export function Sidebar() {
 
       <div className="p-4 border-t border-border text-xs text-muted-foreground text-center flex flex-col gap-2">
         <a
-          href="mailto:johnmichaelkuczynski@gmail.com"
+          href="mailto:contact@zhisystems.ai"
           className="font-medium text-foreground hover:underline"
         >
           Contact Us
         </a>
-        <span>Cloud Architecture (AWS/Azure)</span>
+        <span>Cryptography: Secrets, Locks, and Digital Trust</span>
       </div>
     </div>
   );

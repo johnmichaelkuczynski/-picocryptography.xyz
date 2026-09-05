@@ -285,7 +285,7 @@ function deterministicFeedback(
         : " Your reasoning was solid across the items.";
     return `Thanks for working through this reasoning check.${overall?.value ? ` You scored ${overall.value}.` : ""}${weakLine} Remember that a strong answer follows only from the reasons given — distinguish what is stated, what is assumed, and what is merely plausible.`;
   }
-  return `Thanks for working through these Cloud Architecture cases.${overall?.value ? ` You scored ${overall.value}.` : ""} Strong answers identify the decisive layer from the scene; check compute, storage, network, identity, scaling, resilience, recovery, cost, observability, and security.`;
+  return `Thanks for working through these cryptography cases.${overall?.value ? ` You scored ${overall.value}.` : ""} Strong answers identify the decisive detail, the attacker it enables, what guarantee fails, and a proportionate cryptographic or operational repair.`;
 }
 
 export async function generateFeedback(
@@ -298,7 +298,7 @@ export async function generateFeedback(
     .join("\n");
   const system =
     instrument === "subject"
-      ? "You are an instructor giving warm, specific feedback on a student's Cloud Architecture reasoning check (brief realistic cloud-system cases). 2-4 sentences. Note overall performance and offer one concrete way to identify the responsible architecture layer from scene evidence. Use only the metrics provided; do not invent numbers. Plain prose, no markdown headings."
+      ? "You are an instructor giving warm, specific feedback on a student's cryptography reasoning check (brief realistic security cases). 2-4 sentences. Note overall performance and offer one concrete way to connect a decisive implementation detail to the failed security guarantee. Use only the metrics provided; do not invent numbers. Plain prose, no markdown headings."
       : "You are a reasoning instructor giving warm, specific feedback on a student's general-reasoning check. 2-4 sentences. Note overall performance and the skill areas to strengthen, using only the metrics provided. Plain prose, no markdown headings.";
   const user = `Assessment: ${assessmentTitle}\nResult summary: ${summary.headline}\nMetrics:\n${metricsText}`;
   try {
@@ -360,7 +360,8 @@ async function generateGeneralVariant(
   const spec = genSpecFor("general", phase);
   const system =
     "You are an assessment author writing ORIGINAL general-reasoning multiple-choice questions. " +
-    "Each question must measure genuine reasoning (not recall, and NOT mere agreement with authority), have exactly four answer options with one unambiguously best answer, and target the requested skill area. " +
+    "Each question must present a concrete, realistic, domain-neutral scenario and measure genuine reasoning (not recall, definitions, one-word answers, or mere agreement with authority). It must have exactly four answer options with one unambiguously best answer and target the requested skill area. " +
+    "Every option must contain two concise sentences so that even the multiple-choice response represents a reasoned application to the scenario. " +
     "List the CORRECT option FIRST, followed by three plausible but wrong distractors. " +
     "Write fresh questions on varied, neutral everyday topics — do NOT reuse the example wording. " +
     `Difficulty: ${spec.level} ` +
@@ -412,17 +413,17 @@ async function generateSubjectVariant(
 ): Promise<GeneratedItemContent[]> {
   const spec = genSpecFor("subject", phase);
   const system =
-    "You are an assessment author writing ORIGINAL questions for a Cloud Architecture (AWS/Azure) course. " +
-    "Every question must be a brief, realistic CASE about designing or operating a cloud system that rewards REASONING from a decisive scene detail, never definition recall or a one-word fact. Keep it answerable with one sentence. " +
+    "You are an assessment author writing ORIGINAL questions for Cryptography: Secrets, Locks, and Digital Trust. " +
+    "Every question must be a brief, realistic CASE about protecting information or trust that rewards REASONING from a decisive scene detail, never definition recall or a one-word fact. Require a reasoned answer of at least two sentences. " +
     "Each has exactly four answer options with one clearly best, well-supported answer. " +
     "List the CORRECT option FIRST, followed by three plausible but worse distractors (an over-simple single-cause claim, an 'obvious'/sensational answer, or an irrelevant one). " +
-    "Also write a one-sentence model answer explaining why the first option is best. " +
+    "Also write a two-sentence model answer explaining why the first option is best and what follows operationally. " +
     "Keep the subject matter tasteful and age-appropriate — never graphic or sensational. " +
     `Difficulty: ${spec.level} ` +
     `Stay strictly within this scope: ${spec.topicFocus} ` +
     'Respond ONLY as JSON of the form {"items":[{"prompt":"short case ending in a question","options":["best","worse","worse","worse"],"modelAnswer":"why the first option is best"}]}.';
   const user =
-    `Write ${count} new, distinct Cloud Architecture case questions within the scope above.\n` +
+    `Write ${count} new, distinct cryptography case questions within the scope above.\n` +
     `For style only (do NOT copy these): ${JSON.stringify(examplePrompts)}.`;
   const out = await chatJson<{
     items?: { prompt?: unknown; options?: unknown; modelAnswer?: unknown }[];

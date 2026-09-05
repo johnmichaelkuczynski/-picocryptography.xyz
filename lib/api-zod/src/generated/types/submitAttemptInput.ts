@@ -9,7 +9,7 @@ import type { AnswerInput } from './answerInput';
 
 export interface SubmitAttemptInput {
   /** Complete final answer snapshot. The server persists this exact snapshot before grading. */
-  answers?: AnswerInput[];
+  answers: AnswerInput[];
   /** Admin mode — grade the attempt but skip AI/diachronic detection. */
   skipDetection?: boolean;
 }

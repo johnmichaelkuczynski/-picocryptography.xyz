@@ -18,24 +18,24 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-storage
-  .ensureUniqueVisitorsTable()
-  .catch((err) =>
-    logger.error({ err }, "Failed to provision unique_visitors table"),
-  );
-
-seedIfEmpty()
-  .then(() => seedReasoningPrimersIfMissing())
-  .then(() => seedDiagnosticsIfEmpty())
-  .catch((err) => {
-    logger.error({ err }, "Seed failed");
-  });
-
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
+async function start(): Promise<void> {
+  try {
+    await storage.ensureUniqueVisitorsTable();
+    await seedIfEmpty();
+    await seedReasoningPrimersIfMissing();
+    await seedDiagnosticsIfEmpty();
+  } catch (err) {
+    logger.error({ err }, "Database readiness failed; server will not listen");
     process.exit(1);
   }
 
-  logger.info({ port }, "Server listening");
-});
+  app.listen(port, (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+    logger.info({ port }, "Server listening");
+  });
+}
+
+void start();

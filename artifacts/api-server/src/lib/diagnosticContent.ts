@@ -3,8 +3,7 @@
 //
 // Two instruments, each offered at FOUR time-points (phases) so a student can
 // gauge themselves before, during, and after the course:
-//   - subject  — Cloud Architecture reasoning. Realistic short cases about
-//     cloud systems; the best-supported answer
+//   - subject  — Cryptography reasoning. Realistic security cases; the best-supported answer
 //     is keyed first.
 //   - general  — General Reasoning. Genuine reasoning items spanning analysis,
 //     inference, evaluation, deduction, and induction (NOT a "docility"/agree-
@@ -13,7 +12,7 @@
 // Each (instrument, phase) is offered in THREE selectable answer formats that
 // share the same kind of questions:
 //   - mcq     — pick the single best option.
-//   - hybrid  — pick the best option AND (optionally) write a short note.
+//   - hybrid  — pick the best option AND write a short reasoned note.
 //   - written — no options shown; write a short answer in your own words.
 //
 // These diagnostics are UNGRADED practice: takeable anytime, unlimited times,
@@ -86,27 +85,27 @@ export type GenSpec = { topicFocus: string; level: string };
 const SUBJECT_SPECS: Record<Phase, GenSpec> = {
   before: {
     level:
-      "Intro level: answerable by a thoughtful newcomer before lessons. Do not require technical vocabulary; reward brief plain-language reasoning from details in the scene.",
+      "Intro level: answerable by a thoughtful newcomer before lessons. Avoid unexplained vocabulary and reward multi-sentence reasoning from concrete evidence.",
     topicFocus:
-      "Basic cloud boundaries: renting infrastructure changes who operates the hardware but not the customer's responsibility for configuration; compute, storage, network, and identity solve different problems; storage types are not interchangeable; public exposure and broad permissions create risk. Use simple cases that reward practical judgment without requiring jargon.",
+      "Everyday secret-message and password cases: repeated symbol patterns, the danger of reusing secret material, the difference between hiding and proving origin, and why implementation details matter.",
   },
   third: {
     level:
-      "Early course level: covers Session 1 fundamentals. Keep cases brief and one-sentence-friendly.",
+      "Early-course level covering Hour 1. Require a short, reasoned application rather than terminology recall.",
     topicFocus:
-      "Session 1 fundamentals: renting rather than owning; compute, storage, network, and identity primitives; virtual machines, containers, and serverless functions; object, block, and file storage; managed relational and key-value databases; regions and availability zones; VPCs or virtual networks, subnets, security groups, IAM, and least privilege.",
+      "Substitution ciphers, frequency and word-pattern attacks, one-time-pad perfect secrecy, true randomness, key length, secure delivery, and the catastrophic effect of pad reuse.",
   },
   twothirds: {
     level:
-      "Mid-course level: covers all of Session 1 and early Session 2. Use short cases requiring one clear diagnostic step.",
+      "Mid-course level covering Hours 1–3. Require a concrete diagnosis and justified consequence.",
     topicFocus:
-      "All Session 1 concepts, including compute and storage selection, managed databases, geography, networking, and identity; plus early Session 2 concepts: scaling up versus out, load balancing, statelessness, designing for failure, redundancy, backups, RTO, and RPO.",
+      "Substitution and one-time pads; block-cipher modes, pattern leakage, nonces and authenticated encryption; hashes, salts and password hashing; public key agreement, authentication, encryption and signatures.",
   },
   after: {
     level:
-      "End-of-course level: covers both sessions. Use concise integrative cases, still answerable in one sentence.",
+      "End-of-course level covering all four hours. Use concise integrative cases requiring at least two explanatory sentences.",
     topicFocus:
-      "The full course: compute, storage, network, and identity choices; regions and availability zones; horizontal scaling and statelessness; failure design, redundancy, backups, RTO, and RPO; cloud cost; managed services versus self-hosting and lock-in; infrastructure as code; logs, metrics, and traces; encryption, secrets, least privilege, and shared responsibility.",
+      "The full course: classical pattern leakage and one-time pads; block encryption, nonces and integrity; hashes and password storage; authenticated key agreement, public keys and signatures; weak randomness, side channels and human failures; quantum threats, post-quantum migration, crypto agility and backdoors.",
   },
 };
 
@@ -152,98 +151,98 @@ const FORMAT_LABEL: Record<DiagFormat, string> = {
 function instructionsFor(instrument: Instrument, format: DiagFormat): string {
   const subject =
     instrument === "subject"
-      ? "Answer each Cloud Architecture case — these reward careful reasoning from the scene, not memorized definitions"
+      ? "Answer each Cryptography case — these reward careful application to the scene, not memorized definitions"
       : "Answer each reasoning question — these measure how you think, not what you recall";
   const body =
     format === "mcq"
       ? `${subject} by selecting the single best option.`
       : format === "hybrid"
-        ? `${subject} by selecting the best option. You can add a quick note on your reasoning if you like — it's optional and a few words is plenty.`
-        : `${subject}. No answer options are shown — just jot a brief answer in your own words. One or two sentences is plenty; there's no need to write a lot.`;
+        ? `${subject} by selecting the best option and adding a two-sentence note connecting the decisive evidence to the conclusion.`
+        : `${subject}. No answer options are shown — explain the decisive evidence and its consequence in at least two sentences.`;
   return `${body} This is ungraded practice — take it anytime, as many times as you like; it never affects your course grade. Submitting shows your results with written feedback.`;
 }
 
 // ===========================================================================
-// SUBJECT — Cloud Architecture blueprint cases (best answer keyed FIRST)
+// SUBJECT — Cryptography blueprint cases (best answer keyed FIRST)
 // ===========================================================================
 
 const SUBJECT_BEFORE: DiagItem[] = [
   {
     prompt:
-      "A small company moves its application to the cloud and assumes the provider now controls who can read its data; what is the best correction?",
+      "A puzzle club replaces each letter with the same secret symbol in every newsletter. After collecting a year of messages, an outsider identifies repeated words and uneven symbol counts; which analysis best explains the risk and the appropriate response?",
     options: [
-      "The provider operates the underlying infrastructure, while the customer still configures identities, access, data protection, and the application",
-      "The provider automatically makes every customer permission safe",
-      "Moving to the cloud removes the need to manage credentials",
-      "Only application code matters after migration",
+      "The fixed mapping preserves language patterns across messages, so the outsider can combine counts and word shapes to test guesses. The club should replace substitution with modern randomized encryption rather than merely rearrange the alphabet.",
+      "The outsider can only succeed if the club publicly reveals the alphabet. Choosing different symbols while retaining one fixed mapping therefore solves the problem.",
+      "Uneven counts prove that the messages were altered in transit. The club should keep the cipher and add a file checksum.",
+      "Repeated words reveal only message length, not letter relationships. Removing spaces is therefore a complete repair.",
     ],
     modelAnswer:
-      "Cloud changes the ownership boundary, but the customer still owns access configuration, application security, and data protection under shared responsibility.",
+      "A fixed substitution preserves frequency and word-shape evidence that accumulates across messages. A new fixed alphabet has the same structural weakness, so the club needs modern randomized encryption.",
   },
   {
     prompt:
-      "A media company stores millions of complete video files on expensive disks attached to one virtual machine; which change best fits the access pattern?",
+      "Two rescue teams possess matching pages of truly random key material, but one team proposes reusing Monday’s page for Tuesday’s message after supplies run low. Which response best evaluates that plan?",
     options: [
-      "Move the durable videos to object storage and let compute instances access them independently",
-      "Buy a larger attached disk and keep the same single-machine dependency",
-      "Put every video inside a relational database row",
-      "Rename the disk so it is easier to identify",
+      "Reuse destroys the one-time condition and lets an interceptor cancel the repeated key to expose relationships between messages. They should delay, securely obtain fresh pad material, or use a properly authenticated modern protocol.",
+      "Reuse remains perfectly secret because each original page was random. They only need to keep the page number hidden.",
+      "Reuse is safe when the two messages have different lengths. They should add blank characters to make that difference larger.",
+      "The danger is only accidental deletion of the page. Photographing it for backup preserves the mathematical guarantee.",
     ],
     modelAnswer:
-      "Whole durable files fit object storage, which separates data durability and scale from one replaceable compute instance.",
+      "Using a random pad twice lets ciphertexts cancel the same key and reveal a relation between plaintexts. The teams must never reuse pad material and need a secure alternative when fresh material is unavailable.",
   },
   {
     prompt:
-      "A payroll service's cloud role can read every bucket and secret even though it uses one database and one export bucket; which response best reduces the risk?",
+      "A download site encrypts a software installer so visitors cannot read it in transit, but provides no trusted signature or authenticated source. A visitor assumes encryption proves the vendor created the file; which evaluation is best?",
     options: [
-      "Grant only the specific database and bucket actions the workload requires",
-      "Keep administrator access because the application is inside the cloud account",
-      "Make the role public so access failures are less likely",
-      "Use a longer role name without changing its permissions",
+      "Confidential transport can hide bytes without proving who supplied them. The visitor also needs an authenticated connection or a signature verified with a vendor key obtained through a trusted binding.",
+      "Any encryption proves authorship because only the vendor can create ciphertext. No separate identity check is needed.",
+      "A larger encrypted file is harder to forge, so file size supplies the missing trust. The visitor should compare byte counts.",
+      "Keeping the encryption algorithm secret proves the source. Publishing verification information would weaken it.",
     ],
     modelAnswer:
-      "Least privilege limits the workload identity to required resources and actions, reducing the blast radius of misuse or compromise.",
+      "Secrecy and origin authentication are different guarantees. The visitor needs a trustworthy binding to the vendor and must verify the connection or signature before trusting the installer.",
   },
 ];
 
 const SUBJECT_THIRD: DiagItem[] = [
   {
     prompt:
-      "A team chooses serverless functions for a continuously running video encoder that often needs two hours and custom operating-system packages; what should be investigated first?",
+      "An archivist attacks a long message encrypted with one secret substitution alphabet. The most common symbol is not E, but repeated double symbols and a recurring three-letter word appear; which approach is best?",
     options: [
-      "Whether the function's duration, runtime, and packaging limits conflict with the workload, and whether containers or VMs fit better",
-      "Whether the function can be given a more descriptive name",
-      "Whether object storage should be renamed block storage",
-      "Whether all compute options have identical control and limits",
+      "Treat frequency as probabilistic evidence and combine it with word shapes, repeated letters, and contextual guesses. Test substitutions against the whole message rather than committing to one count.",
+      "Declare the most common symbol to be E even when the resulting words fail. Frequency rules are exact for every individual text.",
+      "Conclude the cipher is unbreakable because the top count differs from average English. No other language pattern is useful.",
+      "Sort the ciphertext symbols alphabetically and read them in that order. Substitution changes positions rather than identities.",
     ],
     modelAnswer:
-      "The workload needs long execution and custom runtime control, so the team should compare the serverless constraints with container or VM compute.",
+      "Frequency analysis combines noisy counts with repeated-letter and word-shape constraints. A good hypothesis should make multiple parts of the plaintext coherent, not merely match one average.",
     skillArea: "analysis",
   },
   {
     prompt:
-      "An application and its database are both placed in one availability zone even though the design diagram lists two zones; what follows?",
+      "A journalist uses a short memorable quotation repeatedly as a supposed one-time pad for reports of varying length. An interceptor sees many ciphertexts; what follows and why?",
     options: [
-      "A failure of that zone can still remove both application and data service despite the diagram",
-      "Naming a second zone automatically creates redundancy",
-      "A second region is guaranteed without extra configuration",
-      "The database becomes public only because it is in one zone",
+      "The scheme lacks both true randomness and one-time use, so repeated key structure can be canceled or inferred across reports. A genuine pad must be random, message-length, secret, and never reused.",
+      "The quotation is safe because readers do not know which book contains it. Familiar language becomes random after encryption.",
+      "Varying report lengths prevent comparison between ciphertexts. Reuse matters only when lengths are exactly equal.",
+      "The scheme gains perfect secrecy if punctuation is removed. Pad quality depends only on formatting.",
     ],
     modelAnswer:
-      "Resilience depends on where the actual resources and dependencies run, not on the number of zones shown in a diagram.",
+      "A repeated quotation is predictable and reused, violating core one-time-pad conditions. Multiple ciphertexts give an attacker exploitable structure rather than perfect secrecy.",
     skillArea: "inference",
   },
   {
     prompt:
-      "A public web server needs to read one private bucket, but the team plans to embed an account-wide access key in its source code; which change is best?",
+      "A museum has enough genuine random pad material for one emergency message. Staff want to copy it into several backups and reuse it for convenience; which policy best preserves the claimed security?",
     options: [
-      "Use a workload identity with short-lived, bucket-specific permissions and keep secrets out of source code",
-      "Commit the key in an encrypted-looking filename",
-      "Make every bucket public so the key is unnecessary",
-      "Give the server permanent administrator credentials",
+      "Restrict access to the single necessary copy, track exactly which segment is consumed, and destroy it after use. If reliable one-time handling is impractical, choose an authenticated modern cipher instead of weakening the pad rules.",
+      "Create many copies because identical random material remains one-time material. More availability cannot affect secrecy.",
+      "Reuse is acceptable for messages on different subjects. Meaning, rather than key reuse, determines security.",
+      "Store the pad beside the ciphertext so operators cannot lose it. Physical proximity does not alter exposure.",
     ],
     modelAnswer:
-      "A workload identity with least privilege avoids a long-lived embedded secret and restricts the server to the bucket it actually needs.",
+      "Perfect secrecy depends on tightly controlled, uniquely consumed key material. Operational convenience that creates copies or reuse defeats the guarantee, so a practical authenticated cipher may be safer.",
     skillArea: "evaluation",
   },
 ];
@@ -251,41 +250,41 @@ const SUBJECT_THIRD: DiagItem[] = [
 const SUBJECT_TWOTHIRDS: DiagItem[] = [
   {
     prompt:
-      "A load-balanced shopping site stores carts in each web server's local memory; after scaling out, customers sometimes lose carts; which conclusion is best?",
+      "A satellite team encrypts map tiles by applying the same block-cipher key independently to every block. Coastlines remain visible in the output; which diagnosis and repair are best?",
     options: [
-      "The web tier is not truly stateless, so cart state should move to a shared data service",
-      "The load balancer must always send every user to the largest server",
-      "Horizontal scaling guarantees local state will be synchronized",
-      "A larger server name will preserve carts",
+      "Independent equal blocks produce equal ciphertext blocks, preserving image structure. Use a vetted authenticated-encryption mode with unique nonces and verify tags before accepting data.",
+      "The key is necessarily too short because all visible patterns prove brute force. Doubling the same key removes the coastlines.",
+      "Images cannot be encrypted securely because neighboring pixels resemble one another. Compressing the ciphertext afterward supplies secrecy.",
+      "The map needs a password hash rather than encryption. Hashing would still permit authorized users to recover the original image.",
     ],
     modelAnswer:
-      "Local session state makes instances non-interchangeable; shared durable state is required for reliable horizontal scaling.",
+      "The block mode leaks equality even if the primitive is strong. Authenticated encryption with correctly managed unique nonces hides repetition and detects modification.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A database backup job reports success every night, but the business promises one-hour recovery and nobody has attempted a restore; which conclusion is strongest?",
+      "A forum salts each password but computes a single fast SHA-256 hash. After theft, attackers guess common passwords offline at high speed; which conclusion and change are strongest?",
     options: [
-      "The recovery promise is unproven until a restore is completed and timed against the one-hour target",
-      "A successful backup job guarantees every restore will finish within one hour",
-      "Redundant web servers make database restores unnecessary",
-      "The backup filename determines the recovery time",
+      "Salts prevent shared precomputed results but do not make each guess expensive. Move to a tuned memory-hard password-hashing function while retaining unique salts and upgrading records safely.",
+      "The salt failed because it was stored beside the hash. Hiding one shared salt is the only required repair.",
+      "SHA-256 is cryptographically broken whenever it is used with a password. Encrypting all passwords with one reversible key is safer.",
+      "Offline guessing can be stopped by adding a login rate limit. The attacker must still use the forum’s login page.",
     ],
     modelAnswer:
-      "Backup creation proves a copy exists, not that the team can restore consistent data within the stated RTO.",
+      "A salt provides uniqueness, not computational cost. A memory-hard password function slows each offline candidate while unique salts continue to prevent reuse of work across accounts.",
     skillArea: "inference",
   },
   {
     prompt:
-      "A service needs no more than ten minutes of data loss after a failure; what must its recovery design demonstrate?",
+      "A chat app performs unauthenticated public-key agreement on hostile Wi-Fi and then encrypts messages with the derived key. Users never verify identities; what attack remains and what must change?",
     options: [
-      "Backups or replication and restore procedures can recover to a point no more than ten minutes old",
-      "The application server can reboot within ten minutes",
-      "The provider advertises high durability for a different service",
-      "The team can recreate the network diagram from memory",
+      "An active intermediary can establish separate secrets with each user and relay readable messages. Bind the agreement to verified identities through trusted certificates, signatures, or an explicit key-verification process.",
+      "Only passive listening remains because any public-key agreement authenticates both ends. Increasing symmetric key length completes the design.",
+      "The public values must be hidden before agreement begins. Sending them through encryption solves the original delivery problem without authentication.",
+      "The app should reuse one session key forever so users recognize it. Key age supplies identity proof.",
     ],
     modelAnswer:
-      "The ten-minute requirement is an RPO and must be supported by the data-protection interval and verified recovery procedure.",
+      "Unauthenticated agreement protects against passive observation but not an active middle person. The protocol must bind the exchanged keys to identities the users actually trust.",
     skillArea: "analysis",
   },
 ];
@@ -293,41 +292,41 @@ const SUBJECT_TWOTHIRDS: DiagItem[] = [
 const SUBJECT_AFTER: DiagItem[] = [
   {
     prompt:
-      "A team manually creates production networks and identities in the console, and nobody can reproduce or review the changes after an incident; which fix is most reliable?",
+      "A door controller uses a respected encryption algorithm, but keys come from the installation timestamp and its response time reveals how many tag bytes match. Which assessment best directs the incident response?",
     options: [
-      "Define the infrastructure as versioned code with reviewed plans, controlled application, and recorded state",
-      "Ask one administrator to remember every click",
-      "Permit emergency console changes without reconciliation",
-      "Record only the final resource names in a document",
+      "Attackers can search the small timestamp-derived key space and exploit timing leakage without defeating the cipher’s mathematics. Replace keys from a cryptographic random source, deploy vetted constant-time verification, and investigate past exposure.",
+      "A respected cipher makes key generation and comparison behavior irrelevant. The team should merely rename the algorithm in documentation.",
+      "Timing proves only that the controller is slow, not that secrets can leak. Faster hardware is the complete repair.",
+      "Installation timestamps are unpredictable because clocks advance continuously. Reusing the same generation method for new keys is safe.",
     ],
     modelAnswer:
-      "Infrastructure as code makes the environment reproducible, reviewable, and auditable instead of depending on undocumented console actions.",
+      "Predictable randomness and secret-dependent timing create practical attacks around a sound primitive. Response requires new unpredictable keys, constant-time vetted code, and an exposure investigation.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A product launch survives on two stateless web instances, but every request still depends on one database in one zone; what evidence is missing from the team's high-availability claim?",
+      "A vendor signs updates correctly, but an attacker steals the private key from a developer laptop and publishes malware with valid signatures. Which response best reflects what failed?",
     options: [
-      "A tested failure path showing the data tier remains available or recovers within the required objective when that zone fails",
-      "A screenshot showing two web-server icons",
-      "A larger web-server instance in the same zone",
-      "A guarantee that load balancing duplicates the database",
+      "The signature mathematics still verifies, but the operational trust claim has collapsed because the attacker controls the signing identity. Revoke the key, block affected releases, investigate, and move signing to restricted protected storage with audited access.",
+      "Valid verification proves the malware came from the legitimate vendor, so no incident occurred. Private-key location cannot change signature meaning.",
+      "Encrypt the malware after signing it so attackers cannot distribute it. Confidentiality restores the compromised signing identity.",
+      "Publish the stolen private key so customers can compare it. Wider key access strengthens non-forgeability.",
     ],
     modelAnswer:
-      "Redundant compute does not remove the single-zone database dependency; the availability claim needs a tested data-tier failure and recovery path.",
+      "Signatures authenticate control of a private key, so theft lets the attacker forge the vendor’s authority. The vendor must revoke and replace that trust anchor and harden the signing process.",
     skillArea: "inference",
   },
   {
     prompt:
-      "During an incident, the team has application logs but cannot tell whether time is spent in the web tier, queue, or database; what control is missing?",
+      "A thirty-year archive is offered an unpublished quantum-proof cipher and a universal government recovery key. Which plan best manages the actual risks?",
     options: [
-      "Correlated metrics and distributed traces that show latency and request flow across services",
-      "More unstructured log lines without request identifiers",
-      "A policy to delete old telemetry during incidents",
-      "A brighter dashboard background",
+      "Inventory long-lived cryptography, prioritize harvest-now-decrypt-later exposure, and stage standardized post-quantum migration with agility and testing. Reject unreviewed algorithms and recognize that a universal recovery key creates a high-value systemic access path.",
+      "Deploy the unpublished cipher immediately because any quantum label outranks public review. Add the recovery key later without changing risk.",
+      "Do nothing until a quantum computer publicly decrypts current traffic. Long-lived ciphertext collected today cannot be affected later.",
+      "Replace only symmetric encryption with the vendor product because quantum attacks affect all algorithms identically. Public-key migration can wait indefinitely.",
     ],
     modelAnswer:
-      "Metrics reveal where latency changes and traces connect one request's path across services, filling the gap left by isolated logs.",
+      "Long confidentiality horizons justify planned adoption of reviewed post-quantum standards, not panic purchases. Crypto agility supports migration, while a universal backdoor adds an enduring target and failure mode.",
     skillArea: "evaluation",
   },
 ];
@@ -341,79 +340,79 @@ const SUBJECT_AFTER: DiagItem[] = [
 const GENERAL_BLUEPRINT: DiagItem[] = [
   {
     prompt:
-      "Consider: 'All students who studied passed the exam. Maria studied. So Maria passed.' Which unstated assumption does the argument rely on?",
+      "A school report says, “Every student in Room 4 who attended the review passed. Maria attended a review, so she passed.” Which analysis best identifies what the principal must check before accepting the conclusion?",
     options: [
-      "Maria is among the students the first statement describes.",
-      "Studying is the only way to pass the exam.",
-      "Maria always studies for her exams.",
-      "The exam was unusually difficult.",
+      "The principal must check that Maria was in Room 4 and attended the review covered by the report. Without that link, the general statement may describe a different group.",
+      "The principal must prove that review attendance is the only possible way to pass. Otherwise no student’s result can be inferred.",
+      "The principal should assume Maria always attends reviews because she attended one. A repeated habit is already established.",
+      "The principal should investigate whether the exam was difficult. Difficulty alone determines whether this deduction is valid.",
     ],
     modelAnswer:
-      "It assumes Maria is one of the students covered by 'all students who studied' — that her studying puts her in the group described.",
+      "The conclusion requires Maria to belong to the exact group covered by the first statement. Attending some review does not establish that she was a Room 4 student at the specified review.",
     skillArea: "analysis",
   },
   {
     prompt:
-      "A survey finds 70% of people who exercise daily report good sleep, versus 30% of those who never exercise. Which conclusion is best supported?",
+      "A neighborhood survey finds that 70% of daily exercisers report good sleep, compared with 30% of non-exercisers. The mayor wants to claim exercise guarantees sleep improvement; which advice best applies the evidence?",
     options: [
-      "People who exercise daily are more likely to report good sleep than those who never exercise.",
-      "Exercise guarantees good sleep for everyone.",
-      "Poor sleep is what causes people to stop exercising.",
-      "Anyone who wants good sleep must exercise daily.",
+      "Report that daily exercise is associated with more self-reported good sleep in this sample. Do not claim a guarantee or cause without ruling out selection, measurement, and other differences.",
+      "State that exercise guarantees good sleep because 70% is a majority. The remaining participants do not affect that conclusion.",
+      "State that poor sleep causes people to stop exercising because the groups differ. The direction of cause follows from the percentages.",
+      "Require every resident with poor sleep to exercise daily because no other explanation is possible. A survey establishes the necessary treatment.",
     ],
     modelAnswer:
-      "Only that daily exercisers are more likely to report good sleep — an association, not a guarantee or a proven cause.",
+      "The survey supports an association in the sampled reports, not a universal guarantee. It does not by itself establish causal direction or eliminate confounding factors.",
     skillArea: "inference",
   },
   {
-    prompt: "Which source would most strengthen the claim 'this medication is safe'?",
+    prompt: "A clinic is deciding whether to adopt a new medication. It has a manufacturer advertisement, one patient testimonial, a wellness post, and a large peer-reviewed controlled trial; which evaluation should guide the committee?",
     options: [
-      "A large, peer-reviewed clinical trial.",
-      "A testimonial from one satisfied customer.",
-      "An advertisement produced by the manufacturer.",
-      "A popular wellness blog post.",
+      "Give the controlled trial the most weight because it systematically compares many patients and has undergone expert review. Then inspect its methods, adverse-event data, and applicability to the clinic’s patients.",
+      "Give the testimonial the most weight because firsthand satisfaction rules out population-level harms. One vivid experience is more reliable than a comparison.",
+      "Give the advertisement the most weight because the manufacturer knows the product best. Its financial interest increases independence.",
+      "Give the wellness post the most weight because popularity is evidence of methodological quality. Reader count substitutes for controlled data.",
     ],
     modelAnswer:
-      "A large, peer-reviewed clinical trial — independent, systematic evidence is far stronger than a testimonial, an ad, or a blog.",
+      "The large controlled trial is the strongest listed source because it offers systematic comparative evidence and review. The committee should still evaluate its methods and relevance rather than treating publication as automatic proof.",
     skillArea: "evaluation",
   },
   {
     prompt:
-      "A neighbor insists it rained overnight. You know that if it had rained, the streets would be wet — and stepping outside, you see the streets are not wet. What necessarily follows?",
+      "A park manager’s tested rule says that if it rained overnight, the uncovered sensor strip will be wet at dawn. The strip is dry and functioning normally; which reasoning should guide the manager’s report?",
     options: [
-      "It did not rain.",
-      "It rained.",
-      "The streets are dry for some other reason.",
-      "Nothing at all follows.",
+      "Conclude that it did not rain under the stated conditions. Rain would imply a wet functioning strip, and the observed dry strip rules that possibility out.",
+      "Conclude that it rained because the manager expected rain. Expectations override the conditional observation.",
+      "Conclude that the strip dried for another reason even though the scenario rules that out. Any imagined exception defeats deduction.",
+      "Conclude that nothing follows because conditional statements never support conclusions. The strip’s state is irrelevant.",
     ],
     modelAnswer:
-      "It did not rain — if rain would have made the streets wet and they are not wet, then it cannot have rained.",
+      "Given the stated reliable rule and functioning strip, rain would require wetness. The dry reading therefore supports the deductive conclusion that it did not rain.",
     skillArea: "deduction",
   },
   {
     prompt:
-      "Plants given a new fertilizer grew taller than otherwise identical plants without it, all else held equal. The best-supported conclusion is:",
+      "A gardener randomly gives half of otherwise comparable plants a new fertilizer while holding light and water constant. The treated plants grow taller; which conclusion and next step are best supported?",
     options: [
-      "The fertilizer probably caused the extra growth.",
-      "Taller plants attract more fertilizer.",
-      "Fertilizer is required for any plant growth at all.",
-      "The result was pure coincidence.",
+      "The controlled comparison supports the fertilizer as the likely cause of the extra growth in this trial. Replication across more plants and conditions would test how broadly the effect holds.",
+      "The taller plants must have caused the earlier fertilizer assignment. Random assignment permits outcomes to travel backward in time.",
+      "The trial proves no plant can grow without this fertilizer. A difference in height establishes absolute necessity.",
+      "The result must be coincidence because induction never supports causal conclusions. Controls and random assignment add no evidence.",
     ],
     modelAnswer:
-      "Because everything else was held equal, the fertilizer probably caused the extra growth.",
+      "Random assignment and controlled conditions make the fertilizer the best-supported cause of the observed difference. Repetition would strengthen confidence and reveal whether the result generalizes.",
     skillArea: "induction",
   },
   {
     prompt:
-      "A report notes that ice-cream sales and drowning deaths rise in the same months. A careful reader should infer that:",
+      "A city analyst notices that ice-cream sales and drowning incidents both rise in the same months. A council member proposes restricting ice cream to prevent drownings; which response best evaluates the pattern?",
     options: [
-      "Both may be linked to a third factor, such as hot weather.",
-      "Eating ice cream causes drowning.",
-      "Drowning incidents cause ice-cream sales.",
-      "The data must simply be mistaken.",
+      "Investigate a shared factor such as hot weather, which can increase swimming and ice-cream purchases. The correlation alone does not show that restricting one will reduce the other.",
+      "Adopt the restriction because simultaneous increases prove ice cream causes drowning. No mechanism or comparison is needed.",
+      "Increase swimming restrictions only after ice-cream sales fall because drowning causes purchases. Reversing the proposed direction establishes causation.",
+      "Discard the data because correlated trends are always errors. A third factor cannot produce two real changes.",
     ],
     modelAnswer:
-      "That both probably rise because of a shared third factor such as hot weather — correlation doesn't mean one causes the other.",
+      "A common cause such as hot weather plausibly explains both trends. The observed correlation does not establish that ice-cream sales cause drowning, so the policy needs stronger causal evidence.",
     skillArea: "inference",
   },
 ];
@@ -440,7 +439,7 @@ const BASE_CONTENT: BaseContent[] = PHASE_ORDER.flatMap((phase) => {
     {
       instrument: "subject" as const,
       phase,
-      baseTitle: `Cloud Architecture Check — ${PHASE_LABEL[phase]}`,
+      baseTitle: `Cryptography Check — ${PHASE_LABEL[phase]}`,
       items: subjectItems[phase],
     },
     {

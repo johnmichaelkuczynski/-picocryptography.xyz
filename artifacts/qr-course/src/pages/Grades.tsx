@@ -92,7 +92,7 @@ export default function Grades() {
                       <div className="flex flex-col">
                         <span className="font-medium">{a.title}</span>
                         <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                          {a.kind} · Day {a.weekNumber}
+                          {a.kind} · Hour {a.weekNumber}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">

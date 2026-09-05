@@ -4,10 +4,22 @@ import { AppShell } from '../AppShell';
 
 export function Scene3() {
   const topics = [
-    "The building blocks",
-    "Designing for real use",
-    "How to reason about cloud-architecture cases",
-    "Core reasoning skills"
+    {
+      title: "Hour 1: Every code broken because people repeat themselves",
+      desc: "Letter counts & stock phrases: Enigma fell to habit, not genius."
+    },
+    {
+      title: "Hour 2: Perfect secrecy exists and is worthless",
+      desc: "Why the unbreakable cipher went unused. Security is priced, not guaranteed."
+    },
+    {
+      title: "Hour 3: Two strangers can agree on a secret",
+      desc: "The astonishing idea that makes the internet possible while everyone listens."
+    },
+    {
+      title: "Hour 4: Nobody breaks the math",
+      desc: "Things fall apart at the seams: keys, people, sloppy code, and governments."
+    }
   ];
 
   return (
@@ -25,9 +37,9 @@ export function Scene3() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <div className="text-sm font-medium text-[#718096] mb-1">ONE-DAY INTENSIVE</div>
-            <h2 className="text-3xl font-display font-bold text-[#1A2B3D]">Cloud Architecture (AWS/Azure)</h2>
-            <p className="text-[#4A5568] mt-2">2 course topics • 2 diagnostic primers</p>
+            <div className="text-sm font-medium text-[#718096] mb-1">INTENSIVE COURSE</div>
+            <h2 className="text-3xl font-display font-bold text-[#1A2B3D]">Cryptography</h2>
+            <p className="text-[#4A5568] mt-2">4 course hours • 4 core modules</p>
           </motion.div>
 
           <div className="flex-1 bg-white rounded-lg border border-[#E2E8F0] shadow-sm overflow-hidden flex flex-col relative">
@@ -43,7 +55,10 @@ export function Scene3() {
                   <div className="w-8 h-8 rounded-full bg-[#EFECE6] text-[#1A2B3D] flex items-center justify-center font-mono text-xs font-bold mr-4 shrink-0">
                     {i+1}
                   </div>
-                  <div className="flex-1 font-medium text-[#1A2B3D]">{topic}</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-[#1A2B3D]">{topic.title}</div>
+                    <div className="text-xs text-[#4A5568] mt-1">{topic.desc}</div>
+                  </div>
                   <div className="w-20 text-right">
                     {i === 0 ? (
                       <span className="text-xs font-bold text-[#10B981] bg-[#10B981]/10 px-2 py-1 rounded">DONE</span>

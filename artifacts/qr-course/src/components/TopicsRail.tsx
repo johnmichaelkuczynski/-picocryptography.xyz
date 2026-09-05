@@ -5,10 +5,10 @@ export const pdfUrl = `${base}api/course/download-pdf`;
 export const txtUrl = `${base}api/course/download-txt`;
 
 const COURSE_TOPIC_TITLES = [
-  "The building blocks",
-  "Designing for real use",
-  "How to reason about cloud-architecture cases",
-  "Core reasoning skills",
+  "HOUR 1 EVERY CODE EVER BROKEN WAS BROKEN BECAUSE PEOPLE REPEAT THEMSELVES",
+  "HOUR 2 PERFECT SECRECY EXISTS, IS PROVABLE, AND IS WORTHLESS",
+  "HOUR 3 TWO STRANGERS CAN AGREE ON A SECRET WHILE EVERYONE LISTENS",
+  "HOUR 4 NOBODY BREAKS THE MATH — THINGS FALL APART AT THE SEAMS",
 ];
 
 export function useCourseTopicTitles(): string[] {
@@ -53,7 +53,7 @@ export default function TopicsRail() {
           data-testid="rail-download-pdf"
         >
           <Download className="w-3.5 h-3.5" />
-          Download Cloud Architecture (PDF)
+          Download Course (PDF)
         </a>
         <a
           href={txtUrl}
@@ -61,7 +61,7 @@ export default function TopicsRail() {
           data-testid="rail-download-txt"
         >
           <Download className="w-3.5 h-3.5" />
-          Download Cloud Architecture (TXT)
+          Download Course (TXT)
         </a>
         <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
           Every lecture (short version) plus practice homework and exam

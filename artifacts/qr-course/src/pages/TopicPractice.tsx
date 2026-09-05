@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { AnswerInput } from "@/components/AnswerInput";
 import { ArrowLeft, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 function difficultyFromAccuracy(attempts: number, accuracy: number): {
   value: number;
@@ -138,7 +140,7 @@ export default function TopicPractice() {
     return (
       <Layout>
         <div className="p-8 max-w-3xl mx-auto">
-          <div className="text-red-700">Invalid topic.</div>
+          <div className="text-destructive">Invalid topic.</div>
           <Link href="/analytics" className="text-primary underline">
             Back to analytics
           </Link>
@@ -167,11 +169,11 @@ export default function TopicPractice() {
             Topic practice
           </div>
           <h1 className="font-serif text-3xl">
-            {topic?.topicTitle ?? (topicsLoading ? "Loading…" : `Topic ${topicId}`)}
+            {topic?.topicTitle ?? (topicsLoading ? "Loading..." : `Topic ${topicId}`)}
           </h1>
           {topic && (
             <div className="text-sm text-muted-foreground">
-              Day {topic.weekNumber} · {topic.attempts} prior attempt
+              Hour {topic.weekNumber} · {topic.attempts} prior attempt
               {topic.attempts === 1 ? "" : "s"} · {topic.accuracy}% accuracy ·{" "}
               <span className="uppercase tracking-wider font-semibold">
                 {topic.strengthLabel}
@@ -222,14 +224,34 @@ export default function TopicPractice() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <AnswerInput
-            value={answer}
-            onChange={(val, t) => {
-              setAnswer(val);
-              setTrace(t);
-            }}
-            disabled={!!grade || !problem}
-          />
+          {problem?.type === 'multiple_choice' && problem.options ? (
+            <RadioGroup
+              value={answer}
+              onValueChange={(val) => {
+                setAnswer(val);
+                setTrace({ keystrokeCount: 0, eraseCount: 0, durationMs: 0 });
+              }}
+              disabled={!!grade || !problem}
+              className="flex flex-col gap-3"
+            >
+              {problem.options.map((opt, i) => (
+                <div key={i} className="flex items-center space-x-2 border p-3 rounded hover:bg-secondary/50 transition-colors">
+                  <RadioGroupItem value={opt} id={`opt-${i}`} />
+                  <Label htmlFor={`opt-${i}`} className="flex-1 cursor-pointer">{opt}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          ) : (
+            <AnswerInput
+              value={answer}
+              onChange={(val, t) => {
+                setAnswer(val);
+                setTrace(t);
+              }}
+              disabled={!!grade || !problem}
+              compact={true}
+            />
+          )}
         </div>
 
         {grade ? (
@@ -250,7 +272,7 @@ export default function TopicPractice() {
               ) : (
                 <XCircle className="w-4 h-4" />
               )}
-              {grade.correct ? "Correct" : "Not quite"}
+              {grade.correct ? "Correct" : "Not quite"} - {grade.percentage}%
             </div>
             <div className="text-sm prose prose-sm max-w-none">
               <MarkdownRenderer content={grade.explanation} />
@@ -275,7 +297,7 @@ export default function TopicPractice() {
               onClick={submit}
               disabled={!answer.trim() || grader.isPending || !problem}
             >
-              {grader.isPending ? "Grading…" : "Submit answer"}
+              {grader.isPending ? "Grading..." : "Submit answer"}
             </Button>
           </div>
         )}

@@ -27,14 +27,23 @@ export async function gradeAnswer(opts: {
   prompt: string;
   correctAnswer: string;
   userAnswer: string;
-}): Promise<{ correct: boolean; explanation: string }> {
+  type?: "multiple_choice" | "freeform";
+}): Promise<{ correct: boolean; percentage: number; explanation: string }> {
   const user = opts.userAnswer ?? "";
   const correct = opts.correctAnswer ?? "";
 
   if (normalize(user) === normalize(correct)) {
     return {
       correct: true,
+      percentage: 100,
       explanation: `Correct. ${correct}`,
+    };
+  }
+  if (opts.type === "multiple_choice") {
+    return {
+      correct: false,
+      percentage: 0,
+      explanation: `Incorrect. The correct choice is ${correct}.`,
     };
   }
 
@@ -43,21 +52,22 @@ export async function gradeAnswer(opts: {
   if (u != null && c != null) {
     const tol = Math.max(0.01, Math.abs(c) * 0.01);
     if (Math.abs(u - c) <= tol) {
-      return { correct: true, explanation: `Correct. The expected answer is ${correct}.` };
+      return { correct: true, percentage: 100, explanation: `Correct. The expected answer is ${correct}.` };
     }
   }
 
   if (!user.trim()) {
     return {
       correct: false,
+      percentage: 0,
       explanation: `No answer was provided.`,
     };
   }
 
   try {
-    const out = await chatJson<{ correct: boolean; explanation: string }>(
+    const out = await chatJson<{ correct: boolean; percentage: number; explanation: string }>(
       [
-        "You grade short answers for the course Cloud Architecture (AWS/Azure). Judge whether the student's answer is ACTUALLY CORRECT as an answer to the question, using expert knowledge of cloud compute, storage, networks, identity, resilience, scaling, recovery, cost, observability, infrastructure as code, and shared responsibility. Judge on substance alone.",
+        "You grade short answers for the course Cryptography: Secrets, Locks, and Digital Trust. Judge conceptual substance flexibly using expert knowledge. Explicitly ignore jargon matching, phrasing, grammar, spelling, sentence count, and reference-answer wording.",
         "",
         "About the reference answer:",
         "- A `reference_answer` is provided. It is only a FALLIBLE HINT from the course materials — it may be incomplete, narrow, or simply WRONG. It is NOT ground truth.",
@@ -77,7 +87,8 @@ export async function gradeAnswer(opts: {
         "",
         "Keep `explanation` neutral, factual, and respectful — never snippy, sarcastic, or dismissive. 1-3 short sentences stating why the answer is or isn't correct on the merits.",
         "",
-        'Output strict JSON {"correct": boolean, "explanation": string}.',
+        "Give an actual numeric percentage from 0 to 100 reflecting how fully and correctly the response answers the question. Set correct=true for a substantively correct response (normally percentage >= 70).",
+        'Output strict JSON {"correct": boolean, "percentage": number, "explanation": string}.',
       ].join("\n"),
       JSON.stringify({
         question_asked: opts.prompt,
@@ -87,13 +98,18 @@ export async function gradeAnswer(opts: {
     );
     return {
       correct: !!out.correct,
+      percentage: Math.max(0, Math.min(100, Number(out.percentage))),
       explanation: out.explanation || `The correct answer is ${correct}.`,
     };
-  } catch {
-    return {
-      correct: false,
-      explanation: `The correct answer is ${correct}.`,
-    };
+  } catch (cause) {
+    throw new GradingUnavailableError("AI grading is temporarily unavailable; retry submission.", cause);
+  }
+}
+
+export class GradingUnavailableError extends Error {
+  constructor(message: string, public readonly cause?: unknown) {
+    super(message);
+    this.name = "GradingUnavailableError";
   }
 }
 
@@ -106,13 +122,19 @@ export async function gradePracticeEssay(opts: {
   prompt: string;
   correctAnswer: string;
   userAnswer: string;
-}): Promise<{ correct: boolean; feedback: string }> {
+  type?: "multiple_choice" | "freeform";
+}): Promise<{ correct: boolean; percentage: number; feedback: string }> {
+  if (opts.type === "multiple_choice") {
+    const graded = await gradeAnswer(opts);
+    return { correct: graded.correct, percentage: graded.percentage, feedback: graded.explanation };
+  }
   const user = (opts.userAnswer ?? "").trim();
   const correct = opts.correctAnswer ?? "";
 
   if (!user) {
     return {
       correct: false,
+      percentage: 0,
       feedback: `You left this one blank. Give it a real attempt — even a rough draft — and resubmit for feedback.\n\n**Model answer:** ${correct}`,
     };
   }
@@ -120,12 +142,13 @@ export async function gradePracticeEssay(opts: {
   try {
     const out = await chatJson<{
       correct: boolean;
+      percentage: number;
       feedback: string;
     }>(
       [
-        "You are a warm, rigorous Cloud Architecture tutor giving feedback on a PRACTICE answer (never penalized — the goal is to help the student improve before the real graded version).",
+        "You are a warm, rigorous cryptography tutor giving feedback on a PRACTICE answer (never penalized — the goal is to help the student improve before the real graded version).",
         "",
-        "Decide `correct` by whether the student's answer is ACTUALLY CORRECT on the merits, using expert knowledge of cloud architecture across AWS and Azure — not by similarity to any reference. A `reference_answer` is provided, but it is only a FALLIBLE HINT from the course materials: it may be incomplete, narrow, or simply WRONG, and is NOT ground truth. If the student is actually correct but differs from or contradicts the reference, mark `correct` = true; if the reference is wrong, ignore it.",
+        "Decide `correct` by whether the student's answer is ACTUALLY CORRECT on the merits, using expert knowledge of cryptography and secure implementation — not by similarity to any reference. A `reference_answer` is provided, but it is only a FALLIBLE HINT from the course materials: it may be incomplete, narrow, or simply WRONG, and is NOT ground truth. If the student is actually correct but differs from or contradicts the reference, mark `correct` = true; if the reference is wrong, ignore it.",
         "",
         "Work out what the question actually asks for, then mark `correct` = true if the student genuinely supplies a correct answer. Accept paraphrases, different wording, different examples, and equivalent reasoning. If two answers do not differ in substance they get the same result.",
         "",
@@ -133,7 +156,7 @@ export async function gradePracticeEssay(opts: {
         "",
         "Then write `feedback` as encouraging Markdown with these sections: **What you got right** (be specific, cite their wording), **What's missing or off** (only genuine errors or gaps that make the answer actually wrong — never nitpick form, grammar, or divergence from the reference when the student is correct), and **How to strengthen it** (1-2 concrete next steps). 4-8 sentences total, neutral and supportive in tone — never snippy.",
         "",
-        'Output strict JSON {"correct": boolean, "feedback": string}.',
+        'Output strict JSON {"correct": boolean, "percentage": number from 0 to 100, "feedback": string}.',
       ].join("\n"),
       JSON.stringify({
         question_asked: opts.prompt,
@@ -143,14 +166,12 @@ export async function gradePracticeEssay(opts: {
     );
     return {
       correct: !!out.correct,
+      percentage: Math.max(0, Math.min(100, Number(out.percentage))),
       feedback:
         out.feedback ||
         `Here's the model answer to compare against:\n\n${correct}`,
     };
-  } catch {
-    return {
-      correct: false,
-      feedback: `I couldn't reach the grader just now. Compare your answer against the model answer and try again:\n\n**Model answer:** ${correct}`,
-    };
+  } catch (cause) {
+    throw new GradingUnavailableError("AI grading is temporarily unavailable; retry submission.", cause);
   }
 }

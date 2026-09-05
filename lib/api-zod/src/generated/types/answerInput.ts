@@ -10,5 +10,7 @@ import type { KeystrokeTrace } from './keystrokeTrace';
 export interface AnswerInput {
   problemId: number;
   answer: string;
+  /** When true, grade this persisted answer immediately without submitting the attempt. */
+  gradeNow?: boolean;
   trace: KeystrokeTrace;
 }

@@ -38,6 +38,7 @@ import type {
   GraderLabResult,
   HealthStatus,
   Lecture,
+  LiveAnswerDiagnosticResult,
   LongAnswerDiagnosticGenerated,
   LongAnswerDiagnosticInput,
   LongAnswerDiagnosticResult,
@@ -293,6 +294,76 @@ export const useGradeLongAnswerDiagnostic = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGradeLongAnswerDiagnosticMutationOptions(options));
+    }
+
+export const getRunLiveAnswerDiagnosticUrl = () => {
+
+
+
+
+  return `/api/diagnostics/live-answer`
+}
+
+/**
+ * @summary Generate, persist, read back, and grade a live student answer
+ */
+export const runLiveAnswerDiagnostic = async ( options?: RequestInit): Promise<LiveAnswerDiagnosticResult> => {
+
+  return customFetch<LiveAnswerDiagnosticResult>(getRunLiveAnswerDiagnosticUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRunLiveAnswerDiagnosticMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runLiveAnswerDiagnostic>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runLiveAnswerDiagnostic>>, TError,void, TContext> => {
+
+const mutationKey = ['runLiveAnswerDiagnostic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runLiveAnswerDiagnostic>>, void> = () => {
+
+
+          return  runLiveAnswerDiagnostic(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunLiveAnswerDiagnosticMutationResult = NonNullable<Awaited<ReturnType<typeof runLiveAnswerDiagnostic>>>
+
+    export type RunLiveAnswerDiagnosticMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate, persist, read back, and grade a live student answer
+ */
+export const useRunLiveAnswerDiagnostic = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runLiveAnswerDiagnostic>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runLiveAnswerDiagnostic>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunLiveAnswerDiagnosticMutationOptions(options));
     }
 
 export const getGetCourseOverviewUrl = () => {
@@ -1204,7 +1275,7 @@ export const getSubmitAttemptUrl = (attemptId: number,) => {
  * @summary Submit the attempt for grading (also runs AI + diachronic detection)
  */
 export const submitAttempt = async (attemptId: number,
-    submitAttemptInput?: SubmitAttemptInput, options?: RequestInit): Promise<AttemptResult> => {
+    submitAttemptInput: SubmitAttemptInput, options?: RequestInit): Promise<AttemptResult> => {
 
   return customFetch<AttemptResult>(getSubmitAttemptUrl(attemptId),
   {
@@ -1220,8 +1291,8 @@ export const submitAttempt = async (attemptId: number,
 
 
 export const getSubmitAttemptMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitAttempt>>, TError,{attemptId: number;data?: BodyType<SubmitAttemptInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof submitAttempt>>, TError,{attemptId: number;data?: BodyType<SubmitAttemptInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitAttempt>>, TError,{attemptId: number;data: BodyType<SubmitAttemptInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitAttempt>>, TError,{attemptId: number;data: BodyType<SubmitAttemptInput>}, TContext> => {
 
 const mutationKey = ['submitAttempt'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1233,7 +1304,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitAttempt>>, {attemptId: number;data?: BodyType<SubmitAttemptInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitAttempt>>, {attemptId: number;data: BodyType<SubmitAttemptInput>}> = (props) => {
           const {attemptId,data} = props ?? {};
 
           return  submitAttempt(attemptId,data,requestOptions)
@@ -1247,18 +1318,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SubmitAttemptMutationResult = NonNullable<Awaited<ReturnType<typeof submitAttempt>>>
-    export type SubmitAttemptMutationBody = BodyType<SubmitAttemptInput> | undefined
+    export type SubmitAttemptMutationBody = BodyType<SubmitAttemptInput>
     export type SubmitAttemptMutationError = ErrorType<unknown>
 
     /**
  * @summary Submit the attempt for grading (also runs AI + diachronic detection)
  */
 export const useSubmitAttempt = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitAttempt>>, TError,{attemptId: number;data?: BodyType<SubmitAttemptInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitAttempt>>, TError,{attemptId: number;data: BodyType<SubmitAttemptInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof submitAttempt>>,
         TError,
-        {attemptId: number;data?: BodyType<SubmitAttemptInput>},
+        {attemptId: number;data: BodyType<SubmitAttemptInput>},
         TContext
       > => {
       return useMutation(getSubmitAttemptMutationOptions(options));

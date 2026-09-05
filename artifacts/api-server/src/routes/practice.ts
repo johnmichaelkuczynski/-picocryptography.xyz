@@ -16,7 +16,7 @@ import {
   GradePracticeAnswerResponse,
 } from "@workspace/api-zod";
 import { chatJson } from "../lib/ai";
-import { gradeAnswer } from "../lib/grading";
+import { gradeAnswer, GradingUnavailableError } from "../lib/grading";
 
 const router: IRouter = Router();
 
@@ -29,14 +29,18 @@ function isValidReasoningProblem(problem: {
   prompt: string;
   correctAnswer: string;
   explanation: string;
+  type?: string;
+  options?: string[] | null;
 }): boolean {
   const prompt = problem.prompt.trim();
   const answer = problem.correctAnswer.trim();
   const sentenceCount = answer.split(/[.!?]+(?:\s|$)/).filter(Boolean).length;
+  const validMultipleChoice =
+    problem.type === "multiple_choice" &&
+    problem.options?.length === 4 &&
+    problem.options.includes(problem.correctAnswer);
   return (
-    prompt.length >= 80 &&
-    answer.length >= 100 &&
-    sentenceCount >= 2 &&
+    (validMultipleChoice || (prompt.length >= 30 && answer.length >= 20 && sentenceCount >= 1)) &&
     !/\b(define|what (?:is|are) .+ called|what does .+ mean|difference between)\b/i.test(
       prompt,
     )
@@ -152,6 +156,13 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
     )
     .orderBy(desc(practiceProblemsTable.id))
     .limit(3);
+  const countRows = await db.execute(sql`
+    select count(*)::int as n
+    from practice_problems
+    where session_id = ${sessionId}
+  `);
+  const generatedCount =
+    Number((countRows.rows[0] as { n?: number } | undefined)?.n ?? 0);
 
   const difficulty = Math.max(1, Math.min(5, session.difficulty));
   const difficultyLabel =
@@ -166,16 +177,19 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
       : "challenging";
 
   const userRequest = parsed.data.request?.trim() || "";
-  let generated: { prompt: string; correctAnswer: string; explanation: string };
+  const makeMultipleChoice = generatedCount % 2 === 0;
+  let generated: { prompt: string; correctAnswer: string; explanation: string; type: "multiple_choice" | "freeform"; options: string[] | null };
   try {
     generated = await chatJson<{
       prompt: string;
       correctAnswer: string;
       explanation: string;
+      type: "multiple_choice" | "freeform";
+      options: string[] | null;
     }>(
-      `You generate a single practice problem for the course Cloud Architecture (AWS/Azure). The problem MUST be on the topic "${topic.title}" and at difficulty "${difficultyLabel}" (${difficulty.toFixed(
-        1,
-      )}/5). Test practical understanding of cloud architecture, not recall of any particular reading. The question MUST be fully self-contained: do NOT reference "the lecture", "the text", "the course", "the example", or "the case"; state every fact needed to reason about the situation.\n\nSTRICT QUESTION RULES (no exceptions):\n- Every question must present a SPECIFIC, realistic, NAMED cloud-system scenario (for example, Northstar Media stores durable videos on one VM's block disk; Priya's payroll workload can read every cloud secret; Harbor Tickets loses carts because each scaled instance keeps local state; Mateo's untested nightly backup cannot meet a ten-minute recovery point). Ask the student to APPLY the topic's idea to THAT scenario by diagnosing the decisive detail and recommending or predicting an architectural or operational consequence.\n- NEVER ask for a definition, an abstract comparison, a term, or what something is "called"; NEVER ask the student to recite terminology.\n- NEVER write a question whose answer is a single word, a single term, or a bare "yes"/"no". Require a reasoned 2-4 sentence answer tied to the scenario.\n- The "correctAnswer" must be a 2-4 sentence model answer showing the operational reasoning for THIS scenario. The "explanation" briefly says what earns full credit.\n\nRespond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string}. Avoid these recent prompts: ${JSON.stringify(
+      `You generate a single practice problem for the course Cryptography: Secrets, Locks, and Digital Trust. The problem MUST be on the topic "${topic.title}" and at difficulty "${difficultyLabel}" (${difficulty.toFixed(
+       1,
+       )}/5). Test practical understanding in a fully self-contained named scenario. Generate ${makeMultipleChoice ? "a multiple-choice question with exactly four concise options and correctAnswer exactly equal to one option" : "a short freeform question normally answerable in one sentence, occasionally two, and rarely three; never enforce sentence count"}. Keep the prompt and expected answer short. Never ask for jargon recall.\n\nRespond as strict JSON: {"prompt": string, "correctAnswer": string, "explanation": string, "type": "multiple_choice"|"freeform", "options": string[4]|null}. Avoid these recent prompts: ${JSON.stringify(
         lastProblems.map((p) => p.prompt),
       )}.`,
       userRequest || `Generate a new ${difficultyLabel} problem on ${topic.title}.`,
@@ -185,11 +199,13 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
     }
   } catch {
     generated = {
-      prompt: `At Northstar Bank, Maya's production model behaves differently after a feature pipeline change. Apply "${topic.title}" to diagnose the decisive system detail and recommend what Maya should verify or change. Justify your answer in 2-4 sentences.`,
+      prompt: `At Northstar Bank, Maya discovers that a security tool was deployed with the wrong key or nonce-handling assumptions. Apply "${topic.title}" to identify what Maya should verify or change.`,
       correctAnswer:
-        `A strong answer applies "${topic.title}" to the cloud-system evidence, explains what the observed detail does and does not establish, and recommends a concrete architectural control with a way to verify it. It reasons from the scenario rather than merely naming a concept.`,
+        `A strong answer applies "${topic.title}" to the security evidence, explains what the observed detail does and does not establish, and recommends a concrete cryptographic or operational control with a way to verify it. It reasons from the scenario rather than merely naming a concept.`,
       explanation:
         "Full credit reasons about the specific situation and shows operational understanding; restating a definition does not earn credit.",
+      type: "freeform",
+      options: null,
     };
   }
 
@@ -199,6 +215,8 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
       sessionId,
       topicId: topic.id,
       prompt: generated.prompt,
+      type: generated.type,
+      options: generated.options,
       correctAnswer: generated.correctAnswer,
       explanation: generated.explanation,
       difficulty,
@@ -216,6 +234,8 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
       topicId: topic.id,
       topicTitle: topic.title,
       difficulty,
+      type: stored.type as "multiple_choice" | "freeform",
+      options: stored.options,
     }),
   );
 });
@@ -250,11 +270,21 @@ router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<voi
     return;
   }
 
-  const graded = await gradeAnswer({
-    prompt: problem.prompt,
-    correctAnswer: problem.correctAnswer,
-    userAnswer: answer,
-  });
+  let graded;
+  try {
+    graded = await gradeAnswer({
+      prompt: problem.prompt,
+      correctAnswer: problem.correctAnswer,
+      userAnswer: answer,
+      type: problem.type as "multiple_choice" | "freeform",
+    });
+  } catch (error) {
+    if (error instanceof GradingUnavailableError) {
+      res.status(503).json({ error: error.message, retryable: true, graded: false });
+      return;
+    }
+    throw error;
+  }
 
   await db.insert(practiceAttemptsTable).values({
     sessionId,
@@ -278,7 +308,7 @@ router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<voi
     try {
       tutorTip = (
         await chatJson<{ tip: string }>(
-          "You are a kind, concise Cloud Architecture tutor. Given a problem, the correct answer, and the student's wrong attempt, give ONE focused next-step tip (2 sentences max). Respond as strict JSON: {\"tip\": string}.",
+          "You are a kind, concise cryptography tutor. Given a problem, the correct answer, and the student's wrong attempt, give ONE focused next-step tip (2 sentences max). Respond as strict JSON: {\"tip\": string}.",
           JSON.stringify({
             prompt: problem.prompt,
             correctAnswer: problem.correctAnswer,
@@ -295,6 +325,7 @@ router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<voi
     GradePracticeAnswerResponse.parse({
       problemId,
       correct: graded.correct,
+      percentage: graded.percentage,
       correctAnswer: problem.correctAnswer,
       explanation: graded.explanation || problem.explanation,
       newDifficulty,
