@@ -24,7 +24,7 @@ function normalize(src: string): string {
 export function MarkdownRenderer({ content, inverted = false }: MarkdownRendererProps) {
   const normalized = normalize(content ?? "");
   const base =
-    "prose max-w-none prose-headings:font-serif prose-p:leading-relaxed prose-a:text-primary prose-pre:bg-slate-50 prose-code:before:content-none prose-code:after:content-none";
+    "prose max-w-none prose-headings:font-serif prose-p:leading-relaxed prose-a:text-primary prose-code:before:content-none prose-code:after:content-none [&_pre]:border [&_pre]:border-slate-700 [&_pre]:bg-slate-900 [&_pre]:text-slate-50 [&_pre]:shadow-sm [&_pre_code]:whitespace-pre-wrap [&_pre_code]:break-words [&_pre_code]:text-slate-50";
   const theme = inverted
     ? "prose-invert text-inherit prose-headings:text-inherit prose-strong:text-inherit prose-code:text-inherit prose-a:text-inherit"
     : "prose-slate dark:prose-invert";
