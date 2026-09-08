@@ -207,6 +207,7 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback((checkoutAfter = false) => {
     preservePageDraft();
     if (checkoutAfter) localStorage.setItem(PENDING_CHECKOUT, "1");
+    else localStorage.removeItem(PENDING_CHECKOUT);
     window.location.assign(
       `/api/auth/google?returnTo=${encodeURIComponent(relativeReturnTo())}`,
     );

@@ -154,7 +154,7 @@ function TopBar() {
   }
 
   return (
-    <div className="sticky top-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-b border-border bg-background/80 backdrop-blur">
+    <div className="sticky top-0 z-10 flex min-h-16 flex-wrap items-center justify-end gap-2 px-6 pb-3 pt-16 xl:pt-3 xl:pr-[400px] border-b border-border bg-background/80 backdrop-blur">
       {isAdmin && <button
         onClick={handleExpandLectures}
         disabled={expanding}

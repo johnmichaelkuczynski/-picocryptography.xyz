@@ -66,7 +66,19 @@ export default function AccessChrome() {
 
   return (
     <>
-      <div data-access-controls className="fixed right-3 top-3 z-[60] flex items-center gap-2 sm:right-5">
+      <div data-access-controls className="fixed right-3 top-3 z-[60] flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center justify-end gap-2 sm:right-5">
+        {!access?.user && (
+          <button
+            type="button"
+            onClick={() => signIn(false)}
+            disabled={loading}
+            data-testid="button-google-sign-in"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium shadow-md hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+          >
+            <LogIn className="h-4 w-4" aria-hidden="true" />
+            Sign in with Google
+          </button>
+        )}
         {access?.user && (
           <button
             type="button"

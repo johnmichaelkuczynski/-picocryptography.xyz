@@ -83,7 +83,7 @@ function CourseEntryButton({
 export default function Landing() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-4 px-6 pb-4 pt-20 xl:pt-4 xl:pr-[360px] border-b border-border">
+      <header className="flex flex-wrap items-center justify-between gap-4 px-6 pb-4 pt-20 xl:pt-4 xl:pr-[400px] border-b border-border">
         <div className="flex items-center gap-3">
           <a
             href="https://zhisystems.ai/"
