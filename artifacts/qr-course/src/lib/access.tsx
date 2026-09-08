@@ -33,6 +33,25 @@ const PENDING_CHECKOUT = "qr-course:checkout-after-login";
 const REDIRECT_DRAFT = "qr-course:redirect-draft";
 export const BILLING_ORIGIN = "qr-course:billing-origin";
 
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly data: Record<string, unknown> | null;
+
+  constructor(
+    message: string,
+    status: number,
+    code: string,
+    data: Record<string, unknown> | null,
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+    this.data = data;
+  }
+}
+
 let currentCsrfToken = "";
 const nativeFetch = window.fetch.bind(window);
 
@@ -112,7 +131,7 @@ export async function apiRequest<T>(
       (typeof data?.message === "string" && data.message) ||
       (typeof data?.error === "string" && data.error) ||
       `Request failed (${response.status})`;
-    throw new Error(message);
+    throw new ApiRequestError(message, response.status, code, data);
   }
   return data as T;
 }
@@ -240,15 +259,49 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
       window.location.assign(result.url);
     } catch (cause) {
       localStorage.removeItem(PENDING_CHECKOUT);
+      if (
+        cause instanceof ApiRequestError &&
+        cause.status === 409 &&
+        cause.code === "ALREADY_PAID"
+      ) {
+        const next = await refresh();
+        if (next?.stage === "paid") {
+          toast({
+            title: "Full access is already active",
+            description: "Your existing payment is active. No new checkout was created.",
+          });
+        } else {
+          const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+          window.location.assign(`${basePath}/billing/return`);
+        }
+        return;
+      }
+      if (
+        cause instanceof ApiRequestError &&
+        ((cause.status === 409 &&
+          (cause.code === "CHECKOUT_RECONCILIATION_REQUIRED" ||
+            cause.code === "PENDING_CHECKOUT_CONFLICT")) ||
+          (cause.status === 502 && cause.code === "CHECKOUT_FAILED"))
+      ) {
+        // A checkout may already exist even though no URL was returned. Route
+        // through server-authoritative status recovery rather than offering a
+        // second purchase.
+        const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+        window.location.assign(`${basePath}/billing/return`);
+        return;
+      }
       toast({
         title: "Unable to start checkout",
-        description: cause instanceof Error ? cause.message : "Please try again.",
+        description:
+          cause instanceof Error
+            ? cause.message
+            : "No checkout was opened. Check your payment status before trying again.",
         variant: "destructive",
       });
     } finally {
       checkoutStarting.current = false;
     }
-  }, [access?.user, signIn]);
+  }, [access?.user, refresh, signIn]);
 
   const portal = useCallback(async () => {
     try {
@@ -376,6 +429,11 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!access?.user || localStorage.getItem(PENDING_CHECKOUT) !== "1") return;
+    const onBillingReturn = window.location.pathname.endsWith("/billing/return");
+    if (access.stage === "paid" || onBillingReturn) {
+      localStorage.removeItem(PENDING_CHECKOUT);
+      return;
+    }
     const timer = window.setTimeout(() => {
       localStorage.removeItem(PENDING_CHECKOUT);
       void checkout();

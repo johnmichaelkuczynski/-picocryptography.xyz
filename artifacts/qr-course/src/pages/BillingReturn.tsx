@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2, RotateCcw, XCircle } from "lucide-react";
-import { apiRequest, BILLING_ORIGIN, useAccess } from "@/lib/access";
+import {
+  apiRequest,
+  ApiRequestError,
+  BILLING_ORIGIN,
+  useAccess,
+} from "@/lib/access";
 
 type Status = "verifying" | "paid" | "unpaid" | "error";
 
@@ -12,12 +17,35 @@ export default function BillingReturn() {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
   const courseHref = `${basePath}${courseReturnTo}`;
 
+  async function recoverExistingPayment(): Promise<boolean> {
+    const billingStatus = await apiRequest<{ paid: boolean }>("/api/billing/status");
+    const nextAccess = await refresh();
+    return billingStatus.paid || nextAccess?.stage === "paid";
+  }
+
   async function verify() {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id") ?? params.get("sessionId");
     if (!sessionId) {
-      setStatus("unpaid");
-      setMessage("Checkout was canceled or no Stripe session was returned. No access has been unlocked.");
+      setStatus("verifying");
+      setMessage("");
+      try {
+        const paid = await recoverExistingPayment();
+        if (paid) {
+          setStatus("paid");
+          setMessage("Your existing payment is active. Full course access is now available.");
+        } else {
+          setStatus("unpaid");
+          setMessage(
+            "No completed payment could be confirmed. Checkout may have been canceled or may still be processing. Do not start another payment while one is pending; retry this status check first.",
+          );
+        }
+      } catch {
+        setStatus("error");
+        setMessage(
+          "We could not check the existing payment. Payment may have succeeded. DO NOT PAY AGAIN. Retry verification of the existing payment below.",
+        );
+      }
       return;
     }
     setStatus("verifying");
@@ -27,8 +55,8 @@ export default function BillingReturn() {
         method: "POST",
         body: JSON.stringify({ sessionId }),
       });
-      await refresh();
-      if (result.paid) {
+      const nextAccess = await refresh();
+      if (result.paid || nextAccess?.stage === "paid") {
         setStatus("paid");
         setMessage("Stripe confirmed your payment. Full course access is now active.");
       } else {
@@ -36,8 +64,28 @@ export default function BillingReturn() {
         setMessage("Stripe has not confirmed payment. Your access has not changed.");
       }
     } catch (cause) {
+      try {
+        const paid = await recoverExistingPayment();
+        if (paid) {
+          setStatus("paid");
+          setMessage("Your existing payment is active. Full course access is now available.");
+          return;
+        }
+      } catch {
+        // Keep the original verification failure as the diagnostic detail.
+      }
+      const safeCode =
+        cause instanceof ApiRequestError && /^[A-Z0-9_]+$/.test(cause.code)
+          ? cause.code
+          : null;
+      const detail =
+        cause instanceof ApiRequestError
+          ? ` (${safeCode || `HTTP ${cause.status}`})`
+          : "";
       setStatus("error");
-      setMessage(cause instanceof Error ? cause.message : "Payment verification failed.");
+      setMessage(
+        `We could not confirm the existing payment${detail}. Payment may have succeeded. DO NOT PAY AGAIN. Retry verification of the existing payment below.`,
+      );
     }
   }
 
@@ -71,7 +119,7 @@ export default function BillingReturn() {
                 className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium hover:bg-secondary"
               >
                 <RotateCcw className="h-4 w-4" />
-                Retry verification
+                Retry existing payment
               </button>
             )}
             <a href={courseHref}>

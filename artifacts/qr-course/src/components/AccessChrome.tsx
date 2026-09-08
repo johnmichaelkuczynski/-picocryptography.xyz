@@ -21,6 +21,8 @@ export default function AccessChrome() {
   } = useAccess();
   const price = formatBillingPrice(billing);
   const billingUnavailable = billing && (!billing.available || !billing.price);
+  const billingReturnPending =
+    location.startsWith("/billing/return") && access?.stage !== "paid";
   const gated =
     !excludedGatePaths.some(
       (path) => location === path || (path !== "/" && location.startsWith(path)),
@@ -104,12 +106,18 @@ export default function AccessChrome() {
           <button
             type="button"
             onClick={() => void checkout()}
-            disabled={loading || Boolean(billingUnavailable)}
+            disabled={loading || Boolean(billingUnavailable) || billingReturnPending}
             title={billing?.error}
             className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-md hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-            <span>{price ? `Pay ${price}` : "Pay"}</span>
+            <span>
+              {billingReturnPending
+                ? "Verifying payment…"
+                : price
+                  ? `Pay ${price}`
+                  : "Pay"}
+            </span>
           </button>
         )}
       </div>

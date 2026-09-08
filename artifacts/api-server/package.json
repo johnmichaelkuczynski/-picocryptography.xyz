@@ -9,7 +9,8 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:auth": "node ./test-auth.mjs",
-    "test:http-access": "node ./test-http-access.mjs"
+    "test:http-access": "node ./test-http-access.mjs",
+    "test:billing": "node ./test-billing.mjs"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",

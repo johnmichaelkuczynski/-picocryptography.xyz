@@ -1,5 +1,6 @@
 - [Course answer-key QC diagnostic](course-qc-diagnostic.md) — LLM key-legitimacy checks must judge against the course's own lecture text (not generic knowledge), or correct course-specific keys false-flag.
 - [App access model](api-auth-model.md) — Staged guest → Google → paid access replaces public-only policy; Stripe must use live credentials, never sandbox.
+- [Stripe reconciliation](stripe-reconciliation.md) — Verification failure is not charge failure; recover or block completed purchases, and serialize current Stripe reads with entitlement writes.
 - [Google session continuity](google-session-continuity.md) — Passport rotates sessions during login; retain guest ownership before authentication, but never reuse it across Google accounts.
 - [Tutor starter-question style](tutor-starter-questions.md) — lecture starter questions must ALWAYS be concrete-case application; never definition/abstract/comparison questions (user mandate).
 - [Course content reseed](course-content-reseed.md) — seeded data migrations must self-heal via a content marker + replace-in-transaction; "seed if empty" strands old content in existing/prod DBs (prod writes are read-only).
