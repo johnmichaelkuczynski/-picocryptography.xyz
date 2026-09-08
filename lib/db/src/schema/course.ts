@@ -86,6 +86,8 @@ export const attemptsTable = pgTable("attempts", {
   submittedAt: timestamp("submitted_at", { withTimezone: true }),
   deadlineAt: timestamp("deadline_at", { withTimezone: true }),
   scorePercent: doublePrecision("score_percent"),
+  ownerId: text("owner_id"),
+  userId: integer("user_id"),
 });
 
 export const answersTable = pgTable("answers", {
@@ -127,6 +129,8 @@ export const practiceSessionsTable = pgTable("practice_sessions", {
   focusOnWeaknesses: boolean("focus_on_weaknesses").notNull().default(true),
   difficulty: doublePrecision("difficulty").notNull().default(2.0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  ownerId: text("owner_id"),
+  userId: integer("user_id"),
 });
 
 export const practiceProblemsTable = pgTable("practice_problems", {
@@ -220,6 +224,8 @@ export const diagnosticAttemptsTable = pgTable("diagnostic_attempts", {
   scoreSummary: jsonb("score_summary"),
   startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
   submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  ownerId: text("owner_id"),
+  userId: integer("user_id"),
 });
 
 // Per-item responses for a submitted attempt. The full response set is also

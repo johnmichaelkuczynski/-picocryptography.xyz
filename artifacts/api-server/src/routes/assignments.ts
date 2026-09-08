@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { createHash } from "node:crypto";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import type { Request } from "express";
 import {
   db,
   assignmentsTable,
@@ -20,8 +21,23 @@ import {
 } from "@workspace/api-zod";
 import { gradeAnswer, GradingUnavailableError } from "../lib/grading";
 import { detect } from "../lib/detection";
+import { getAccessIdentity } from "../lib/access";
 
 const router: IRouter = Router();
+
+function attemptOwner(req: Request) {
+  const identity = getAccessIdentity(req);
+  return {
+    identity,
+    condition:
+      identity.userId == null
+        ? and(
+            isNull(attemptsTable.userId),
+            eq(attemptsTable.ownerId, identity.ownerId),
+          )!
+        : eq(attemptsTable.userId, identity.userId),
+  };
+}
 
 function persistenceEvidence(answer: string) {
   return {
@@ -87,7 +103,8 @@ async function upsertAnswerSnapshot(
   }
 }
 
-router.get("/assignments", async (_req, res) => {
+router.get("/assignments", async (req, res) => {
+  const owner = attemptOwner(req);
   const rows = await db
     .select()
     .from(assignmentsTable)
@@ -101,7 +118,7 @@ router.get("/assignments", async (_req, res) => {
       const attempts = await db
         .select()
         .from(attemptsTable)
-        .where(eq(attemptsTable.assignmentId, a.id))
+        .where(and(eq(attemptsTable.assignmentId, a.id), owner.condition))
         .orderBy(asc(attemptsTable.id));
       const submitted = attempts.filter((x) => x.status === "submitted");
       const inProgress = attempts.find((x) => x.status === "in_progress");
@@ -172,11 +189,12 @@ router.get("/assignments/:assignmentId", async (req, res): Promise<void> => {
   );
 });
 
-async function loadAttempt(attemptId: number) {
+async function loadAttempt(req: Request, attemptId: number) {
+  const owner = attemptOwner(req);
   const [attempt] = await db
     .select()
     .from(attemptsTable)
-    .where(eq(attemptsTable.id, attemptId));
+    .where(and(eq(attemptsTable.id, attemptId), owner.condition));
   if (!attempt) return null;
   const answers = await db
     .select()
@@ -200,6 +218,7 @@ async function loadAttempt(attemptId: number) {
 }
 
 router.post("/assignments/:assignmentId/start", async (req, res): Promise<void> => {
+  const owner = attemptOwner(req);
   const id = parseIdParam(req.params.assignmentId);
   if (!Number.isFinite(id)) {
     res.status(400).json({ error: "invalid id" });
@@ -215,9 +234,9 @@ router.post("/assignments/:assignmentId/start", async (req, res): Promise<void> 
   const [existing] = await db
     .select()
     .from(attemptsTable)
-    .where(and(eq(attemptsTable.assignmentId, id), eq(attemptsTable.status, "in_progress")));
+    .where(and(eq(attemptsTable.assignmentId, id), eq(attemptsTable.status, "in_progress"), owner.condition));
   if (existing) {
-    const state = await loadAttempt(existing.id);
+    const state = await loadAttempt(req, existing.id);
     res.json(StartAssignmentAttemptResponse.parse(state));
     return;
   }
@@ -228,13 +247,19 @@ router.post("/assignments/:assignmentId/start", async (req, res): Promise<void> 
       : null;
   const [created] = await db
     .insert(attemptsTable)
-    .values({ assignmentId: id, status: "in_progress", deadlineAt })
+    .values({
+      assignmentId: id,
+      status: "in_progress",
+      deadlineAt,
+      ownerId: owner.identity.ownerId,
+      userId: owner.identity.userId,
+    })
     .returning();
   if (!created) {
     res.status(500).json({ error: "failed to create" });
     return;
   }
-  const state = await loadAttempt(created.id);
+  const state = await loadAttempt(req, created.id);
   res.json(StartAssignmentAttemptResponse.parse(state));
 });
 
@@ -244,7 +269,7 @@ router.get("/assignments/attempts/:attemptId", async (req, res): Promise<void> =
     res.status(400).json({ error: "invalid id" });
     return;
   }
-  const state = await loadAttempt(id);
+  const state = await loadAttempt(req, id);
   if (!state) {
     res.status(404).json({ error: "attempt not found" });
     return;
@@ -253,6 +278,7 @@ router.get("/assignments/attempts/:attemptId", async (req, res): Promise<void> =
 });
 
 router.put("/assignments/attempts/:attemptId/answer", async (req, res): Promise<void> => {
+  const owner = attemptOwner(req);
   const id = parseIdParam(req.params.attemptId);
   if (!Number.isFinite(id)) {
     res.status(400).json({ error: "invalid id" });
@@ -268,7 +294,7 @@ router.put("/assignments/attempts/:attemptId/answer", async (req, res): Promise<
   const [attempt] = await db
     .select()
     .from(attemptsTable)
-    .where(eq(attemptsTable.id, id));
+    .where(and(eq(attemptsTable.id, id), owner.condition));
   if (!attempt) {
     res.status(404).json({ error: "attempt not found" });
     return;
@@ -389,6 +415,7 @@ router.put("/assignments/attempts/:attemptId/answer", async (req, res): Promise<
 });
 
 router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise<void> => {
+  const owner = attemptOwner(req);
   const id = parseIdParam(req.params.attemptId);
   if (!Number.isFinite(id)) {
     res.status(400).json({ error: "invalid id" });
@@ -399,11 +426,11 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { answers: finalSnapshots, skipDetection } = parsed.data;
+  const { answers: finalSnapshots } = parsed.data;
   const [attempt] = await db
     .select()
     .from(attemptsTable)
-    .where(eq(attemptsTable.id, id));
+    .where(and(eq(attemptsTable.id, id), owner.condition));
   if (!attempt) {
     res.status(404).json({ error: "attempt not found" });
     return;
@@ -486,7 +513,7 @@ router.post("/assignments/attempts/:attemptId/submit", async (req, res): Promise
             : graded.explanation || p.explanation,
       });
 
-      if (a && userAnswer.trim().length > 0 && !skipDetection) {
+      if (a && userAnswer.trim().length > 0) {
       const det = await detect(userAnswer, {
         keystrokeCount: a.keystrokeCount,
         eraseCount: a.eraseCount,

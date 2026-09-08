@@ -539,6 +539,7 @@ function Question({
               : "Your answer — a sentence is plenty:"}
           </p>
           <AnswerInput
+            draftKey={`reasoning-item-${item.id}`}
             value={written}
             onChange={(val) => onWrite(val)}
             compact

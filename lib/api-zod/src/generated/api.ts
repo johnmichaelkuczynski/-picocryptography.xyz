@@ -9,6 +9,105 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Current Google identity and server-enforced trial allowance
+ */
+export const GetAccessResponse = zod.object({
+  "stage": zod.enum(['guest', 'free', 'login_required', 'payment_required', 'paid']),
+  "user": zod.object({
+  "id": zod.number(),
+  "displayName": zod.string(),
+  "email": zod.string(),
+  "isAdmin": zod.boolean().optional()
+}).nullable(),
+  "activeSeconds": zod.number(),
+  "actionsUsed": zod.number(),
+  "secondsLimit": zod.number(),
+  "actionsLimit": zod.number(),
+  "csrfToken": zod.string()
+})
+
+
+/**
+ * @summary Record active usage using server elapsed time
+ */
+export const RecordAccessHeartbeatResponse = zod.object({
+  "stage": zod.enum(['guest', 'free', 'login_required', 'payment_required', 'paid']),
+  "user": zod.object({
+  "id": zod.number(),
+  "displayName": zod.string(),
+  "email": zod.string(),
+  "isAdmin": zod.boolean().optional()
+}).nullable(),
+  "activeSeconds": zod.number(),
+  "actionsUsed": zod.number(),
+  "secondsLimit": zod.number(),
+  "actionsLimit": zod.number(),
+  "csrfToken": zod.string()
+})
+
+
+/**
+ * @summary Begin Google-only OAuth login
+ */
+export const StartGoogleLoginQueryParams = zod.object({
+  "returnTo": zod.coerce.string().optional()
+})
+
+
+/**
+ * @summary Live Stripe price and checkout availability
+ */
+export const GetBillingConfigResponse = zod.object({
+  "available": zod.boolean(),
+  "liveMode": zod.boolean(),
+  "price": zod.object({
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "interval": zod.string().nullable(),
+  "intervalCount": zod.number().nullable()
+}).nullable(),
+  "error": zod.string().optional()
+})
+
+
+export const GetBillingStatusResponse = zod.object({
+  "paid": zod.boolean()
+})
+
+
+/**
+ * @summary Create live hosted checkout for the authenticated Google account
+ */
+export const CreateBillingCheckoutBody = zod.object({
+  "returnTo": zod.string().optional()
+})
+
+export const CreateBillingCheckoutResponse = zod.object({
+  "url": zod.string()
+})
+
+
+/**
+ * @summary Verify an owned checkout with Stripe before granting access
+ */
+
+
+
+export const VerifyBillingCheckoutBody = zod.object({
+  "sessionId": zod.string().min(1)
+})
+
+export const VerifyBillingCheckoutResponse = zod.object({
+  "paid": zod.boolean()
+})
+
+
+export const CreateBillingPortalResponse = zod.object({
+  "url": zod.string()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

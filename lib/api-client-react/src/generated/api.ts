@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccessState,
   ActivityItem,
   AnalyticsReport,
   AnalyticsSummary,
@@ -29,6 +30,11 @@ import type {
   AssignmentSummary,
   AttemptResult,
   AttemptState,
+  BillingConfig,
+  BillingRedirect,
+  BillingStatus,
+  BillingVerificationInput,
+  CheckoutInput,
   CourseOverview,
   DetectionResult,
   DetectionScanInput,
@@ -56,6 +62,7 @@ import type {
   ReasoningAttemptState,
   ReasoningResult,
   RewriteLectureInput,
+  StartGoogleLoginParams,
   StartReasoningBody,
   SubmitAttemptInput,
   SubmitReasoningBody,
@@ -77,6 +84,808 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getGetAccessUrl = () => {
+
+
+
+
+  return `/api/access`
+}
+
+/**
+ * @summary Current Google identity and server-enforced trial allowance
+ */
+export const getAccess = async ( options?: RequestInit): Promise<AccessState> => {
+
+  return customFetch<AccessState>(getGetAccessUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAccessQueryKey = () => {
+    return [
+    `/api/access`
+    ] as const;
+    }
+
+
+export const getGetAccessQueryOptions = <TData = Awaited<ReturnType<typeof getAccess>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccess>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAccessQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccess>>> = ({ signal }) => getAccess({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAccess>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAccessQueryResult = NonNullable<Awaited<ReturnType<typeof getAccess>>>
+export type GetAccessQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Current Google identity and server-enforced trial allowance
+ */
+
+export function useGetAccess<TData = Awaited<ReturnType<typeof getAccess>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccess>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAccessQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRecordAccessHeartbeatUrl = () => {
+
+
+
+
+  return `/api/access/heartbeat`
+}
+
+/**
+ * @summary Record active usage using server elapsed time
+ */
+export const recordAccessHeartbeat = async ( options?: RequestInit): Promise<AccessState> => {
+
+  return customFetch<AccessState>(getRecordAccessHeartbeatUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRecordAccessHeartbeatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordAccessHeartbeat>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordAccessHeartbeat>>, TError,void, TContext> => {
+
+const mutationKey = ['recordAccessHeartbeat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordAccessHeartbeat>>, void> = () => {
+
+
+          return  recordAccessHeartbeat(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordAccessHeartbeatMutationResult = NonNullable<Awaited<ReturnType<typeof recordAccessHeartbeat>>>
+
+    export type RecordAccessHeartbeatMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Record active usage using server elapsed time
+ */
+export const useRecordAccessHeartbeat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordAccessHeartbeat>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordAccessHeartbeat>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRecordAccessHeartbeatMutationOptions(options));
+    }
+
+export const getStartGoogleLoginUrl = (params?: StartGoogleLoginParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/auth/google?${stringifiedParams}` : `/api/auth/google`
+}
+
+/**
+ * @summary Begin Google-only OAuth login
+ */
+export const startGoogleLogin = async (params?: StartGoogleLoginParams, options?: RequestInit): Promise<unknown> => {
+
+  return customFetch<unknown>(getStartGoogleLoginUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStartGoogleLoginQueryKey = (params?: StartGoogleLoginParams,) => {
+    return [
+    `/api/auth/google`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getStartGoogleLoginQueryOptions = <TData = Awaited<ReturnType<typeof startGoogleLogin>>, TError = ErrorType<void>>(params?: StartGoogleLoginParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof startGoogleLogin>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStartGoogleLoginQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof startGoogleLogin>>> = ({ signal }) => startGoogleLogin(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof startGoogleLogin>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type StartGoogleLoginQueryResult = NonNullable<Awaited<ReturnType<typeof startGoogleLogin>>>
+export type StartGoogleLoginQueryError = ErrorType<void>
+
+
+/**
+ * @summary Begin Google-only OAuth login
+ */
+
+export function useStartGoogleLogin<TData = Awaited<ReturnType<typeof startGoogleLogin>>, TError = ErrorType<void>>(
+ params?: StartGoogleLoginParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof startGoogleLogin>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getStartGoogleLoginQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCompleteGoogleLoginUrl = () => {
+
+
+
+
+  return `/api/auth/google/callback`
+}
+
+/**
+ * @summary Validate OAuth state and establish a Google account session
+ */
+export const completeGoogleLogin = async ( options?: RequestInit): Promise<unknown> => {
+
+  return customFetch<unknown>(getCompleteGoogleLoginUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCompleteGoogleLoginQueryKey = () => {
+    return [
+    `/api/auth/google/callback`
+    ] as const;
+    }
+
+
+export const getCompleteGoogleLoginQueryOptions = <TData = Awaited<ReturnType<typeof completeGoogleLogin>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof completeGoogleLogin>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCompleteGoogleLoginQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof completeGoogleLogin>>> = ({ signal }) => completeGoogleLogin({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof completeGoogleLogin>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CompleteGoogleLoginQueryResult = NonNullable<Awaited<ReturnType<typeof completeGoogleLogin>>>
+export type CompleteGoogleLoginQueryError = ErrorType<void>
+
+
+/**
+ * @summary Validate OAuth state and establish a Google account session
+ */
+
+export function useCompleteGoogleLogin<TData = Awaited<ReturnType<typeof completeGoogleLogin>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof completeGoogleLogin>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCompleteGoogleLoginQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getLogoutGoogleUrl = () => {
+
+
+
+
+  return `/api/auth/logout`
+}
+
+/**
+ * @summary End the Google app session
+ */
+export const logoutGoogle = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getLogoutGoogleUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getLogoutGoogleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGoogle>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutGoogle>>, TError,void, TContext> => {
+
+const mutationKey = ['logoutGoogle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutGoogle>>, void> = () => {
+
+
+          return  logoutGoogle(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutGoogleMutationResult = NonNullable<Awaited<ReturnType<typeof logoutGoogle>>>
+
+    export type LogoutGoogleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary End the Google app session
+ */
+export const useLogoutGoogle = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutGoogle>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logoutGoogle>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutGoogleMutationOptions(options));
+    }
+
+export const getGetBillingConfigUrl = () => {
+
+
+
+
+  return `/api/billing/config`
+}
+
+/**
+ * @summary Live Stripe price and checkout availability
+ */
+export const getBillingConfig = async ( options?: RequestInit): Promise<BillingConfig> => {
+
+  return customFetch<BillingConfig>(getGetBillingConfigUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBillingConfigQueryKey = () => {
+    return [
+    `/api/billing/config`
+    ] as const;
+    }
+
+
+export const getGetBillingConfigQueryOptions = <TData = Awaited<ReturnType<typeof getBillingConfig>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBillingConfigQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingConfig>>> = ({ signal }) => getBillingConfig({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBillingConfig>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBillingConfigQueryResult = NonNullable<Awaited<ReturnType<typeof getBillingConfig>>>
+export type GetBillingConfigQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Live Stripe price and checkout availability
+ */
+
+export function useGetBillingConfig<TData = Awaited<ReturnType<typeof getBillingConfig>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingConfig>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBillingConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetBillingStatusUrl = () => {
+
+
+
+
+  return `/api/billing/status`
+}
+
+export const getBillingStatus = async ( options?: RequestInit): Promise<BillingStatus> => {
+
+  return customFetch<BillingStatus>(getGetBillingStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBillingStatusQueryKey = () => {
+    return [
+    `/api/billing/status`
+    ] as const;
+    }
+
+
+export const getGetBillingStatusQueryOptions = <TData = Awaited<ReturnType<typeof getBillingStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBillingStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingStatus>>> = ({ signal }) => getBillingStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBillingStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBillingStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getBillingStatus>>>
+export type GetBillingStatusQueryError = ErrorType<unknown>
+
+
+
+export function useGetBillingStatus<TData = Awaited<ReturnType<typeof getBillingStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBillingStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateBillingCheckoutUrl = () => {
+
+
+
+
+  return `/api/billing/checkout`
+}
+
+/**
+ * @summary Create live hosted checkout for the authenticated Google account
+ */
+export const createBillingCheckout = async (checkoutInput?: CheckoutInput, options?: RequestInit): Promise<BillingRedirect> => {
+
+  return customFetch<BillingRedirect>(getCreateBillingCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      checkoutInput,)
+  }
+);}
+
+
+
+
+export const getCreateBillingCheckoutMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingCheckout>>, TError,{data?: BodyType<CheckoutInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBillingCheckout>>, TError,{data?: BodyType<CheckoutInput>}, TContext> => {
+
+const mutationKey = ['createBillingCheckout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBillingCheckout>>, {data?: BodyType<CheckoutInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createBillingCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBillingCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof createBillingCheckout>>>
+    export type CreateBillingCheckoutMutationBody = BodyType<CheckoutInput> | undefined
+    export type CreateBillingCheckoutMutationError = ErrorType<void>
+
+    /**
+ * @summary Create live hosted checkout for the authenticated Google account
+ */
+export const useCreateBillingCheckout = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingCheckout>>, TError,{data?: BodyType<CheckoutInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBillingCheckout>>,
+        TError,
+        {data?: BodyType<CheckoutInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBillingCheckoutMutationOptions(options));
+    }
+
+export const getVerifyBillingCheckoutUrl = () => {
+
+
+
+
+  return `/api/billing/verify`
+}
+
+/**
+ * @summary Verify an owned checkout with Stripe before granting access
+ */
+export const verifyBillingCheckout = async (billingVerificationInput: BillingVerificationInput, options?: RequestInit): Promise<BillingStatus> => {
+
+  return customFetch<BillingStatus>(getVerifyBillingCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      billingVerificationInput,)
+  }
+);}
+
+
+
+
+export const getVerifyBillingCheckoutMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyBillingCheckout>>, TError,{data: BodyType<BillingVerificationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyBillingCheckout>>, TError,{data: BodyType<BillingVerificationInput>}, TContext> => {
+
+const mutationKey = ['verifyBillingCheckout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyBillingCheckout>>, {data: BodyType<BillingVerificationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyBillingCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyBillingCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof verifyBillingCheckout>>>
+    export type VerifyBillingCheckoutMutationBody = BodyType<BillingVerificationInput>
+    export type VerifyBillingCheckoutMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Verify an owned checkout with Stripe before granting access
+ */
+export const useVerifyBillingCheckout = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyBillingCheckout>>, TError,{data: BodyType<BillingVerificationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof verifyBillingCheckout>>,
+        TError,
+        {data: BodyType<BillingVerificationInput>},
+        TContext
+      > => {
+      return useMutation(getVerifyBillingCheckoutMutationOptions(options));
+    }
+
+export const getCreateBillingPortalUrl = () => {
+
+
+
+
+  return `/api/billing/portal`
+}
+
+export const createBillingPortal = async ( options?: RequestInit): Promise<BillingRedirect> => {
+
+  return customFetch<BillingRedirect>(getCreateBillingPortalUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCreateBillingPortalMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingPortal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBillingPortal>>, TError,void, TContext> => {
+
+const mutationKey = ['createBillingPortal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBillingPortal>>, void> = () => {
+
+
+          return  createBillingPortal(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBillingPortalMutationResult = NonNullable<Awaited<ReturnType<typeof createBillingPortal>>>
+
+    export type CreateBillingPortalMutationError = ErrorType<unknown>
+
+    export const useCreateBillingPortal = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingPortal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBillingPortal>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateBillingPortalMutationOptions(options));
+    }
+
+export const getReceiveStripeWebhookUrl = () => {
+
+
+
+
+  return `/api/stripe/webhook`
+}
+
+/**
+ * @summary Receive signed live Stripe events using the raw body
+ */
+export const receiveStripeWebhook = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getReceiveStripeWebhookUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getReceiveStripeWebhookMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveStripeWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof receiveStripeWebhook>>, TError,void, TContext> => {
+
+const mutationKey = ['receiveStripeWebhook'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof receiveStripeWebhook>>, void> = () => {
+
+
+          return  receiveStripeWebhook(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReceiveStripeWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof receiveStripeWebhook>>>
+
+    export type ReceiveStripeWebhookMutationError = ErrorType<void>
+
+    /**
+ * @summary Receive signed live Stripe events using the raw body
+ */
+export const useReceiveStripeWebhook = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof receiveStripeWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof receiveStripeWebhook>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getReceiveStripeWebhookMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

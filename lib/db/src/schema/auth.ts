@@ -41,6 +41,29 @@ export const uniqueVisitorsTable = pgTable("unique_visitors", {
   hits: integer("hits").notNull().default(1),
 });
 
+export const trialUsageTable = pgTable("trial_usage", {
+  ownerId: text("owner_id").primaryKey(),
+  userId: integer("user_id").references(() => usersTable.id, {
+    onDelete: "cascade",
+  }),
+  activeSeconds: integer("active_seconds").notNull().default(0),
+  actionsUsed: integer("actions_used").notNull().default(0),
+  heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type TrialUsage = typeof trialUsageTable.$inferSelect;
+
+export const trialAccountsTable = pgTable("trial_accounts", {
+  userId: integer("user_id")
+    .primaryKey()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  secondsLimit: integer("seconds_limit").notNull(),
+  actionsLimit: integer("actions_limit").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type UniqueVisitor = typeof uniqueVisitorsTable.$inferSelect;
 
 export const insertVisitSchema = createInsertSchema(visitsTable).omit({

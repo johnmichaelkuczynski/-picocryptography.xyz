@@ -47,8 +47,9 @@ router.get("/tutor/suggestions/:lectureId", async (req, res): Promise<void> => {
   // should Alex do after lying?"), since the prompt + retry do the heavy lifting.
   const isAbstract = (q: string): boolean => {
     const t = q.toLowerCase().trim();
-    const capitalized = q.match(/\b[A-Z][A-Za-z]*(?:['’]s)?\b/g) ?? [];
-    const questionWords = new Set([
+    const capitalized: string[] =
+      q.match(/\b[A-Z][A-Za-z]*(?:['’]s)?\b/g) ?? [];
+    const questionWords = new Set<string>([
       "A",
       "An",
       "At",

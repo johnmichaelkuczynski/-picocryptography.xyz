@@ -3,12 +3,15 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, PenTool, BarChart3, Activity, RotateCcw, Sparkles, Scale, GraduationCap, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminMode } from "@/lib/adminMode";
+import { useAccess } from "@/lib/access";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export function Sidebar() {
   const [location] = useLocation();
   const [adminMode] = useAdminMode();
+  const { access } = useAccess();
+  const isAdmin = access?.user?.isAdmin === true;
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -16,7 +19,7 @@ export function Sidebar() {
     { href: "/reasoning", label: "Assessments", icon: Scale },
     { href: "/grades", label: "Grades", icon: GraduationCap },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    ...(adminMode
+    ...(isAdmin && adminMode
       ? [{ href: "/admin", label: "Administrator", icon: ShieldCheck }]
       : []),
   ];
@@ -79,6 +82,8 @@ function TopBar() {
   const [location, setLocation] = useLocation();
   const active = location.startsWith("/diagnostics");
   const [adminMode, setAdminMode] = useAdminMode();
+  const { access } = useAccess();
+  const isAdmin = access?.user?.isAdmin === true;
   const qc = useQueryClient();
   const [resetting, setResetting] = useState(false);
   const [expanding, setExpanding] = useState(false);
@@ -150,7 +155,7 @@ function TopBar() {
 
   return (
     <div className="sticky top-0 z-10 flex items-center justify-end gap-2 px-6 py-3 border-b border-border bg-background/80 backdrop-blur">
-      <button
+      {isAdmin && <button
         onClick={handleExpandLectures}
         disabled={expanding}
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border border-border hover:bg-secondary disabled:opacity-50"
@@ -159,8 +164,8 @@ function TopBar() {
       >
         <Sparkles className={`w-4 h-4 ${expanding ? "animate-pulse" : ""}`} />
         {expanding ? (expandProgress ?? "Rewriting…") : "Generate medium + long lectures"}
-      </button>
-      <button
+      </button>}
+      {isAdmin && <button
         onClick={handleReset}
         disabled={resetting}
         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium border border-border hover:bg-secondary disabled:opacity-50"
@@ -169,7 +174,7 @@ function TopBar() {
       >
         <RotateCcw className={`w-4 h-4 ${resetting ? "animate-spin" : ""}`} />
         {resetting ? "Resetting…" : "Reset course"}
-      </button>
+      </button>}
       <Link href="/diagnostics">
         <button
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -184,7 +189,7 @@ function TopBar() {
         </button>
       </Link>
 
-      <button
+      {isAdmin && <button
         onClick={() => setAdminMode(!adminMode)}
         className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
           adminMode
@@ -196,7 +201,7 @@ function TopBar() {
       >
         <ShieldCheck className="w-4 h-4" />
         {adminMode ? "Admin: On" : "Admin: Off"}
-      </button>
+      </button>}
 
     </div>
   );

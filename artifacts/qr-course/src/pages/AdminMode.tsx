@@ -9,10 +9,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { useAdminMode } from "@/lib/adminMode";
+import { useAccess } from "@/lib/access";
+import NotFound from "@/pages/not-found";
 
 type Source = "problem" | "custom";
 
 export default function AdminMode() {
+  const { access } = useAccess();
+  if (access?.user?.isAdmin !== true) return <NotFound />;
+  return <AdminContent />;
+}
+
+function AdminContent() {
   const [adminMode, setAdminMode] = useAdminMode();
 
   const [source, setSource] = useState<Source>("problem");

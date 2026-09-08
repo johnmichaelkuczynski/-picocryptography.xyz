@@ -1,10 +1,12 @@
 import { Router, type IRouter } from "express";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import type { Request } from "express";
 import {
   db,
   topicsTable,
   attemptsTable,
   practiceAttemptsTable,
+  practiceSessionsTable,
   assignmentsTable,
 } from "@workspace/db";
 import {
@@ -14,6 +16,7 @@ import {
   GenerateReportResponse,
 } from "@workspace/api-zod";
 import { chatJson } from "../lib/ai";
+import { getAccessIdentity } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -26,14 +29,35 @@ function labelFor(accuracy: number, attempts: number): StrengthLabel {
   return "weak";
 }
 
-async function topicStats() {
+function ownedAttemptCondition(req: Request) {
+  const identity = getAccessIdentity(req);
+  return {
+    identity,
+    condition:
+      identity.userId == null
+        ? and(
+            isNull(attemptsTable.userId),
+            eq(attemptsTable.ownerId, identity.ownerId),
+          )!
+        : eq(attemptsTable.userId, identity.userId),
+  };
+}
+
+async function topicStats(req: Request) {
+  const { identity } = ownedAttemptCondition(req);
   const topics = await db
     .select()
     .from(topicsTable)
     .orderBy(asc(topicsTable.position));
   const stats = await db.execute(sql`
-    select topic_id, count(*)::int as n, avg(case when correct then 1.0 else 0.0 end) as acc
-    from practice_attempts group by topic_id
+    select pa.topic_id, count(*)::int as n,
+           avg(case when pa.correct then 1.0 else 0.0 end) as acc
+    from practice_attempts pa
+    join practice_sessions ps on ps.id = pa.session_id
+    where (${identity.userId}::int is null and ps.user_id is null
+           and ps.owner_id = ${identity.ownerId})
+       or (${identity.userId}::int is not null and ps.user_id = ${identity.userId})
+    group by pa.topic_id
   `);
   const byId = new Map<number, { n: number; acc: number }>();
   for (const r of stats.rows as Array<{ topic_id: number; n: number; acc: number }>) {
@@ -54,23 +78,36 @@ async function topicStats() {
   });
 }
 
-router.get("/analytics/summary", async (_req, res) => {
+router.get("/analytics/summary", async (req, res) => {
+  const owner = ownedAttemptCondition(req);
   const submitted = await db
     .select()
     .from(attemptsTable)
-    .where(eq(attemptsTable.status, "submitted"));
+    .where(and(eq(attemptsTable.status, "submitted"), owner.condition));
   const officialAverage =
     submitted.length === 0
       ? 0
       : submitted.reduce((s, a) => s + (a.scorePercent ?? 0), 0) / submitted.length;
 
-  const practice = await db.select().from(practiceAttemptsTable);
+  const practiceResult = await db.execute(sql`
+    select pa.* from practice_attempts pa
+    join practice_sessions ps on ps.id = pa.session_id
+    where (${owner.identity.userId}::int is null and ps.user_id is null
+           and ps.owner_id = ${owner.identity.ownerId})
+       or (${owner.identity.userId}::int is not null and ps.user_id = ${owner.identity.userId})
+  `);
+  const practice = practiceResult.rows as Array<{
+    correct: boolean;
+    createdAt?: Date;
+    created_at?: Date;
+  }>;
   const practiceCorrect = practice.filter((p) => p.correct).length;
   const practiceAccuracy =
     practice.length === 0 ? 0 : (practiceCorrect / practice.length) * 100;
 
   const days = new Set<string>();
-  for (const p of practice) days.add(new Date(p.createdAt).toISOString().slice(0, 10));
+  for (const p of practice)
+    days.add(new Date(p.createdAt ?? p.created_at!).toISOString().slice(0, 10));
   for (const a of submitted)
     if (a.submittedAt) days.add(new Date(a.submittedAt).toISOString().slice(0, 10));
 
@@ -85,7 +122,7 @@ router.get("/analytics/summary", async (_req, res) => {
     else if (i > 0) break;
   }
 
-  const topics = await topicStats();
+  const topics = await topicStats(req);
   const tested = topics.filter((t) => t.attempts > 0);
   tested.sort((a, b) => b.accuracy - a.accuracy);
   const strongest = tested[0]?.topicTitle ?? null;
@@ -104,12 +141,13 @@ router.get("/analytics/summary", async (_req, res) => {
   );
 });
 
-router.get("/analytics/topics", async (_req, res) => {
-  const rows = await topicStats();
+router.get("/analytics/topics", async (req, res) => {
+  const rows = await topicStats(req);
   res.json(GetTopicAnalyticsResponse.parse(rows));
 });
 
-router.get("/analytics/activity", async (_req, res) => {
+router.get("/analytics/activity", async (req, res) => {
+  const owner = ownedAttemptCondition(req);
   const recentPractice = await db
     .select({
       id: practiceAttemptsTable.id,
@@ -118,6 +156,19 @@ router.get("/analytics/activity", async (_req, res) => {
       topicId: practiceAttemptsTable.topicId,
     })
     .from(practiceAttemptsTable)
+    .innerJoin(
+      // Ownership is inherited from the session.
+      practiceSessionsTable,
+      eq(practiceAttemptsTable.sessionId, practiceSessionsTable.id),
+    )
+    .where(
+      owner.identity.userId == null
+        ? and(
+            isNull(practiceSessionsTable.userId),
+            eq(practiceSessionsTable.ownerId, owner.identity.ownerId),
+          )!
+        : eq(practiceSessionsTable.userId, owner.identity.userId),
+    )
     .orderBy(desc(practiceAttemptsTable.id))
     .limit(20);
   const topics = await db.select().from(topicsTable);
@@ -131,7 +182,7 @@ router.get("/analytics/activity", async (_req, res) => {
       assignmentId: attemptsTable.assignmentId,
     })
     .from(attemptsTable)
-    .where(eq(attemptsTable.status, "submitted"))
+    .where(and(eq(attemptsTable.status, "submitted"), owner.condition))
     .orderBy(desc(attemptsTable.id))
     .limit(20);
   const assignments = await db.select().from(assignmentsTable);
@@ -159,12 +210,13 @@ router.get("/analytics/activity", async (_req, res) => {
   res.json(GetRecentActivityResponse.parse(items.slice(0, 30)));
 });
 
-router.post("/analytics/report", async (_req, res) => {
-  const topics = await topicStats();
+router.post("/analytics/report", async (req, res) => {
+  const owner = ownedAttemptCondition(req);
+  const topics = await topicStats(req);
   const submitted = await db
     .select()
     .from(attemptsTable)
-    .where(eq(attemptsTable.status, "submitted"));
+    .where(and(eq(attemptsTable.status, "submitted"), owner.condition));
   const officialAverage =
     submitted.length === 0
       ? 0

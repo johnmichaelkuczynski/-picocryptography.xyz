@@ -18,6 +18,9 @@ import Reasoning from "@/pages/Reasoning";
 import ReasoningRunner from "@/pages/ReasoningRunner";
 import Grades from "@/pages/Grades";
 import AdminMode from "@/pages/AdminMode";
+import BillingReturn from "@/pages/BillingReturn";
+import AccessChrome from "@/components/AccessChrome";
+import { AccessProvider, useAccess } from "@/lib/access";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -40,8 +43,24 @@ function Router() {
       <Route path="/weeks/:weekNumber" component={WeekView} />
       <Route path="/lectures/:lectureId" component={LectureView} />
       <Route path="/practice/topic/:topicId" component={TopicPractice} />
+      <Route path="/billing/return" component={BillingReturn} />
       <Route component={NotFound} />
     </Switch>
+  );
+}
+
+function AccessReadyApp() {
+  const { access, loading } = useAccess();
+  return (
+    <TooltipProvider>
+      {!loading && access && (
+        <div id="course-route-content">
+          <Router />
+        </div>
+      )}
+      <AccessChrome />
+      <Toaster />
+    </TooltipProvider>
   );
 }
 
@@ -49,10 +68,9 @@ function App() {
   return (
     <WouterRouter base={basePath}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Router />
-          <Toaster />
-        </TooltipProvider>
+        <AccessProvider>
+          <AccessReadyApp />
+        </AccessProvider>
       </QueryClientProvider>
     </WouterRouter>
   );

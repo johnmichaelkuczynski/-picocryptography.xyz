@@ -3,6 +3,8 @@ import { logger } from "./lib/logger";
 import { seedIfEmpty, seedReasoningPrimersIfMissing } from "./lib/seed";
 import { seedDiagnosticsIfEmpty } from "./lib/seedDiagnostics";
 import { storage } from "./storage";
+import { provisionAccessSchema } from "./lib/access";
+import { provisionBillingSchema } from "./routes/billing";
 
 const rawPort = process.env["PORT"];
 
@@ -21,6 +23,8 @@ if (Number.isNaN(port) || port <= 0) {
 async function start(): Promise<void> {
   try {
     await storage.ensureUniqueVisitorsTable();
+    await provisionAccessSchema();
+    await provisionBillingSchema();
     await seedIfEmpty();
     await seedReasoningPrimersIfMissing();
     await seedDiagnosticsIfEmpty();

@@ -1,12 +1,12 @@
 ---
 name: App access model
-description: Owner mandate that the course has no login system, account controls, auth prompts, or AI usage gate.
+description: Owner's staged Google-login/paywall policy and live-only Stripe constraint supersede the earlier public-only course.
 ---
 
 # App access model
 
-The course must have no login system at all. Every page and every AI-powered feature is public. Do not add sign-in/sign-out controls, account UI, authentication routes, login prompts, token allowances, or usage-based login gates.
+The course starts with limited anonymous use, then requires Google sign-in for additional free use, then requires payment. Payment remains available from the top-right at every stage. This replaces the previous public-only/no-login policy.
 
-**Why:** On 2026-08-22, the owner explicitly reversed the earlier metered Google-login policy and required all login to be removed.
+**Why:** On 2026-09-08, the owner explicitly requested staged access and supplied live Stripe credentials. They expressly prohibited Stripe sandbox/test setup and distinguished Google login from Replit login.
 
-**How to apply:** New pages and AI endpoints must work anonymously without authentication middleware. Keep public PDF/TXT downloads available. The PDF library must stay external in the server bundle or its font pipeline breaks at runtime.
+**How to apply:** Preserve the existing course UI and exact-answer recovery while enforcing usage and paid entitlement on the server. Use only live Stripe credentials and the supplied Price ID; never introduce sandbox fallback or perform real charges as tests. Do not reintroduce Replit sign-in. The existing Google identity/storage infrastructure is reused rather than activating the unused Clerk credentials.

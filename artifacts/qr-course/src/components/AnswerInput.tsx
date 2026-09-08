@@ -13,6 +13,7 @@ interface AnswerInputProps {
   /** Kept for compatibility; pasting is now allowed in every answer field. */
   allowPaste?: boolean;
   initialTrace?: KeystrokeTrace;
+  draftKey?: string;
 }
 
 export function AnswerInput({
@@ -22,6 +23,7 @@ export function AnswerInput({
   disabled,
   compact,
   initialTrace,
+  draftKey,
 }: AnswerInputProps) {
   const [adminMode] = useAdminMode();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -100,6 +102,7 @@ export function AnswerInput({
     <div className="flex flex-col gap-2 w-full">
       <textarea
         ref={textareaRef}
+        data-draft-key={draftKey}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}

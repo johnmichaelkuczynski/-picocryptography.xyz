@@ -995,6 +995,7 @@ function PracticePane({
 
         <div className="flex flex-col gap-2">
           <AnswerInput
+            draftKey={problem ? `lecture-${lectureId}-problem-${problem.id}` : undefined}
             value={answer}
             onChange={(val, t) => {
               setAnswer(val);

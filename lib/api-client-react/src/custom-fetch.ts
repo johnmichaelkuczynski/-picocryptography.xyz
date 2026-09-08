@@ -7,6 +7,7 @@ export type ErrorType<T = unknown> = ApiError<T>;
 export type BodyType<T> = T;
 
 export type AuthTokenGetter = () => Promise<string | null> | string | null;
+export type CsrfTokenGetter = () => Promise<string | null> | string | null;
 
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
@@ -17,6 +18,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _csrfTokenGetter: CsrfTokenGetter | null = null;
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +44,11 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/** Register a CSRF token getter for cookie-authenticated web mutations. */
+export function setCsrfTokenGetter(getter: CsrfTokenGetter | null): void {
+  _csrfTokenGetter = getter;
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -358,6 +365,15 @@ export async function customFetch<T = unknown>(
     }
   }
 
+  if (
+    _csrfTokenGetter &&
+    !["GET", "HEAD", "OPTIONS"].includes(method) &&
+    !headers.has("x-csrf-token")
+  ) {
+    const csrfToken = await _csrfTokenGetter();
+    if (csrfToken) headers.set("x-csrf-token", csrfToken);
+  }
+
   const requestInfo = { method, url: resolveUrl(input) };
 
   const response = await fetch(input, { ...init, method, headers });
@@ -366,14 +382,20 @@ export async function customFetch<T = unknown>(
     const errorData = await parseErrorBody(response, method);
     // Anonymous free-preview exhausted: notify the app so it can show a
     // sign-in prompt (the server returns 401 { error: "login_required" }).
-    if (
-      response.status === 401 &&
-      typeof window !== "undefined" &&
+    const errorValue =
       errorData !== null &&
       typeof errorData === "object" &&
-      (errorData as { error?: unknown }).error === "login_required"
+      ((errorData as { error?: unknown; code?: unknown }).code ??
+        (errorData as { error?: unknown }).error);
+    const accessError =
+      typeof errorValue === "string" ? errorValue.toUpperCase() : "";
+    if (
+      ((response.status === 401 && accessError === "LOGIN_REQUIRED") ||
+        (response.status === 402 && accessError === "PAYMENT_REQUIRED")) &&
+      typeof window !== "undefined" &&
+      typeof window.dispatchEvent === "function"
     ) {
-      window.dispatchEvent(new CustomEvent("bam:login-required"));
+      window.dispatchEvent(new CustomEvent("qr:access-required"));
     }
     throw new ApiError(response, errorData, requestInfo);
   }

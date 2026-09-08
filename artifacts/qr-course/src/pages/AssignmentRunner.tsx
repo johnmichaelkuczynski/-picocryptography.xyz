@@ -325,6 +325,7 @@ export default function AssignmentRunner() {
                 </RadioGroup>
               ) : (
                 <AnswerInput
+                  draftKey={`assignment-${assignmentId}-problem-${currentProblem.id}`}
                   key={currentProblem.id}
                   value={answers[currentProblem.id] || ""}
                   onChange={(val, trace) => handleAnswerChange(currentProblem.id, val, trace)}

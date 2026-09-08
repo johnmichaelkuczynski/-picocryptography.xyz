@@ -13,6 +13,7 @@ import {
   useRunLiveAnswerDiagnostic,
   type LiveAnswerDiagnosticResult,
 } from "@workspace/api-client-react";
+import { useAccess } from "@/lib/access";
 
 type Step = {
   name: string;
@@ -85,6 +86,11 @@ function ResultCard({ title, result }: { title: string; result: RunResult | null
 }
 
 export default function Diagnostics() {
+  const { access } = useAccess();
+  return <DiagnosticsContent isAdmin={access?.user?.isAdmin === true} />;
+}
+
+function DiagnosticsContent({ isAdmin }: { isAdmin: boolean }) {
   const runLiveAnswer = useRunLiveAnswerDiagnostic();
   const [sysBusy, setSysBusy] = useState(false);
   const [synthBusy, setSynthBusy] = useState(false);
@@ -174,10 +180,13 @@ export default function Diagnostics() {
         <div>
           <h1 className="font-serif text-3xl mb-1">Diagnostics</h1>
           <p className="text-muted-foreground">
-            Four self-tests to verify the course app is healthy end-to-end.
+            {isAdmin
+              ? "Four self-tests to verify the course app is healthy end-to-end."
+              : "Verify the live answer pipeline end-to-end."}
           </p>
         </div>
 
+        {isAdmin && <>
         <section className="space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -262,6 +271,7 @@ export default function Diagnostics() {
           )}
           <ResultCard title="Answer-key quality-control results" result={qcResult} />
         </section>
+        </>}
 
         <section className="space-y-4">
           <div className="flex items-start justify-between gap-4">

@@ -27,6 +27,122 @@ tags:
   - name: diagnostics
     description: Visible end-to-end health checks
 paths:
+  /access:
+    get:
+      operationId: getAccess
+      summary: Current Google identity and server-enforced trial allowance
+      responses:
+        "200":
+          description: Access state and session CSRF token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessState"
+  /access/heartbeat:
+    post:
+      operationId: recordAccessHeartbeat
+      summary: Record active usage using server elapsed time
+      responses:
+        "200":
+          description: Updated access state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessState"
+  /auth/google:
+    get:
+      operationId: startGoogleLogin
+      summary: Begin Google-only OAuth login
+      parameters:
+        - in: query
+          name: returnTo
+          schema: { type: string }
+      responses:
+        "302": { description: Redirect to Google }
+  /auth/google/callback:
+    get:
+      operationId: completeGoogleLogin
+      summary: Validate OAuth state and establish a Google account session
+      responses:
+        "302": { description: Redirect back to the course or sign-in error page }
+  /auth/logout:
+    post:
+      operationId: logoutGoogle
+      summary: End the Google app session
+      responses:
+        "200": { description: Signed out }
+  /billing/config:
+    get:
+      operationId: getBillingConfig
+      summary: Live Stripe price and checkout availability
+      responses:
+        "200":
+          description: Live configuration without secret credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingConfig"
+  /billing/status:
+    get:
+      operationId: getBillingStatus
+      responses:
+        "200":
+          description: Verified entitlement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatus"
+  /billing/checkout:
+    post:
+      operationId: createBillingCheckout
+      summary: Create live hosted checkout for the authenticated Google account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Stripe-hosted checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRedirect"
+        "401": { description: Google login required }
+  /billing/verify:
+    post:
+      operationId: verifyBillingCheckout
+      summary: Verify an owned checkout with Stripe before granting access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingVerificationInput"
+      responses:
+        "200":
+          description: Server-verified payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatus"
+  /billing/portal:
+    post:
+      operationId: createBillingPortal
+      responses:
+        "200":
+          description: Authenticated customer's billing portal URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRedirect"
+  /stripe/webhook:
+    post:
+      operationId: receiveStripeWebhook
+      summary: Receive signed live Stripe events using the raw body
+      responses:
+        "200": { description: Event processed idempotently }
+        "400": { description: Invalid signature or nonlive event }
   /healthz:
     get:
       operationId: healthCheck
@@ -657,6 +773,64 @@ paths:
 
 components:
   schemas:
+    AccessUser:
+      type: ["object", "null"]
+      required: [id, displayName, email]
+      properties:
+        id: { type: integer }
+        displayName: { type: string }
+        email: { type: string }
+        isAdmin: { type: boolean }
+    AccessState:
+      type: object
+      required: [stage, user, activeSeconds, actionsUsed, secondsLimit, actionsLimit, csrfToken]
+      properties:
+        stage:
+          type: string
+          enum: [guest, free, login_required, payment_required, paid]
+        user:
+          $ref: "#/components/schemas/AccessUser"
+        activeSeconds: { type: number }
+        actionsUsed: { type: integer }
+        secondsLimit: { type: integer }
+        actionsLimit: { type: integer }
+        csrfToken: { type: string }
+    BillingPrice:
+      type: ["object", "null"]
+      required: [amount, currency, interval, intervalCount]
+      properties:
+        amount: { type: integer }
+        currency: { type: string }
+        interval: { type: ["string", "null"] }
+        intervalCount: { type: ["integer", "null"] }
+    BillingConfig:
+      type: object
+      required: [available, liveMode, price]
+      properties:
+        available: { type: boolean }
+        liveMode: { type: boolean }
+        price:
+          $ref: "#/components/schemas/BillingPrice"
+        error: { type: string }
+    BillingStatus:
+      type: object
+      required: [paid]
+      properties:
+        paid: { type: boolean }
+    BillingRedirect:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+    CheckoutInput:
+      type: object
+      properties:
+        returnTo: { type: string }
+    BillingVerificationInput:
+      type: object
+      required: [sessionId]
+      properties:
+        sessionId: { type: string, minLength: 1 }
     HealthStatus:
       type: object
       properties:

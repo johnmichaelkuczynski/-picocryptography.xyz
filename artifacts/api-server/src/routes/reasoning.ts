@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import type { Request } from "express";
 import {
   db,
   assignmentsTable,
@@ -34,8 +35,23 @@ import {
   type ScoreSummary,
   type DiagFormat,
 } from "../lib/reasoning";
+import { getAccessIdentity } from "../lib/access";
 
 const router: IRouter = Router();
+
+function diagnosticOwner(req: Request) {
+  const identity = getAccessIdentity(req);
+  return {
+    identity,
+    condition:
+      identity.userId == null
+        ? and(
+            isNull(diagnosticAttemptsTable.userId),
+            eq(diagnosticAttemptsTable.ownerId, identity.ownerId),
+          )!
+        : eq(diagnosticAttemptsTable.userId, identity.userId),
+  };
+}
 
 // Diagnostics are ungraded practice: the entire course grade is coursework.
 const COURSEWORK_WEIGHT = 100;
@@ -113,7 +129,8 @@ async function insertAttemptItems(
   );
 }
 
-router.get("/reasoning/assessments", async (_req, res) => {
+router.get("/reasoning/assessments", async (req, res) => {
+  const owner = diagnosticOwner(req);
   const assessments = await db
     .select()
     .from(diagnosticAssessmentsTable)
@@ -132,7 +149,7 @@ router.get("/reasoning/assessments", async (_req, res) => {
       const attempts = await db
         .select()
         .from(diagnosticAttemptsTable)
-        .where(eq(diagnosticAttemptsTable.assessmentId, a.id))
+        .where(and(eq(diagnosticAttemptsTable.assessmentId, a.id), owner.condition))
         .orderBy(asc(diagnosticAttemptsTable.id));
       const submitted = attempts.find((x) => x.status === "submitted");
       const inProgress = attempts.find((x) => x.status === "in_progress");
@@ -159,6 +176,7 @@ router.get("/reasoning/assessments", async (_req, res) => {
 });
 
 router.get("/reasoning/assessments/:assessmentId", async (req, res): Promise<void> => {
+  const owner = diagnosticOwner(req);
   const id = parseIdParam(req.params.assessmentId);
   if (!Number.isFinite(id)) {
     res.status(400).json({ error: "invalid id" });
@@ -177,7 +195,7 @@ router.get("/reasoning/assessments/:assessmentId", async (req, res): Promise<voi
   const attempts = await db
     .select()
     .from(diagnosticAttemptsTable)
-    .where(eq(diagnosticAttemptsTable.assessmentId, id));
+    .where(and(eq(diagnosticAttemptsTable.assessmentId, id), owner.condition));
   const status: "not_started" | "in_progress" | "passed" = attempts.some(
     (x) => x.status === "submitted",
   )
@@ -201,6 +219,7 @@ router.get("/reasoning/assessments/:assessmentId", async (req, res): Promise<voi
 });
 
 router.post("/reasoning/assessments/:assessmentId/start", async (req, res): Promise<void> => {
+  const owner = diagnosticOwner(req);
   const id = parseIdParam(req.params.assessmentId);
   if (!Number.isFinite(id)) {
     res.status(400).json({ error: "invalid id" });
@@ -230,7 +249,7 @@ router.post("/reasoning/assessments/:assessmentId/start", async (req, res): Prom
   const existing = await db
     .select()
     .from(diagnosticAttemptsTable)
-    .where(eq(diagnosticAttemptsTable.assessmentId, id))
+    .where(and(eq(diagnosticAttemptsTable.assessmentId, id), owner.condition))
     .orderBy(asc(diagnosticAttemptsTable.id));
   if (retake) {
     const unfinished = existing.filter((x) => x.status === "in_progress");
@@ -281,7 +300,12 @@ router.post("/reasoning/assessments/:assessmentId/start", async (req, res): Prom
 
   const [created] = await db
     .insert(diagnosticAttemptsTable)
-    .values({ assessmentId: id, status: "in_progress" })
+    .values({
+      assessmentId: id,
+      status: "in_progress",
+      ownerId: owner.identity.ownerId,
+      userId: owner.identity.userId,
+    })
     .returning();
   if (!created) {
     res.status(500).json({ error: "failed to create" });
@@ -316,6 +340,7 @@ router.post("/reasoning/assessments/:assessmentId/start", async (req, res): Prom
 });
 
 router.post("/reasoning/assessments/:assessmentId/submit", async (req, res): Promise<void> => {
+  const owner = diagnosticOwner(req);
   const id = parseIdParam(req.params.assessmentId);
   if (!Number.isFinite(id)) {
     res.status(400).json({ error: "invalid id" });
@@ -349,7 +374,7 @@ router.post("/reasoning/assessments/:assessmentId/submit", async (req, res): Pro
   const attempts = await db
     .select()
     .from(diagnosticAttemptsTable)
-    .where(eq(diagnosticAttemptsTable.assessmentId, id))
+    .where(and(eq(diagnosticAttemptsTable.assessmentId, id), owner.condition))
     .orderBy(desc(diagnosticAttemptsTable.id));
   const target =
     attempts.find((x) => x.status === "in_progress") ?? attempts[0];
@@ -386,6 +411,8 @@ router.post("/reasoning/assessments/:assessmentId/submit", async (req, res): Pro
         responses,
         scoreSummary: summary,
         submittedAt: new Date(),
+        ownerId: owner.identity.ownerId,
+        userId: owner.identity.userId,
       })
       .where(eq(diagnosticAttemptsTable.id, target.id));
   } else {
@@ -442,7 +469,8 @@ router.post("/reasoning/assessments/:assessmentId/submit", async (req, res): Pro
   );
 });
 
-router.get("/reasoning/grades", async (_req, res) => {
+router.get("/reasoning/grades", async (req, res) => {
+  const owner = diagnosticOwner(req);
   // ---- Coursework (100%) ----
   const assignments = await db
     .select()
@@ -453,7 +481,17 @@ router.get("/reasoning/grades", async (_req, res) => {
       const attempts = await db
         .select()
         .from(attemptsTable)
-        .where(eq(attemptsTable.assignmentId, a.id));
+        .where(
+          and(
+            eq(attemptsTable.assignmentId, a.id),
+            owner.identity.userId == null
+              ? and(
+                  isNull(attemptsTable.userId),
+                  eq(attemptsTable.ownerId, owner.identity.ownerId),
+                )!
+              : eq(attemptsTable.userId, owner.identity.userId),
+          ),
+        );
       const submitted = attempts.filter((x) => x.status === "submitted");
       const inProgress = attempts.some((x) => x.status === "in_progress");
       const best = submitted.reduce(
@@ -501,7 +539,7 @@ router.get("/reasoning/grades", async (_req, res) => {
     const attempts = await db
       .select()
       .from(diagnosticAttemptsTable)
-      .where(eq(diagnosticAttemptsTable.assessmentId, a.id));
+      .where(and(eq(diagnosticAttemptsTable.assessmentId, a.id), owner.condition));
     const passed = attempts.some((x) => x.status === "submitted" && x.passed);
     const inProgress = attempts.some((x) => x.status === "in_progress");
     const key = `${a.instrument}:${a.phase}`;

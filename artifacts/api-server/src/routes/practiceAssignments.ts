@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import {
   db,
   assignmentsTable,
@@ -16,6 +16,7 @@ import {
 } from "@workspace/api-zod";
 import { chatJson } from "../lib/ai";
 import { gradePracticeEssay, GradingUnavailableError } from "../lib/grading";
+import { getAccessIdentity } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -52,6 +53,7 @@ function isValidReasoningProblem(problem: {
 router.post(
   "/assignments/:assignmentId/practice",
   async (req, res): Promise<void> => {
+    const identity = getAccessIdentity(req);
     const assignmentId = parseIdParam(req.params.assignmentId);
     if (!Number.isFinite(assignmentId)) {
       res.status(400).json({ error: "invalid assignmentId" });
@@ -162,6 +164,8 @@ router.post(
         tutorEnabled: true,
         focusOnWeaknesses: false,
         difficulty: 2.5,
+        ownerId: identity.ownerId,
+        userId: identity.userId,
       })
       .returning();
     if (!session) {
@@ -215,6 +219,7 @@ router.post(
 router.post(
   "/practice/assignment-sessions/:sessionId/grade",
   async (req, res): Promise<void> => {
+    const identity = getAccessIdentity(req);
     const sessionId = parseIdParam(req.params.sessionId);
     if (!Number.isFinite(sessionId)) {
       res.status(400).json({ error: "invalid sessionId" });
@@ -229,7 +234,17 @@ router.post(
     const [session] = await db
       .select()
       .from(practiceSessionsTable)
-      .where(eq(practiceSessionsTable.id, sessionId));
+      .where(
+        and(
+          eq(practiceSessionsTable.id, sessionId),
+          identity.userId == null
+            ? and(
+                isNull(practiceSessionsTable.userId),
+                eq(practiceSessionsTable.ownerId, identity.ownerId),
+              )!
+            : eq(practiceSessionsTable.userId, identity.userId),
+        ),
+      );
     if (!session) {
       res.status(404).json({ error: "session not found" });
       return;

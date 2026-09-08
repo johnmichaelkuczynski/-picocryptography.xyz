@@ -243,6 +243,7 @@ export default function TopicPractice() {
             </RadioGroup>
           ) : (
             <AnswerInput
+              draftKey={problem ? `topic-practice-${topicId}-problem-${problem.id}` : undefined}
               value={answer}
               onChange={(val, t) => {
                 setAnswer(val);

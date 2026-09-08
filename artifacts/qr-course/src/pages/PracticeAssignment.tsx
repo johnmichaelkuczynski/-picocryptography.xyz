@@ -227,6 +227,7 @@ export default function PracticeAssignment() {
                       </RadioGroup>
                     ) : (
                       <AnswerInput
+                        draftKey={`practice-assignment-${assignmentId}-problem-${p.id}`}
                         value={answers[p.id] ?? ""}
                         onChange={(val, trace) => {
                           setAnswers((prev) => ({ ...prev, [p.id]: val }));

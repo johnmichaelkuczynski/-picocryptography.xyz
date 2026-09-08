@@ -5,6 +5,73 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * @nullable
+ */
+export type AccessUser = {
+  id: number;
+  displayName: string;
+  email: string;
+  isAdmin?: boolean;
+} | null;
+
+export type AccessStateStage = typeof AccessStateStage[keyof typeof AccessStateStage];
+
+
+export const AccessStateStage = {
+  guest: 'guest',
+  free: 'free',
+  login_required: 'login_required',
+  payment_required: 'payment_required',
+  paid: 'paid',
+} as const;
+
+export interface AccessState {
+  stage: AccessStateStage;
+  user: AccessUser | null;
+  activeSeconds: number;
+  actionsUsed: number;
+  secondsLimit: number;
+  actionsLimit: number;
+  csrfToken: string;
+}
+
+/**
+ * @nullable
+ */
+export type BillingPrice = {
+  amount: number;
+  currency: string;
+  /** @nullable */
+  interval: string | null;
+  /** @nullable */
+  intervalCount: number | null;
+} | null;
+
+export interface BillingConfig {
+  available: boolean;
+  liveMode: boolean;
+  price: BillingPrice | null;
+  error?: string;
+}
+
+export interface BillingStatus {
+  paid: boolean;
+}
+
+export interface BillingRedirect {
+  url: string;
+}
+
+export interface CheckoutInput {
+  returnTo?: string;
+}
+
+export interface BillingVerificationInput {
+  /** @minLength 1 */
+  sessionId: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -952,4 +1019,8 @@ export interface Gradebook {
   coursework: GradebookCourseworkItem[];
   reasoning: GradebookReasoningItem[];
 }
+
+export type StartGoogleLoginParams = {
+returnTo?: string;
+};
 

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import {
   db,
   topicsTable,
@@ -17,6 +17,8 @@ import {
 } from "@workspace/api-zod";
 import { chatJson } from "../lib/ai";
 import { gradeAnswer, GradingUnavailableError } from "../lib/grading";
+import { getAccessIdentity } from "../lib/access";
+import type { AccessIdentity } from "../lib/access";
 
 const router: IRouter = Router();
 
@@ -51,6 +53,7 @@ async function pickTopicId(
   weekNumber: number | null | undefined,
   preferred: number | null | undefined,
   focusOnWeaknesses: boolean,
+  identity: AccessIdentity,
 ): Promise<{ id: number; title: string; weekNumber: number }> {
   if (preferred != null) {
     const [t] = await db.select().from(topicsTable).where(eq(topicsTable.id, preferred));
@@ -62,8 +65,14 @@ async function pickTopicId(
 
   if (focusOnWeaknesses) {
     const stats = await db.execute(sql`
-      select topic_id, count(*)::int as n, avg(case when correct then 1.0 else 0.0 end) as acc
-      from practice_attempts group by topic_id
+      select pa.topic_id, count(*)::int as n,
+             avg(case when pa.correct then 1.0 else 0.0 end) as acc
+      from practice_attempts pa
+      join practice_sessions ps on ps.id = pa.session_id
+      where (${identity.userId}::int is null and ps.user_id is null
+             and ps.owner_id = ${identity.ownerId})
+         or (${identity.userId}::int is not null and ps.user_id = ${identity.userId})
+      group by pa.topic_id
     `);
     const byId = new Map<number, { n: number; acc: number }>();
     for (const r of stats.rows as Array<{ topic_id: number; n: number; acc: number }>) {
@@ -86,6 +95,7 @@ async function pickTopicId(
 }
 
 router.post("/practice/sessions", async (req, res): Promise<void> => {
+  const identity = getAccessIdentity(req);
   const parsed = StartPracticeSessionBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -105,6 +115,8 @@ router.post("/practice/sessions", async (req, res): Promise<void> => {
       tutorEnabled,
       focusOnWeaknesses: focusOnWeaknesses ?? true,
       difficulty: startDifficulty,
+      ownerId: identity.ownerId,
+      userId: identity.userId,
     })
     .returning();
   if (!created) {
@@ -124,6 +136,7 @@ router.post("/practice/sessions", async (req, res): Promise<void> => {
 });
 
 router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void> => {
+  const identity = getAccessIdentity(req);
   const sessionId = parseIdParam(req.params.sessionId);
   const parsed = NextPracticeProblemBody.safeParse(req.body);
   if (!parsed.success) {
@@ -133,7 +146,17 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
   const [session] = await db
     .select()
     .from(practiceSessionsTable)
-    .where(eq(practiceSessionsTable.id, sessionId));
+    .where(
+      and(
+        eq(practiceSessionsTable.id, sessionId),
+        identity.userId == null
+          ? and(
+              isNull(practiceSessionsTable.userId),
+              eq(practiceSessionsTable.ownerId, identity.ownerId),
+            )!
+          : eq(practiceSessionsTable.userId, identity.userId),
+      ),
+    );
   if (!session) {
     res.status(404).json({ error: "session not found" });
     return;
@@ -143,6 +166,7 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
     session.weekNumber,
     parsed.data.topicId ?? session.topicId,
     session.focusOnWeaknesses,
+    identity,
   );
 
   const lastProblems = await db
@@ -241,6 +265,7 @@ router.post("/practice/sessions/:sessionId/next", async (req, res): Promise<void
 });
 
 router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<void> => {
+  const identity = getAccessIdentity(req);
   const sessionId = parseIdParam(req.params.sessionId);
   const parsed = GradePracticeAnswerBody.safeParse(req.body);
   if (!parsed.success) {
@@ -251,7 +276,17 @@ router.post("/practice/sessions/:sessionId/grade", async (req, res): Promise<voi
   const [session] = await db
     .select()
     .from(practiceSessionsTable)
-    .where(eq(practiceSessionsTable.id, sessionId));
+    .where(
+      and(
+        eq(practiceSessionsTable.id, sessionId),
+        identity.userId == null
+          ? and(
+              isNull(practiceSessionsTable.userId),
+              eq(practiceSessionsTable.ownerId, identity.ownerId),
+            )!
+          : eq(practiceSessionsTable.userId, identity.userId),
+      ),
+    );
   if (!session) {
     res.status(404).json({ error: "session not found" });
     return;

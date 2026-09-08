@@ -6,7 +6,14 @@
 
 ## Overview
 
-Cryptography: Secrets, Locks, and Digital Trust is a self-paced, single-user web course taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
+Cryptography: Secrets, Locks, and Digital Trust is a self-paced web course taught, tutored, drilled, and graded by AI, with built-in academic-integrity enforcement.
+
+## Access and billing requirements
+
+- Allow a short anonymous preview, then require Google sign-in for additional free use, then require payment. Enforce access on the server, not only in the interface.
+- Keep payment available in the top-right throughout the experience; Google identity links the purchase to the learner.
+- Use the owner's live Stripe keys and existing Price ID only. Never provision Stripe sandbox/test credentials or charge a real payment while verifying the app.
+- Preserve exact assignment drafts across sign-in and checkout. Keep learner records isolated and operator actions server-authorized.
 
 The curriculum is a **4-hour intensive with four topics**:
 
