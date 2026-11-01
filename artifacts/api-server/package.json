@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:auth": "node ./test-auth.mjs",
     "test:http-access": "node ./test-http-access.mjs",
-    "test:billing": "node ./test-billing.mjs"
+    "test:billing": "node ./test-billing.mjs",
+    "test:startup": "node ./test-startup.mjs"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",

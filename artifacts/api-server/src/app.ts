@@ -8,6 +8,8 @@ import { logger } from "./lib/logger";
 import { setupAuth } from "./lib/auth";
 import { csrfProtection, requireAdmin, trialGate } from "./lib/access";
 import accessRouter from "./routes/access";
+import healthRouter from "./routes/health";
+import { requireDatabaseReady } from "./lib/readiness";
 import {
   billingRouter,
   stripeWebhookHandler,
@@ -52,6 +54,10 @@ app.use(
     },
   }),
 );
+
+// Startup probes bypass database-backed sessions and all course middleware.
+app.use("/api", healthRouter);
+app.use("/api", requireDatabaseReady);
 
 // Stripe signature verification requires the untouched bytes and must precede
 // JSON parsing, sessions, CSRF, and trial middleware.

@@ -5,6 +5,8 @@ import { seedDiagnosticsIfEmpty } from "./lib/seedDiagnostics";
 import { storage } from "./storage";
 import { provisionAccessSchema } from "./lib/access";
 import { provisionBillingSchema } from "./routes/billing";
+import { setDatabaseReady } from "./lib/readiness";
+import { setTimeout as delay } from "node:timers/promises";
 
 const rawPort = process.env["PORT"];
 
@@ -20,26 +22,38 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-async function start(): Promise<void> {
-  try {
-    await storage.ensureUniqueVisitorsTable();
-    await provisionAccessSchema();
-    await provisionBillingSchema();
-    await seedIfEmpty();
-    await seedReasoningPrimersIfMissing();
-    await seedDiagnosticsIfEmpty();
-  } catch (err) {
-    logger.error({ err }, "Database readiness failed; server will not listen");
-    process.exit(1);
-  }
-
-  app.listen(port, (err) => {
-    if (err) {
-      logger.error({ err }, "Error listening on port");
-      process.exit(1);
+async function initializeDatabase(): Promise<void> {
+  let attempt = 0;
+  for (;;) {
+    try {
+      await storage.ensureUniqueVisitorsTable();
+      await provisionAccessSchema();
+      await provisionBillingSchema();
+      await seedIfEmpty();
+      await seedReasoningPrimersIfMissing();
+      await seedDiagnosticsIfEmpty();
+      setDatabaseReady(true);
+      logger.info("Database ready; course API requests are enabled");
+      return;
+    } catch (err) {
+      setDatabaseReady(false);
+      const retryDelayMs = Math.min(5_000 * 2 ** Math.min(attempt++, 4), 60_000);
+      logger.error(
+        { err, retryDelayMs },
+        "Database initialization failed; health checks remain available and initialization will retry",
+      );
+      await delay(retryDelayMs);
     }
-    logger.info({ port }, "Server listening");
-  });
+  }
 }
 
-void start();
+// Open the HTTP listener first: Replit's startup probe must work even while
+// the database is waking up or unavailable. Course requests remain gated.
+app.listen(port, "0.0.0.0", (err) => {
+  if (err) {
+    logger.error({ err }, "Error listening on port");
+    process.exit(1);
+  }
+  logger.info({ port }, "Server listening");
+  void initializeDatabase();
+});

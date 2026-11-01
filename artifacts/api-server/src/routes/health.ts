@@ -3,7 +3,8 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-router.get("/healthz", (_req, res) => {
+// Liveness must not depend on database availability, sessions, or trial usage.
+router.get(["/", "/healthz"], (_req, res) => {
   const data = HealthCheckResponse.parse({ status: "ok" });
   res.json(data);
 });
